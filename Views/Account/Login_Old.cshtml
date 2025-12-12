@@ -1,0 +1,114 @@
+﻿@using Corno.Concept.Portal.Models
+@model LoginViewModel
+@{
+    Layout = null;
+    // ViewBag.Title = "Login Page";
+}
+
+<link rel="icon" href="~/favicon.png">
+
+<link href="@Url.Content("~/Content/bootstrap.min.css")" rel="stylesheet" type="text/css" />
+<link href="@Url.Content("~/Content/kendo/2023.1.117/kendo.default-v2.min.css")" rel="stylesheet" type="text/css" />
+<link href="~/Content/Site.css" rel="stylesheet" />
+<script src="@Url.Content("~/Scripts/bootstrap.min.js")"></script>
+<script src="@Url.Content("~/Scripts/kendo/2023.1.117/jquery.min.js")"></script>
+<script src="@Url.Content("~/Scripts/kendo/2023.1.117/jszip.min.js")"></script>
+<script src="@Url.Content("~/Scripts/kendo/2023.1.117/kendo.all.min.js")"></script>
+<script src="@Url.Content("~/Scripts/kendo/2023.1.117/kendo.aspnetmvc.min.js")"></script>
+
+
+<div class="grandParentContaniner">
+    <div class="parentContainer">
+        <div class="card">
+            <!--Form with header-->
+            @using (Html.BeginForm("Login", "Account", FormMethod.Post, new { @class = "form" }))
+            {
+                @*@Html.AntiForgeryToken()*@
+
+                <div class="card-header text-center">
+                    <div class="row">
+                        <div class="col-10 text-start align-middle k-text-align-center">
+                            <h4> Sign In</h4>
+                        </div>
+                        <div class="col-2 text-end">
+                            <img class="p-1 border border-info" src="~/favicon.png" alt="" width="48" height="48">
+                        </div>
+                    </div>
+                </div>
+                @*<div class="text-center mb-4">
+                        <img class="p-1 border border-info" src="~/favicon.png" alt="" width="64" height="64">
+                    </div>*@
+                @*<div class="text-center mb-4">
+                        <img class="p-1 border border-info" src="~/favicon.png" alt="" width="64" height="64">
+                    </div>*@
+
+                <!--<div class="k-card-header k-card-tertiary text-center">-->
+                @*<div class="bg-info text-white text-center py-2">*@
+                <!--<h3> User Sign In</h3>-->
+                @*</div>*@
+                <!--</div>-->
+                <div class="k-card-body">
+                    <div class="row">
+                        @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+                    </div>
+                    <!--Body-->
+                    <div class="row">
+                        <div class="col-12">
+                            @(Html.Kendo().TextBoxFor(m => m.UserName)
+                                .HtmlAttributes(new
+                                {
+                                    placeholder = "User Name",
+                                    required = "required",
+                                    @class = "w-100"
+                                }))
+                        </div>
+                    </div>
+                    <br/>
+                    <div class="row">
+                        <div class="col-12">
+                            @(Html.Kendo().TextBoxFor(m => m.Password)
+                                .HtmlAttributes(new
+                                {
+                                    type = "password",
+                                    placeholder = "Password",
+                                    required = "required",
+                                    @class = "w-100"
+                                    //style = "width:100%;"
+                                }))
+                        </div>
+                    </div>
+                </div>
+                <div class="k-footer k-p-2">
+                    <div class="k-card-actions k-card-actions-horizontal k-card-actions-end">
+                        @(Html.Kendo().Button()
+                            .Name("test")
+                            .Icon("login")
+                            .SpriteCssClass("k-icon-64")
+                            .ThemeColor(ThemeColor.Tertiary)
+                            .FillMode(ButtonFillMode.Outline)
+                            .HtmlAttributes(new
+                            {
+                                @class = "offset-6 col-4",
+                                type = "submit"
+                            })
+                            .Content("Log in"))
+                    </div>
+                </div>
+            }
+            <!--Form with header-->
+        </div>
+    </div>
+</div>
+
+@*<div class="col-md-4">
+        <section id="socialLoginForm">
+            @Html.Partial("_ExternalLoginsListPartial", new ExternalLoginListViewModel { ReturnUrl = ViewBag.ReturnUrl })
+        </section>
+    </div>*@
+
+@section scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}
+
+@Scripts.Render("~/bundles/bootstrap")
+@*@RenderSection("scripts", required: false)*@

@@ -1,0 +1,26 @@
+﻿@using Corno.Globals.Constants
+@model Corno.Models.Common.State
+
+@{
+    Layout = "~/Views/Shared/_LayoutCreate.cshtml";
+}
+
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+}
+
+@{
+    Page.Title = "State";
+    ViewBag.MainMenu = "Masters";
+    ViewBag.CurrentSitemap = "State";
+    ViewBag.BoxTitle = "Create New State";
+    ViewBag.Area = "Masters";
+    ViewBag.Controller = "State";
+    ViewBag.SubmitAction = ViewBag.Create;
+}
+
+@Html.Partial("_State", Model)

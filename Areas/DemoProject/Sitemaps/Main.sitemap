@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<siteMap xmlns="http://schemas.microsoft.com/AspNet/SiteMap-File-1.0">
+	<siteMapNode title="" url="">
+		<siteMapNode title="File" web="true" windows="true" roles="administrator">
+			<siteMapNode name="Logout" title="Logout" icon="Logout" web="true" windows="true" controller="Account" action="Login" roles="administrator     " />
+			<siteMapNode name="Exit" title="Exit" icon="Exit" web="true" windows="true" roles="administrator Packing Press shop Kitting Sorting Stores WIP Shirwal" />
+		</siteMapNode>
+		<siteMapNode name="Masters" title="Masters" web="true" windows="true" roles="administrator Stores WIP Sorting">
+			<siteMapNode name="Item" title="Items" formname="Corno.Forms.Common.ItemForm" misctype="Item" icon="Item" web="true" windows="true" controller="Item" action="Index" area="Masters" roles="administrator Stores WIP Sorting" />
+			<siteMapNode name="PackingType" title="Packing Type" formname="Corno.Forms.Common.MiscMasterForm" misctype="PackingType" icon="PackingType" web="true" windows="true" controller="MiscMaster" action="Index" area="Masters" roles="administrator Stores WIP Sorting" />
+		</siteMapNode>
+		<siteMapNode name="Transactions" title="Transaction" web="true" windows="true" roles="administrator Packing Sorting Shirwal WIP M8">
+			<siteMapNode name="LabelForm" title="Label" formname="Corno.Concept.Clients.DemoProject.Forms.LabelForm" icon="Label" web="true" windows="true" controller="Label" action="Index" area="DemoProject" roles="administrator Press shop Kitting Sorting WIP M8" />
+
+		</siteMapNode>
+		<siteMapNode name="Reports" title="Reports" web="true" windows="true" roles="administrator Packing Press shop Kitting Sorting Stores WIP Shirwal M8">
+
+		</siteMapNode>
+		<siteMapNode name="Utility" title="Utility" web="true" windows="true" roles="administrator">
+			<siteMapNode name="BackUp" title="BackUp" formname="Corno.Forms.Common.BackupRestoreForm" icon="Backup" web="true" windows="true" roles="administrator" />
+		</siteMapNode>
+		<siteMapNode name="Admin" title="Admin" web="true" windows="true" roles="administrator s">
+			<siteMapNode name="Users" title="Users" formname="Corno.Forms.Login.UsersForm" icon="User" web="true" windows="true" controller="User" action="Index" area="Admin" roles="administrator" />
+			<siteMapNode name="Roles" title="Roles" formname="Corno.Forms.Login.RolesForm" icon="Role" web="true" windows="true" controller="Role" action="Index" area="Admin" roles="administrator" />
+			<siteMapNode name="ChangePasswordForm" title="Change Password" formname="Corno.Forms.Login.ChangePasswordForm" icon="ChangePassword" web="true" windows="true" controller="ChangePassword" action="Index" area="Admin" roles="administrator s" />
+			<siteMapNode name="Logout" title="Logout" formname="Corno.Forms.Login.LogoutForm" icon="Logout" controller="Account" action="Login" roles="administrator     " />
+		</siteMapNode>
+	</siteMapNode>
+</siteMap>

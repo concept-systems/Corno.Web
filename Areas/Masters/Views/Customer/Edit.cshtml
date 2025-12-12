@@ -1,0 +1,14 @@
+﻿@model Corno.Web.Areas.Masters.ViewModels.Customer.CustomerViewModel
+
+@{
+    Layout = "~/Views/Shared/_LayoutEdit.cshtml";
+}
+
+@{
+    ViewBag.BoxTitle = $"Edit Customer : {Model?.Code}";
+    ViewBag.Area = "Masters";
+    ViewBag.Controller = "Customer";
+    ViewBag.SubmitAction = "Edit";
+}
+
+@Html.Partial("_Customer", Model)

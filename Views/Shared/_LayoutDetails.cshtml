@@ -1,0 +1,61 @@
+﻿@using Corno.Web.Helper
+@{
+    Layout = "~/Views/Shared/_LayoutBase.cshtml";
+}
+
+@section sectionBaseHeader
+{
+    <div class="k-actions k-actions-horizontal k-actions-end">
+        @(Html.Kendo().Button()
+            .Name("btnBack")
+            .Content("List")
+            .ApplyStandardSettingsWithType(ButtonType.Info, "arrow-left")
+            .Events(e => e.Click("onList")))
+    </div>
+}
+
+
+
+<br />
+<div class="box-content">
+    <div class="form-horizontal form-validate">
+        @RenderBody()
+        <hr />
+        @*<div class="control-group">
+                <a href="@Url.Action(ViewBag.Index, ViewBag.Controller,new {miscType= ViewBag.MiscType})" rel="tooltip" title="Back to List" class="btn btn-satblue pull-right">
+                    <i class="icon-circle-arrow-left large"></i> Back to list
+                </a>
+            </div>*@
+    </div>
+</div>
+
+<script type="text/javascript">
+    function onList() {
+        @{
+            // Get values from ViewBag or fall back to route data
+            var area = ViewBag.Area as string ?? ViewContext.RouteData.DataTokens["area"] as string ?? "";
+            var controller = ViewBag.Controller as string ?? ViewContext.RouteData.Values["controller"] as string ?? "";
+            var action = ViewBag.Index as string ?? "Index";
+            
+            // Build URL using Url.Action to ensure proper routing
+            string backUrl;
+            if (!string.IsNullOrEmpty(area))
+            {
+                backUrl = Url.Action(action, controller, new { area = area });
+            }
+            else
+            {
+                backUrl = Url.Action(action, controller);
+            }
+            
+            // If URL generation fails, fall back to home
+            if (string.IsNullOrEmpty(backUrl))
+            {
+                backUrl = Url.Action("Index", "Home");
+            }
+        }
+        var url = '@Html.Raw(backUrl)';
+        // Redirect
+        window.location.href = url;
+    }
+</script>

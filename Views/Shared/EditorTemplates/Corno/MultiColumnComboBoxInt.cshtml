@@ -1,0 +1,24 @@
+@using System.Collections
+@using Corno.Web.Globals
+@model object
+
+<div class="form-group row">
+    @Html.LabelFor(m => m, ViewData[FieldConstants.Name]?.ToString(),
+        new { @class = "col-4" })
+    <div class="col-8">
+        @(Html.Kendo().MultiColumnComboBoxFor(m => m)
+            .DataTextField(ViewData[FieldConstants.DataTextField]?.ToString() ??
+                           FieldConstants.Name)
+            .DataValueField(ViewData[FieldConstants.DataValueField]?.ToString() ??
+                            FieldConstants.Id)
+            .HtmlAttributes(new {@class = "w-100"})
+            .Filter(FilterType.Contains)
+            .Placeholder("Select ...")
+            //.Columns(columns =>
+            //{
+            //    columns.Add().Field(FieldConstants.Code).Title(FieldConstants.Code).Width("250px");
+            //    columns.Add().Field(FieldConstants.Name).Title(FieldConstants.Name).Width("300px");
+            //})
+            .BindTo((IEnumerable)ViewData[FieldConstants.DataSource]))
+    </div>
+</div>

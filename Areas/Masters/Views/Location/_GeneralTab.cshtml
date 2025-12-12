@@ -1,0 +1,54 @@
+﻿@model Corno.Web.Areas.Masters.Dtos.Location.LocationDto
+
+@{
+    var miscMasterService = Bootstrapper.Get<IMiscMasterService>();
+}
+@using Corno.Web.Globals
+@using Corno.Web.Services.Interfaces
+@using Corno.Web.Windsor
+@using Kendo.Mvc.UI
+
+
+
+<div class="row">
+    <div class="col-sm-6">
+        @Html.EditorFor(m => m.AreaId, @"Corno/MultiColumnComboBoxInt",
+            new
+            {
+                DataSource = miscMasterService.GetViewModelList(m => m.MiscType == MiscMasterConstants.Area),
+                Name = "Section/ Area :"
+            })
+        <br />
+        @Html.EditorFor(m => m.RowId, @"Corno/MultiColumnComboBoxInt",
+            new
+            {
+                DataSource = miscMasterService.GetViewModelList(m => m.MiscType == MiscMasterConstants.Row),
+                Name = "Rack/ Row :"
+            })
+        <br />
+        @Html.EditorFor(m => m.BayId, @"Corno/MultiColumnComboBoxInt",
+            new
+            {
+                DataSource = miscMasterService.GetViewModelList(),
+                Name = "Column/ Bay :"
+            })
+        <br />
+        @Html.EditorFor(m => m.LevelId, @"Corno/MultiColumnComboBoxInt",
+            new
+            {
+                DataSource = miscMasterService.GetViewModelList(m => m.MiscType == MiscMasterConstants.ProductType),
+                Name = "Shelf/ Level :"
+            })
+        <br />
+        <div class="form-group row">
+            @Html.LabelFor(m => m.Position, "Position :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @(Html.Kendo().NumericTextBoxFor(m => m.Position)
+                    //.Enable(formEnabled)
+                    .HtmlAttributes(new { @class = "w-100" }))
+            </div>
+        </div>
+    </div>
+    
+</div>

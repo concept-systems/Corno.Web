@@ -1,0 +1,99 @@
+﻿@using System.Web.Mvc.Html
+@using Corno.Web.Extensions
+@using Corno.Web.Globals
+@using Corno.Web.Services.Interfaces
+@using Corno.Web.Services.Masters.Interfaces
+@using Corno.Web.Windsor
+@using Kendo.Mvc.UI
+@model Corno.Web.Areas.Masters.Dtos.Location.LocationDto
+
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+}
+
+@{
+    Page.Title = "Location";
+    ViewBag.MainMenu = "Masters";
+    ViewBag.CurrentSitemap = "Location";
+    ViewBag.Controller = "Location";
+}
+
+@{
+    var miscMasterService = Bootstrapper.Get<IMiscMasterService>();
+    var itemService = Bootstrapper.Get<IBaseItemService>();
+    var customerService = Bootstrapper.Get<ICustomerService>();
+}
+
+@Html.HiddenFor(m => m.Id)
+
+<!-- Toggle button visible on mobile to open the responsive panel -->
+<button id="locationPanelToggle" class="k-button k-button-md k-rounded-md k-button-solid k-button-solid-primary rp-toggle" type="button">
+    <span class="k-icon k-i-menu"></span>
+    Show Details
+</button>
+
+@(Html.Kendo().ResponsivePanel()
+    .Name("locationPanel")
+    .Orientation(ResponsivePanelOrientation.Top)
+    .Breakpoint(100)
+    .ToggleButton("#locationPanelToggle")
+    .HtmlAttributes(new { style = "margin-bottom: 20px;" })
+    .Content(@<text>
+        <div class="responsive-panel-container">
+            <div class="k-widget k-panel mb-4">
+                <h3 class="k-panel-title">Basic Information</h3>
+                <div class="k-panel-content">
+                    <div class="row">
+                        @Html.Partial("Partials/_MasterEdit", Model)
+                    </div>
+                </div>
+            </div>
+
+            <div class="k-widget k-panel mb-4">
+                <h3 class="k-panel-title">Details</h3>
+                <div class="k-panel-content">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            @(Html.Kendo().TabStrip()
+                                .Name("tabStrip")
+                                .Items(tabStrip =>
+                                {
+                                    tabStrip.Add().Text("General")
+                                        .Content(@<text>
+                                                     @Html.Partial("~/Areas/Masters/Views/Location/_GeneralTab.cshtml", Model)
+                                                  </text>);
+
+                                    tabStrip.Add().Text("Dimensions")
+                                        .Content(@<text>
+                                                     @Html.Partial("~/Areas/Masters/Views/Location/_DimensionTab.cshtml", Model)
+                                                  </text>);
+
+                                    tabStrip.Add().Text("Items")
+                                        .Content(@<text>
+                                                     @Html.Partial("~/Areas/Masters/Views/Location/_ItemDetailsTab.cshtml", Model)
+                                                  </text>);
+
+                                    tabStrip.Add().Text("Users")
+                                        .Content(@<text>
+                                                     @Html.Partial("~/Areas/Masters/Views/Location/_UserDetailsTab.cshtml", Model)
+                                                  </text>);
+
+                                    tabStrip.Add().Text("Stocks")
+                                        .Content(@<text>
+                                                     @Html.Partial("~/Areas/Masters/Views/Location/_StockDetailsTab.cshtml", Model)
+                                                  </text>);
+                                })
+                                .SelectedIndex(0)
+                            )
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </text>
+    )
+)

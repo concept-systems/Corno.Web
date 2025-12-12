@@ -1,0 +1,180 @@
+﻿@model Corno.Web.Areas.Masters.Dtos.Item.ItemDto
+
+@{
+    var miscMasterService = Bootstrapper.Get<IMiscMasterService>();
+    var itemService = Bootstrapper.Get<IBaseItemService>();
+    var customerService = Bootstrapper.Get<ICustomerService>();
+}
+
+@using System.Web.Mvc.Html
+@using Corno.Web.Services.Interfaces
+@using Corno.Web.Services.Masters.Interfaces
+@using Corno.Web.Windsor
+@using Kendo.Mvc.UI
+
+<div class="row">
+    <div class="col-4">
+        <div class="form-group row mb-2">
+            @Html.LabelFor(m => m.Weight, "Standard Weight :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @(Html.Kendo().NumericTextBoxFor(m => m.Weight)
+             .HtmlAttributes(new
+             {
+                 @class = "w-100"
+             }))
+            </div>
+        </div>
+        <div class="form-group row mb-2">
+            @Html.LabelFor(m => m.Thickness, "Thickness :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @(Html.Kendo().NumericTextBoxFor(m => m.Thickness)
+             .HtmlAttributes(new
+             {
+                 @class = "w-100"
+             }))
+            </div>
+        </div>
+        <div class="form-group row mb-2">
+            @Html.LabelFor(m => m.Length, "Length :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @(Html.Kendo().NumericTextBoxFor(m => m.Length)
+             .HtmlAttributes(new
+             {
+                 @class = "w-100"
+             }))
+            </div>
+        </div>
+        <div class="form-group row mb-2">
+            @Html.LabelFor(m => m.Width, "Width :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @(Html.Kendo().NumericTextBoxFor(m => m.Width)
+             .HtmlAttributes(new
+             {
+                 @class = "w-100"
+             }))
+            </div>
+        </div>
+        <div class="form-group row mb-2">
+            @Html.LabelFor(m => m.Red, "Red (R) :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @(Html.Kendo().NumericTextBoxFor(m => m.Red)
+             .HtmlAttributes(new
+             {
+                 @class = "w-100"
+             }))
+            </div>
+        </div>
+        <div class="form-group row mb-2">
+            @Html.LabelFor(m => m.Green, "Green (G) :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @(Html.Kendo().NumericTextBoxFor(m => m.Green)
+             .HtmlAttributes(new
+             {
+                 @class = "w-100"
+             }))
+            </div>
+        </div>
+        <div class="form-group row mb-2">
+            @Html.LabelFor(m => m.Blue, "Blue (B) :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @(Html.Kendo().NumericTextBoxFor(m => m.Blue)
+             .HtmlAttributes(new
+             {
+                 @class = "w-100"
+             }))
+            </div>
+        </div>
+    </div>
+    <div class="col-4">
+        <div class="form-group row mb-2">
+            @Html.LabelFor(m => m.WeightTolerance, "Weight Tolerance :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @(Html.Kendo().NumericTextBoxFor(m => m.WeightTolerance)
+                .HtmlAttributes(new
+                {
+                    @class = "w-100"
+                }))
+            </div>
+        </div>
+        <br />
+        <div class="form-group row">
+            @Html.LabelFor(m => m.ThicknessTolerance, "Thickness Tol. :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @(Html.Kendo().NumericTextBoxFor(m => m.ThicknessTolerance)
+                .HtmlAttributes(new
+                {
+                    @class = "w-100"
+                }))
+            </div>
+        </div>
+        <br />
+        <div class="form-group row">
+            @Html.LabelFor(m => m.LengthTolerance, "Length Tolerance :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @(Html.Kendo().NumericTextBoxFor(m => m.LengthTolerance)
+                .HtmlAttributes(new
+                {
+                    @class = "w-100"
+                }))
+            </div>
+        </div>
+        <br />
+        <div class="form-group row">
+            @Html.LabelFor(m => m.WidthTolerance, "Width Tolerance :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @(Html.Kendo().NumericTextBoxFor(m => m.WidthTolerance)
+                .HtmlAttributes(new
+                {
+                    @class = "w-100"
+                }))
+            </div>
+        </div>
+        <br />
+        <div class="form-group row">
+            @Html.LabelFor(m => m.RedTolerance, "Red Tolerance :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @(Html.Kendo().NumericTextBoxFor(m => m.RedTolerance)
+                .HtmlAttributes(new
+                {
+                    @class = "w-100"
+                }))
+            </div>
+        </div>
+        <br />
+        <div class="form-group row">
+            @Html.LabelFor(m => m.GreenTolerance, "Green Tolerance :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @(Html.Kendo().NumericTextBoxFor(m => m.GreenTolerance)
+                .HtmlAttributes(new
+                {
+                    @class = "w-100"
+                }))
+            </div>
+        </div>
+        <br />
+        <div class="form-group row">
+            @Html.LabelFor(m => m.BlueTolerance, "Blue Tolerance :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @(Html.Kendo().NumericTextBoxFor(m => m.BlueTolerance)
+                .HtmlAttributes(new
+                {
+                    @class = "w-100"
+                }))
+            </div>
+        </div>
+    </div>
+</div>

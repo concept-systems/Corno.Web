@@ -1,0 +1,14 @@
+﻿@using Corno.Globals.Constants
+@model Corno.Models.Common.State
+
+@{
+    Layout = "~/Views/Shared/_LayoutDelete.cshtml";
+}
+
+@{
+    ViewBag.BoxTitle = $"Delete State : {Model.Name}";
+    ViewBag.Area = "Masters";
+    ViewBag.SubmitAction = "Delete";
+}
+
+@Html.Partial("_State", Model)

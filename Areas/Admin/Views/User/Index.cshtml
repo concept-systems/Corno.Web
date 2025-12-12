@@ -1,0 +1,111 @@
+﻿@using Corno.Web.Areas.Admin.Dto
+@using Kendo.Mvc.UI
+
+@using Corno.Web.Helper
+
+@{
+    Layout = "~/Views/Shared/_AppLayout.cshtml";
+
+    ViewBag.BoxTitle = "User";
+}
+
+<div class="grid-container-full-height">
+    @(Html.Kendo().Grid<UserIndexDto>()
+        .Name("grid")
+        .ApplyIndexSettings(customToolbar: toolbar =>
+        {
+            toolbar.Custom()
+                .Text("<span class='k-icon k-i-plus'></span> Add New")
+                .HtmlAttributes(new { @class = "k-grid-add-new k-button-add-new-outlined", style = "float: right;", onclick = "onCreate(); return false;" });
+        }) // 👈 Apply index settings (full height, responsive)
+        .Columns(columns =>
+             {
+                 columns.Bound(m => m.UserName)
+                     .HtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                     .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                     .Title("User Name")
+                     .Width(10);
+                 columns.Bound(m => m.Email)
+                     .HtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                     .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                     .Width(10);
+                 columns.Bound(m => m.LastName)
+                     .HtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                     .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                     .Title("Last Name")
+                     .Width(10);
+                 columns.Bound(m => m.Type)
+                     .HtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                     .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                     .Width(10);
+                 columns.Command(command =>
+                 {
+                     command.Custom("Edit").Text(" ").IconClass("k-icon k-i-pencil")
+                         .HtmlAttributes(new { @class = "k-grid-edit" });
+                     command.Custom("ChangePassword").Text(" ").IconClass("k-icon k-i-password")
+                         .HtmlAttributes(new { @class = "k-grid-change-password" });
+                     //.Visible("function(dataItem) { return dataItem.Status === 'Active'; }"); // Show only if Status is "Active";
+                     command.Custom("Delete").Text(" ").IconClass("k-icon k-i-delete k-text-error")
+                         .HtmlAttributes(new { @class = "k-grid-delete" })
+                         .Click("onDeleteClick");
+                 })
+                     .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                     //.HtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                     .HtmlAttributes(new { @class = "k-command-buttons" })
+                     .Width(100)
+                     .Title("Actions"); // Add a class to identify the command column;
+
+             })
+        .Events(events => {
+            events.ApplyCommonEvents();
+            events.DataBound("onDataBound");
+        })
+        .DataSource(dataSource => dataSource
+            .Ajax()
+            .Read(read => read.Action("GetIndexModels", "User"))
+            .Sort(x => x.Add(d => d.Id).Descending())
+        ))
+</div>
+
+
+<script>
+    function onCreate() {
+        window.location.href = '/User/Create';
+    }
+
+    function onDataBound(e) {
+        var grid = $("#grid").data("kendoGrid");
+        // Auto-fit each column
+        grid.columns.forEach(function (column, index) {
+            grid.autoFitColumn(index);
+        });
+
+        $(".k-grid-edit").on("click", function () {
+            var grid = $("#grid").data("kendoGrid");
+            var row = $(this).closest("tr");
+            var dataItem = grid.dataItem(row);
+
+            if (dataItem) {
+                var id = dataItem.Id; // Assuming Id is the unique identifier of the item
+                window.location.href = '/User/Edit/' + id; // Replace with your edit page URL
+            }
+        });
+        $(".k-grid-change-password").on("click", function () {
+            var grid = $("#grid").data("kendoGrid");
+            var row = $(this).closest("tr");
+            var dataItem = grid.dataItem(row);
+
+            if (dataItem) {
+                var id = dataItem.Id; // Assuming Id is the unique identifier of the item
+                window.location.href = '/User/ChangePassword/' + id; // Replace with your edit page URL
+            }
+        });
+    }
+
+    function onDeleteClick(e) {
+    e.preventDefault();
+    var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+    window.location.href = '@Url.Action("Delete", "User")' + '/' + dataItem.Id;
+}
+
+</script>

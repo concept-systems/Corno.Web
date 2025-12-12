@@ -1,0 +1,31 @@
+@using Corno.Web.Globals
+@model Corno.Web.Areas.Admin.Dto.RoleDto
+
+@{
+
+    Layout = "~/Views/Shared/_LayoutDelete.cshtml";
+}
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+}
+
+@{
+    Page.Title = "Role";
+    ViewBag.MainMenu = "Masters";
+    ViewBag.CurrentSitemap = "Role";
+
+    ViewBag.Controller = "Role";
+    ViewBag.SubmitAction = "DeleteConfirmedString";
+}
+
+@{
+    ViewBag.BoxTitle = "Delete Role : " + Model.Name;
+}
+
+@Html.HiddenFor(m => m.Id)
+
+@Html.Partial("_Role", Model)

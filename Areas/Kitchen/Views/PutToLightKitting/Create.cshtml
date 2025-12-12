@@ -1,0 +1,287 @@
+﻿@using Kendo.Mvc.UI
+@model Corno.Web.Areas.Kitchen.Dto.Put_To_Light.PutToLightkittingViewDto
+
+@{
+    Layout = "~/Views/Shared/_LayoutCreate.cshtml";
+    ViewBag.Title = "Put To Light Kitting";
+
+    ViewBag.BoxTitle = "Create Put To Light Kitting";
+    ViewBag.SubmitAction = "Create";
+}
+
+<style>
+    #locationTable {
+        border-collapse: collapse;
+        width: auto; /* Table adapts to the content */
+        margin: 20px auto; /* Centers the table */
+    }
+
+        #locationTable td {
+            width: 150px; /* Sets equal width for cells */
+            height: 70px; /* Ensures square dimensions */
+            border: 1px solid black;
+            text-align: center;
+            /*background-color: white; /* Default background !1!
+        color: black; /* Default foreground !1!*/
+        }
+
+    .highlighted {
+        background-color: green;
+        color: white;
+    }
+    
+</style>
+
+<pre id="log"></pre>
+
+@(Html.Kendo().TileLayout()
+    .Name("tileLayout")
+    .Columns(2)
+    .RowsHeight("100px")
+    .ColumnsWidth("100%")
+    .Containers(c => {
+         c.Add()
+             .BodyTemplateId("template-barcode")
+             .Header(h => h.Text("Locations"))
+             .ColSpan(1)
+             .RowSpan(5);
+         c.Add()
+             .BodyTemplateId("template-items-Info")
+             .Header(h => h.Text("User Entry"))
+             .ColSpan(1)
+             .RowSpan(5);
+    })
+    .Reorderable(true)
+    .Resizable(true))
+
+
+<script id="template-items-Info" type="text/x-kendo-template">
+    <table class="table k-table k-table-alt-row w-100">
+    <tbody>
+         <tr>
+            <td> @Html.LabelFor(m => m.DueDate, "Due Date :", new { @class = "" })</td>
+            <td>
+                @(Html.Kendo().DatePickerFor(m => m.DueDate)
+                    .Format("d MMM yyyy")
+                    .HtmlAttributes(new { @class = "w-100", onChange = "onChange(event)" }).ToClientTemplate())
+            </td>
+        </tr>
+         @*<tr>
+            <td>  @Html.LabelFor(m => m.Family, "Family :", new { @class = "" })</td>
+            <td>
+                 @(Html.Kendo().MultiColumnComboBoxFor(m => m.Family)
+                     .DataTextField(FieldConstants.Group)
+                     .DataValueField(FieldConstants.Group)
+                     .HtmlAttributes(new {  @class = "w-100" })
+                     .Filter("contains")
+                     .Placeholder("Select ...")
+                     .Suggest(true)
+                     //.Events(e => e.Select("OnSelect"))
+                     //.Columns(columns => { columns.Add().Field(FieldConstants.Group).Title(FieldConstants.Group.ToCamelCase()).Width("480px"); })
+                     .DataSource(dataSource => dataSource
+                         .Read(read => { read.Action("GetProductGroups", "PutToLightKitting").Data("getFamilyParameters"); })
+                         .ServerFiltering(false))
+                     .AutoBind(false)
+                     .CascadeFrom(FieldConstants.DueDate).ToClientTemplate())
+            </td>
+        </tr>*@
+        <tr>
+            <td>@Html.LabelFor(m => m.Barcode, "Barcode :", new { @class = "" })</td>
+            <td>
+                @(Html.Kendo().TextBoxFor(m => m.Barcode)
+                    .HtmlAttributes(new { @class = "" }).ToClientTemplate())
+            </td>
+        </tr>
+        <tr>
+            <td > Item Code :</td>
+            <td> <strong>@Model.ItemCode</strong></td>
+        </tr>
+        <tr>
+            <td > Item Name :</td>
+            <td><strong>@Model.ItemName</strong></td>
+        </tr>
+        <tr>
+            <td> So No :</td>
+            <td><strong>@Model.SoNo</strong></td>
+        </tr>
+         <tr>
+             <td> Whs Position :</td>
+             <td> <strong>@Model.WarehousePosition</strong></td>
+         </tr>
+        <tr>
+             <td> Location:</td>
+            <td><strong>@Model.LocationNames</strong></td>
+        </tr>
+         <tr>
+             <td> Color:</td>
+             <td> <strong> @Model.ColorName</strong></td>
+         </tr>
+    </tbody>
+</table>
+</script>
+<script id="template-barcode" type="text/x-kendo-template">
+    <table id="locationTable">
+      <tr>
+        <td data-location-id="1">1</td>
+        <td data-location-id="2">2</td>
+        <td data-location-id="3">3</td>
+        <td data-location-id="4">4</td>
+      </tr>
+      <tr>
+        <td data-location-id="5">5</td>
+        <td data-location-id="6">6</td>
+        <td data-location-id="7">7</td>
+        <td data-location-id="8">8</td>
+      </tr>
+      <tr>
+        <td data-location-id="9">9</td>
+        <td data-location-id="10">10</td>
+        <td data-location-id="11">11</td>
+        <td data-location-id="12">12</td>
+      </tr>
+      <tr>
+        <td data-location-id="13">13</td>
+        <td data-location-id="14">14</td>
+        <td data-location-id="15">15</td>
+        <td data-location-id="16">16</td>
+      </tr>
+      <tr>
+        <td data-location-id="17">17</td>
+        <td data-location-id="18">18</td>
+        <td data-location-id="19">19</td>
+        <td data-location-id="20">20</td>
+      </tr>
+      <tr>
+        <td data-location-id="21">21</td>
+        <td data-location-id="22">22</td>
+        <td data-location-id="23">23</td>
+        <td data-location-id="24">24</td>
+      </tr>
+    </table>
+</script>
+
+<script>
+    $(document).ready(function () {
+        // Comma-separated location IDs from the model
+        const locationNames = "@Model.LocationNames"; // Example: "1,5,10,24"
+        const locationIds = locationNames.split(",").map(Number); // Convert to array of numbers
+        //console.log("Location Names : " + locationNames + ", Location Ids : " + locationIds);
+
+        // Select all table cells
+        const cells = document.querySelectorAll("#locationTable td");
+
+        // Apply green background and white foreground to matching cells
+        cells.forEach((cell) => {
+            const locationId = parseInt(cell.getAttribute("data-location-id"), 10);
+
+            //console.log("Locatin Id : " + locationId);
+            if (locationIds.includes(locationId)) {
+                cell.classList.add("highlighted"); // Add CSS class for styling
+
+                // Connect to websocket
+                connectToWebSocket();
+                var message = '(' + locationId + ',1)';
+                //console.log("Message : " + message);
+
+                //Resent all LED's
+                sendMessage("(-1,0)");
+
+                console.log("Message : " + message);
+                // Glow LED
+
+                // Wait for 2 seconds (2000 milliseconds) before sending the next message
+                var message = '(' + locationId + ',1)';
+                setTimeout(() => {
+                    sendMessage(message);
+                }, 2000);
+            }
+        });
+
+        //// Change focus.
+        //$barcode.focus();
+    });
+
+    //function onSaveClick() {
+    //    var cmbSerialNo = $("#SerialNo").data("kendoMultiColumnComboBox");
+    //    cmbSerialNo.dataSource.read();
+    //};
+
+    //// For debugging: Display focus status in the console
+    setTimeout(function () {
+        var $barcode = $('#Barcode');
+        $barcode.focus().val('').trigger('change');
+        // Simulate Enter key event
+        var e = $.Event('keydown');
+        e.which = 13 || e.which == 10 ; // 13 is Enter
+        $barcode.trigger(e);
+    }, 100);
+
+
+        $(document).ready(function () {
+        // Handle Enter key press in Barcode
+        $("#Barcode").on("keypress", function (e) {
+            if (e.which === 13) { // Enter key pressed
+                e.preventDefault();
+                $("form").submit();
+            }
+        });
+    });
+
+    function onChange(e) {
+        return {
+            dueDate: $('#DueDate').val()
+        }
+    }
+</script>
+
+<script>
+    let ws;
+    function connectToWebSocket() {
+        if (!ws || ws.readyState === WebSocket.CLOSED) { // Check if ws is undefined or closed
+            ws = new WebSocket('ws://172.26.58.88:49666/');
+            //ws = new WebSocket('ws://CONCEPT-VM002:8080/');
+
+            ws.onopen = () => {
+                log('Connected to WebSocket');
+                console.log('Connected to WebSocket');
+            };
+
+            ws.onmessage = (event) => {
+                log('Received:', event.data);
+                console.log('Received:', event.data);
+            };
+
+            ws.onerror = (error) => {
+                log('WebSocket error:', error);
+                console.error('WebSocket error:', error);
+            };
+
+            ws.onclose = () => {
+                log('WebSocket connection closed');
+                console.log('WebSocket connection closed');
+            };
+        }
+    }
+
+    // Function to send a message
+    function sendMessage(message) {
+        //var message = document.getElementById('messageInput').value;
+        if (ws && ws.readyState === WebSocket.OPEN) {
+           
+            ws.send(message);
+            log('SENT: ' + message);
+            console.log('SENT: ' + message);
+        } else {
+            log('ERROR: WebSocket is not open.');
+            console.log('ERROR: WebSocket is not open.');
+            //ws = new WebSocket('ws://CONCEPT-VM002:8080/');
+            ws = new WebSocket('ws://172.26.58.88:49666/');
+            setTimeout(() => sendMessage(message), 500); // Retry after 500ms
+        }
+    }
+
+    // Helper function: log message to screen
+    function log(msg) {
+        document.getElementById('log').textContent += msg + '\n';
+    }
+</script>

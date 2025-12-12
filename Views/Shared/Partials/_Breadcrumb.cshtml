@@ -1,0 +1,89 @@
+@using Kendo.Mvc.UI
+@{
+    // Get route and ViewBag values
+    var area = ViewBag.Area as string ?? ViewContext.RouteData.DataTokens["area"] as string ?? "";
+    var controller = ViewBag.Controller as string ?? ViewContext.RouteData.Values["controller"] as string ?? "";
+    var action = ViewContext.RouteData.Values["action"] as string ?? "";
+    var mainMenu = ViewBag.MainMenu as string ?? "";
+    var mainHeader = ViewBag.MainHeader as string ?? "";
+    var currentSitemap = ViewBag.CurrentSitemap as string ?? "";
+    var boxTitle = ViewBag.BoxTitle as string ?? "";
+    var title = ViewBag.Title as string ?? "";
+    
+    // Determine current page title (prefer BoxTitle, then Title, then action name)
+    var currentPageTitle = !string.IsNullOrEmpty(boxTitle) ? boxTitle : 
+                          (!string.IsNullOrEmpty(title) ? title : 
+                          (!string.IsNullOrEmpty(currentSitemap) ? currentSitemap : ""));
+    
+    // Determine header text (prefer MainHeader, then CurrentSitemap, then controller name)
+    var headerText = !string.IsNullOrEmpty(mainHeader) ? mainHeader : 
+                    (!string.IsNullOrEmpty(currentSitemap) ? currentSitemap : 
+                    (!string.IsNullOrEmpty(controller) ? controller : ""));
+    
+    // Generate unique ID for breadcrumb
+    var breadcrumbId = "breadcrumb-" + (controller ?? "default") + "-" + Guid.NewGuid().ToString("N").Substring(0, 8);
+}
+
+<nav id="@breadcrumbId" class="breadcrumb-nav"></nav>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        var breadcrumbItems = [];
+        
+        // Home item
+        breadcrumbItems.push({
+            type: "rootitem",
+            href: "@Html.Raw(Url.Action("Index", "Home", new { area = "" }))",
+            text: "Home",
+            icon: "home",
+            showIcon: true
+        });
+        
+        @if (!string.IsNullOrEmpty(mainMenu))
+        {
+            <text>
+            breadcrumbItems.push({
+                type: "item",
+                text: "@Html.Raw(mainMenu)"
+            });
+            </text>
+        }
+        
+        @if (!string.IsNullOrEmpty(headerText) && !string.IsNullOrEmpty(controller) && action != "Index")
+        {
+            <text>
+            breadcrumbItems.push({
+                type: "item",
+                href: "@Html.Raw(Url.Action("Index", controller, new { area = area }))",
+                text: "@Html.Raw(headerText)"
+            });
+            </text>
+        }
+        
+        @if (!string.IsNullOrEmpty(currentPageTitle) && action != "Index")
+        {
+            <text>
+            breadcrumbItems.push({
+                type: "item",
+                text: "@Html.Raw(currentPageTitle)"
+            });
+            </text>
+        }
+        else if (action == "Index" && !string.IsNullOrEmpty(headerText))
+        {
+            <text>
+            breadcrumbItems.push({
+                type: "item",
+                text: "@Html.Raw(headerText)"
+            });
+            </text>
+        }
+        
+        // Initialize Kendo Breadcrumb
+        $("#@breadcrumbId").kendoBreadcrumb({
+            items: breadcrumbItems,
+            navigational: true
+        });
+    });
+</script>
+

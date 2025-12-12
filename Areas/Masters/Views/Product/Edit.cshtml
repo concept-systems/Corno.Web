@@ -1,0 +1,15 @@
+﻿@model Corno.Web.Areas.Masters.Dtos.Product.ProductDto
+
+@{
+    Layout = "~/Views/Shared/_LayoutEdit.cshtml";
+}
+
+@{
+    ViewBag.BoxTitle = $"Edit Product : {Model.Name}";
+    ViewBag.Controller = "Product";
+    ViewBag.SubmitAction = "Edit";
+    ViewBag.Area = "Masters";
+}
+
+@Html.Partial("_Product", Model)
+

@@ -1,0 +1,146 @@
+﻿@using System.ComponentModel
+@using Corno.Web.Areas.Masters.Models
+@using Kendo.Mvc.UI
+@model Corno.Web.Areas.Masters.Dtos.Product.ProductDto
+
+@{
+    Layout = "~/Views/Shared/_LayoutDetails.cshtml";
+}
+
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+    ViewBag.View = "Import";
+}
+
+@{
+    ViewBag.BoxTitle = "Import";
+    ViewBag.Area = "DemoProject";
+    ViewBag.Controller = "Product";
+}
+
+
+@{
+    ViewBag.Title = "Import Product";
+    ViewBag.BoxTitle = "Import Product";
+
+    ViewBag.Controller = "Product";
+    ViewBag.ImportAction = "Import";
+}
+
+<div class="col-12">
+    @Html.Partial("Partials/_ProgressbarSignalR")
+    @*@using (Html.BeginForm(ViewBag.ImportAction as string))
+        {
+            @Html.Partial("Partials/_Progressbar")
+        }*@
+</div>
+
+<script type="x/kendo-template" id="page-template">
+    <div class="page-template">
+      <div class="header">
+        <h2 style="text-align: center;">Plan</h2>
+        <div style="float: right">Page #: pageNum # of #: totalPages #</div>
+      </div>
+    </div>
+</script>
+
+<div class="col-12">
+    @(Html.Kendo().Grid<ProductImportModel>()
+            .Name("importGrid")
+            .ToolBar(toolbar =>
+            {
+                toolbar.Excel();
+                toolbar.Pdf();
+                toolbar.Search();
+            })
+            .Scrollable()
+        .Filterable(f => f.Mode(GridFilterMode.Row))
+            .Sortable(s => s.InitialDirection(ListSortDirection.Descending))
+            .Resizable(resize => resize.Columns(true)) // Allow column resizing
+            .PersistSelection()
+            .Height(540)
+            .Columns(columns =>
+            {
+            // Serial Number Column
+            columns.Template(@<text>#: ++rowNumber #</text>)
+                    .Title("Serial</br> No")
+                    .HeaderHtmlAttributes(new { @class = "k-text-center" })
+                    .HtmlAttributes(new { style = "text-align: center" })
+                    .Width(15);
+                columns.Bound(m => m.Code)
+                    .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                    .HtmlAttributes(new { style = "text-align: center" })
+                    .Title("Code")
+                    .Width(50);
+                columns.Bound(m => m.Name)
+                    .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                    .HtmlAttributes(new { style = "text-align: center" })
+                    .Title("Name")
+                    .Width(50);
+                columns.Bound(m => m.Status)
+                .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                .HtmlAttributes(new { style = "text-align: center" })
+                .Width(50);
+                columns.Bound(m => m.Remark)
+                    .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                    .HtmlAttributes(new { style = "text-align: center" })
+                    .Width(50);
+            })
+            .Excel(excel => excel
+                .FileName("Products.xlsx")
+                .ProxyURL(Url.Action("Excel_Export_Save", "Corno", new { area = "" }))
+            )
+            .Pdf(pdf => pdf
+                .AllPages()
+                .AvoidLinks()
+                .PaperSize("A4")
+                .Scale(0.8)
+                .Margin("2cm", "1cm", "1cm", "1cm")
+                .Landscape()
+                .RepeatHeaders()
+                .TemplateId("page-template")
+                .FileName("Products.pdf")
+                .ProxyURL(Url.Action("Excel_Export_Save", "Corno", new { area = "" }))
+            )
+            .Navigatable()
+            .DataSource(dataSource => dataSource
+                .Ajax()
+                //.Read(read => read.Action("Excel_Export_Save", "Corno"))
+                .ServerOperation(false)
+            )
+            .Events(events => events.DataBound("onDataBound"))
+            )
+</div>
+
+<script>
+    var rowNumber = 0;
+    function onDataBound(e) {
+        rowNumber = 0; // Reset the row number counter
+        var rows = this.items();
+        for (var i = 0; i < rows.length; i++) {
+            rowNumber++;
+            // Insert the serial number into the first cell
+            $(rows[i]).find("td:first").html(rowNumber);
+        }
+    }
+
+    @*function onCancelImport() {
+        $.ajax({
+            url: '@Url.Action("CancelImport")',
+            type: 'POST',
+            success: function () {
+                $('#progressBar').val(0);
+                clearInterval(interval);
+                alert('Import canceled');
+            },
+            error: function () {
+                alert('Failed to cancel import');
+            }
+        });
+    }*@
+
+</script>

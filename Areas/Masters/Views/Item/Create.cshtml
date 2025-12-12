@@ -1,0 +1,16 @@
+﻿@model Corno.Web.Areas.Masters.Dtos.Item.ItemDto
+
+@{
+    Layout = "~/Views/Shared/_LayoutCreate.cshtml";
+}
+
+@{
+    ViewBag.BoxTitle = "Create New Item";
+    ViewBag.Area = "Masters";
+    ViewBag.Controller = "Item";
+    ViewBag.SubmitAction = "Create";
+}
+
+@Html.HiddenFor(m => m.Id)
+
+@Html.Partial("_Item", Model)

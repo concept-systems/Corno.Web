@@ -1,0 +1,16 @@
+﻿@model Corno.Web.Areas.Masters.Dtos.Product.ProductDto
+
+@{
+    Layout = "~/Views/Shared/_LayoutCreate.cshtml";
+}
+
+@{
+    ViewBag.BoxTitle = "Create New Product";
+    ViewBag.Area = "Masters";
+    ViewBag.Controller = "Product";
+    ViewBag.SubmitAction = "Create";
+}
+
+@Html.HiddenFor(m => m.Id)
+
+@Html.Partial("_Product", Model)

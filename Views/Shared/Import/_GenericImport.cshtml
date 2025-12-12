@@ -1,0 +1,730 @@
+@using Kendo.Mvc.UI
+@{
+    // NOTE: Layout is set by the parent view (e.g. Import.cshtml in each area)
+
+    var area = ViewBag.Area as string ?? "";
+    var controller = ViewBag.Controller as string ?? "";
+    var title = ViewBag.Title as string ?? "Import Data";
+    var boxTitle = ViewBag.BoxTitle as string ?? title;
+    var description = ViewBag.Description as string ?? "Upload a file to import data.";
+    var allowedExtensions = ViewBag.AllowedExtensions as string[] ?? new[] { ".csv" };
+    var maxFileSize = ViewBag.MaxFileSizeBytes as int? ?? 10 * 1024 * 1024;
+    var maxFileSizeText = ViewBag.MaxFileSizeText as string ?? "10 MB";
+    var hasGrid = ViewBag.HasGrid as bool? ?? true;
+}
+
+<style>
+    .import-page-wrapper {
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .import-container {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+
+    .upload-zone {
+        border: 2px dashed #007bff;
+        border-radius: 8px;
+        padding: 25px 20px;
+        text-align: center;
+        background: #fff;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .upload-zone:hover:not(.disabled) {
+        border-color: #0056b3;
+        background: #f0f8ff;
+    }
+
+    .upload-zone.disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        border-color: #ccc;
+    }
+
+    .file-info-card {
+        background: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 10px 15px;
+        margin-top: 10px;
+        display: none;
+    }
+
+    .file-info-card.show {
+        display: block;
+    }
+
+    .progress-container {
+        background: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 12px 15px;
+        margin-bottom: 15px;
+        display: none;
+    }
+
+    .progress-container.show {
+        display: block;
+    }
+
+    .summary-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        display: none;
+    }
+
+    .summary-card.show {
+        display: block;
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-around;
+        margin-top: 10px;
+        flex-wrap: wrap;
+    }
+
+    .summary-item {
+        text-align: center;
+        flex: 1;
+        min-width: 80px;
+        margin: 5px;
+    }
+
+    .summary-value {
+        font-size: 1.8em;
+        font-weight: bold;
+        margin-bottom: 3px;
+    }
+
+    .summary-label {
+        font-size: 0.8em;
+        opacity: 0.9;
+    }
+</style>
+
+<div class="import-page-wrapper">
+    <div class="import-container">
+        <div class="row">
+            <div class="col-12">
+                <h4 class="mb-4">
+                    <i class="fas fa-file-import"></i> @boxTitle
+                </h4>
+                <p class="text-muted mb-4">
+                    @description Maximum file size: @maxFileSizeText.
+                </p>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="upload-zone" id="uploadZone">
+                    <i class="fas fa-cloud-upload-alt fa-3x mb-3" style="color: #007bff;"></i>
+                    <h5>Drag &amp; Drop your file here</h5>
+                    <p class="text-muted">or click to browse</p>
+                    <p class="text-muted" style="font-size: 0.9em;">
+                        Supported formats: @string.Join(", ", allowedExtensions) | Max size: @maxFileSizeText
+                    </p>
+                </div>
+
+                <div class="file-info-card" id="fileInfoCard">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong id="fileName"></strong>
+                            <p class="text-muted mb-0" style="font-size: 0.9em;" id="fileSize"></p>
+                        </div>
+                        @(Html.Kendo().Button()
+                            .Name("removeFile")
+                            .Content("Remove")
+                            .HtmlAttributes(new { @class = "k-button k-button-md k-rounded-md k-button-solid k-button-solid-base" }))
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-12">
+                @(Html.Kendo().Upload()
+                    .Name("files")
+                    .HtmlAttributes(new { aria_label = "file", style = "position: absolute; opacity: 0; width: 0; height: 0; overflow: hidden; z-index: -1;" })
+                    .Validation(v => v
+                        .AllowedExtensions(allowedExtensions)
+                        .MaxFileSize(maxFileSize)
+                    )
+                    .Messages(m => m
+                        .Select("Choose File")
+                        .UploadSelectedFiles("Start Import")
+                        .DropFilesHere("Drop files here to upload")
+                        .InvalidFileExtension("Invalid file extension.")
+                        .InvalidMaxFileSize("File size exceeds the maximum allowed size.")
+                    )
+                    .Async(a => a
+                        .Save("Import", controller, new { area })
+                        .AutoUpload(false)
+                    )
+                    .Events(e =>
+                    {
+                        e.Select("commonImport.onFileSelect");
+                        e.Upload("commonImport.onUploadStart");
+                        e.Success("commonImport.onUploadSuccess");
+                        e.Error("commonImport.onUploadError");
+                    }))
+            </div>
+        </div>
+
+        <div class="row mt-2">
+            <div class="col-12">
+                <div class="k-card-actions k-card-actions-horizontal k-card-actions-end">
+                    @(Html.Kendo().Button()
+                        .Name("btnStartImport")
+                        .Content("Start Import")
+                        .HtmlAttributes(new { style = "display: none;" }))
+                    @(Html.Kendo().Button()
+                        .Name("btnCancel")
+                        .Content("Cancel Import")
+                        .HtmlAttributes(new { style = "display: none;" }))
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="progress-container" id="progressContainer">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="mb-0">
+                        <i class="fas fa-spinner fa-spin" id="progressSpinner"></i>
+                        <span id="progressTitle">Import Progress</span>
+                    </h5>
+                    @(Html.Kendo().Button()
+                        .Name("btnCancelProgress")
+                        .Content("Cancel")
+                        .HtmlAttributes(new { style = "display: none;" }))
+                </div>
+                <div class="k-progress-bar">
+                    @(Html.Kendo().ProgressBar()
+                        .Name("progressBar")
+                        .Type(ProgressBarType.Percent)
+                        .HtmlAttributes(new { style = "height: 35px;" })
+                        .Animation(a => a.Duration(300)))
+                </div>
+                <div class="mt-2">
+                    <strong>Status:</strong> <span id="currentMessage">-</span>
+                </div>
+                <div class="mt-1">
+                    <strong>Processed:</strong> <span id="processedCount">0</span> / <span id="totalCount">0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="summary-card" id="summaryCard">
+        <h4 class="mb-4"><i class="fas fa-chart-line"></i> Import Summary</h4>
+        <div class="summary-row">
+            <div class="summary-item">
+                <div class="summary-value" id="sumTotal">0</div>
+                <div class="summary-label">Total Records</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-value" id="sumImported">0</div>
+                <div class="summary-label">Imported</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-value" id="sumUpdated">0</div>
+                <div class="summary-label">Updated</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-value" id="sumErrors">0</div>
+                <div class="summary-label">Errors</div>
+            </div>
+        </div>
+        <div class="mt-3 text-center">
+            <span><strong>Duration:</strong> <span id="sumDuration">-</span></span>
+            <div class="mt-1">
+                <span><strong>File:</strong> <span id="sumFileName">-</span></span>
+            </div>
+        </div>
+    </div>
+
+    @if (hasGrid)
+    {
+        <div class="col-12 mt-4">
+            <div id="importGrid"></div>
+        </div>
+    }
+</div>
+
+<script>
+    window.commonImport = (function () {
+        var config = {
+            area: '@area',
+            controller: '@controller'
+        };
+
+        var currentSessionId = null;
+        var progressInterval = null;
+        var selectedFile = null;
+
+        $(document).ready(function () {
+            setupUploadZone();
+            setupButtons();
+            
+            // Cleanup on page unload
+            $(window).on('beforeunload', function () {
+                stopProgressPolling();
+            });
+        });
+
+        function setupUploadZone() {
+            var uploadZone = $('#uploadZone');
+            var fileInput = $('input[name="files"]');
+
+            uploadZone.on('click', function () {
+                if (!$(this).hasClass('disabled')) {
+                    fileInput.click();
+                }
+            });
+
+            uploadZone.on('dragover', function (e) {
+                e.preventDefault();
+                if (!$(this).hasClass('disabled')) {
+                    $(this).addClass('dragover');
+                }
+            });
+
+            uploadZone.on('dragleave', function () {
+                $(this).removeClass('dragover');
+            });
+
+            uploadZone.on('drop', function (e) {
+                e.preventDefault();
+                $(this).removeClass('dragover');
+                if (!$(this).hasClass('disabled')) {
+                    var files = e.originalEvent.dataTransfer.files;
+                    if (files.length > 0) {
+                        fileInput[0].files = files;
+                        fileInput.trigger('change');
+                    }
+                }
+            });
+        }
+
+        function setupButtons() {
+            $('#btnStartImport').on('click', function () {
+                var upload = $('#files').data('kendoUpload');
+                if (upload) {
+                    upload.upload();
+                }
+            });
+
+            $('#removeFile').on('click', function () {
+                var upload = $('#files').data('kendoUpload');
+                if (upload) {
+                    upload.clearAllFiles();
+                }
+                selectedFile = null;
+                $('#fileInfoCard').removeClass('show');
+                $('#btnStartImport').hide();
+                $('#uploadZone').removeClass('disabled');
+            });
+
+            $('#btnCancel').on('click', function () {
+                if (currentSessionId) {
+                    cancelImport(currentSessionId);
+                }
+            });
+
+            $('#btnCancelProgress').on('click', function () {
+                if (currentSessionId) {
+                    cancelImport(currentSessionId);
+                }
+            });
+        }
+
+        function onFileSelect(e) {
+            if (e.files && e.files.length > 0) {
+                selectedFile = e.files[0];
+                $('#fileName').text(selectedFile.name);
+                $('#fileSize').text(formatFileSize(selectedFile.size));
+                $('#fileInfoCard').addClass('show');
+                $('#btnStartImport').show();
+                $('#uploadZone').addClass('disabled');
+            }
+        }
+
+        function onUploadStart(e) {
+            $('#btnStartImport').hide();
+            $('#btnCancel').show();
+            $('#progressContainer').addClass('show');
+            $('#summaryCard').removeClass('show');
+        }
+
+        function onUploadSuccess(e) {
+            if (e.response && e.response.success) {
+                currentSessionId = e.response.sessionId;
+                startProgressPolling();
+            } else {
+                alert(e.response && e.response.message ? e.response.message : 'Import failed');
+                resetUI();
+            }
+        }
+
+        function onUploadError(e) {
+            alert('Upload failed: ' + (e.XMLHttpRequest.responseText || 'Unknown error'));
+            resetUI();
+        }
+
+        function startProgressPolling() {
+            stopProgressPolling(); // Clear any existing interval first
+            
+            progressInterval = setInterval(function () {
+                checkProgress();
+            }, 1000);
+        }
+
+        function stopProgressPolling() {
+            if (progressInterval) {
+                clearInterval(progressInterval);
+                progressInterval = null;
+            }
+        }
+
+        function checkProgress() {
+            if (!currentSessionId) {
+                stopProgressPolling();
+                return;
+            }
+
+            $.ajax({
+                url: '@Url.Action("GetImportProgress", controller, new { area = area })',
+                type: 'GET',
+                data: { sessionId: currentSessionId },
+                global: false, // Prevent triggering global AJAX handlers (page loaders)
+                cache: false,
+                success: function (response) {
+                    if (response.success && response.session) {
+                        updateProgress(response.session);
+
+                        var status = response.session.status;
+                        if (status === 'Completed' || status === 'Failed' || status === 'Cancelled') {
+                            stopProgressPolling();
+                            progressInterval = null;
+                            if (status === 'Completed') {
+                                showSummary(response.session.summary);
+                                loadImportResults();
+                            } else if (status === 'Failed') {
+                                // Display error message from session
+                                var errorMessage = response.session.currentMessage || 'Import failed. Please check the details and try again.';
+                                alert('Import Failed: ' + errorMessage);
+                            } else if (status === 'Cancelled') {
+                                alert('Import was cancelled.');
+                            }
+                            resetUI();
+                        }
+                    } else if (!response.success) {
+                        // Session not found or error - stop polling
+                        stopProgressPolling();
+                        resetUI();
+                    }
+                },
+                error: function (xhr, status, error) {
+                    // Stop polling on error to prevent continuous errors
+                    console.error('Progress check error:', error);
+                    stopProgressPolling();
+                    resetUI();
+                }
+            });
+        }
+
+        function updateProgress(session) {
+            var progressBar = $('#progressBar').data('kendoProgressBar');
+            if (progressBar) {
+                progressBar.value(session.percentComplete || 0);
+            }
+
+            $('#currentMessage').text(session.currentMessage || '-');
+            $('#processedCount').text(session.processedRecords || 0);
+            $('#totalCount').text(session.totalRecords || 0);
+        }
+
+        function showSummary(summary) {
+            if (!summary) return;
+
+            $('#sumTotal').text(summary.totalRecords || 0);
+            $('#sumImported').text(summary.successfullyImported || 0);
+            $('#sumUpdated').text(summary.updated || 0);
+            $('#sumErrors').text(summary.errors || 0);
+            $('#sumDuration').text(summary.duration || '-');
+            $('#sumFileName').text(summary.fileName || (selectedFile ? selectedFile.name : '-'));
+
+            $('#summaryCard').addClass('show');
+            $('#progressContainer').removeClass('show');
+        }
+
+        function cancelImport(sessionId) {
+            if (!sessionId) return;
+            
+            $.ajax({
+                url: '@Url.Action("CancelImport", controller, new { area = area })',
+                type: 'POST',
+                data: { sessionId: sessionId },
+                global: false, // Prevent triggering global AJAX handlers
+                cache: false,
+                success: function (response) {
+                    if (response.success) {
+                        alert('Import cancelled successfully');
+                        resetUI();
+                    } else {
+                        alert(response.message || 'Failed to cancel import');
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error cancelling import:', error);
+                    alert('Failed to cancel import: ' + error);
+                    resetUI();
+                }
+            });
+        }
+
+        function resetUI() {
+            // Stop all polling first
+            stopProgressPolling();
+            
+            // Reset UI elements
+            $('#btnStartImport').hide();
+            $('#btnCancel').hide();
+            $('#btnCancelProgress').hide();
+            $('#progressContainer').removeClass('show');
+            
+            // Clear session ID
+            currentSessionId = null;
+            selectedFile = null;
+
+            // Clear and reset Kendo Upload widget
+            var upload = $('#files').data('kendoUpload');
+            if (upload) {
+                try {
+                    upload.clearAllFiles();
+                } catch (e) {
+                    console.warn('Error clearing upload files:', e);
+                }
+            }
+            
+            // Reset the actual file input element to allow selecting the same file again
+            var fileInput = $('input[name="files"]');
+            if (fileInput.length > 0) {
+                fileInput.val('');
+                // Trigger change event to ensure Kendo Upload widget is aware of the reset
+                fileInput.trigger('change');
+            }
+            
+            // Reset file info card
+            $('#fileInfoCard').removeClass('show');
+            $('#fileName').text('');
+            $('#fileSize').text('');
+            
+            // Reset upload zone - make sure it's visible and enabled
+            $('#uploadZone')
+                .removeClass('disabled')
+                .show()
+                .css('display', 'block');
+            
+            // Reset progress bar
+            var progressBar = $('#progressBar').data('kendoProgressBar');
+            if (progressBar) {
+                progressBar.value(0);
+            }
+            
+            // Reset progress text
+            $('#currentMessage').text('-');
+            $('#processedCount').text('0');
+            $('#totalCount').text('0');
+        }
+
+        function loadImportResults() {
+            if (!@hasGrid.ToString().ToLower()) return;
+            if (!currentSessionId) return;
+
+            $.ajax({
+                url: '@Url.Action("GetImportResults", controller, new { area = area })',
+                type: 'GET',
+                data: { sessionId: currentSessionId },
+                global: false, // Prevent triggering global AJAX handlers
+                cache: false,
+                success: function (response) {
+                    if (response.success && response.results) {
+                        buildDynamicGrid(response.results);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error loading import results:', error);
+                }
+            });
+        }
+
+        function buildDynamicGrid(data) {
+            if (!data || !data.length) {
+                $('#importGrid').empty();
+                return;
+            }
+
+            var sample = data[0];
+            var columns = [];
+            var excludedFields = ['Status', 'Remark'];
+            
+            // Ensure all records have Status and Remark properties
+            data.forEach(function(item) {
+                if (!item.hasOwnProperty('Status') || item.Status === null || item.Status === undefined) {
+                    item.Status = '';
+                }
+                if (!item.hasOwnProperty('Remark') || item.Remark === null || item.Remark === undefined) {
+                    item.Remark = '';
+                }
+            });
+            
+            // Build columns, excluding Status and Remark (they'll be added at the end)
+            for (var key in sample) {
+                if (!sample.hasOwnProperty(key)) continue;
+                if (excludedFields.indexOf(key) >= 0) continue;
+
+                var column = {
+                    field: key,
+                    title: key
+                };
+                
+                // Format date columns - use closure to capture the key
+                if (key.toLowerCase().indexOf('date') >= 0) {
+                    (function(fieldName) {
+                        column.template = function(dataItem) {
+                            var value = dataItem[fieldName];
+                            if (!value || value === null || value === undefined) return '';
+                            
+                            var date = null;
+                            
+                            // Handle JSON date format /Date(1234567890)/
+                            if (typeof value === 'string' && value.indexOf('/Date(') >= 0) {
+                                var match = value.match(/\/Date\((-?\d+)\)\//);
+                                if (match) {
+                                    date = new Date(parseInt(match[1]));
+                                }
+                            }
+                            // Handle Date object
+                            else if (value instanceof Date) {
+                                date = value;
+                            }
+                            // Handle ISO date string or timestamp
+                            else if (typeof value === 'string') {
+                                // Try parsing as ISO string
+                                date = new Date(value);
+                                // If that fails, try as timestamp
+                                if (isNaN(date.getTime()) && !isNaN(value)) {
+                                    date = new Date(parseInt(value));
+                                }
+                            }
+                            // Handle numeric timestamp
+                            else if (typeof value === 'number') {
+                                date = new Date(value);
+                            }
+                            
+                            // Format the date if valid
+                            if (date && !isNaN(date.getTime())) {
+                                var day = ('0' + date.getDate()).slice(-2);
+                                var month = ('0' + (date.getMonth() + 1)).slice(-2);
+                                var year = date.getFullYear();
+                                return day + '/' + month + '/' + year;
+                            }
+                            
+                            return value;
+                        };
+                    })(key);
+                }
+                
+                columns.push(column);
+            }
+            
+            // Always add Status and Remark columns at the end
+            columns.push({
+                field: 'Status',
+                title: 'Status',
+                width: 120,
+                headerAttributes: { style: 'text-align: center' },
+                attributes: { style: 'text-align: center' },
+                template: function(dataItem) {
+                    var status = dataItem.Status || '';
+                    var color = '';
+                    if (status.toLowerCase() === 'error') {
+                        color = 'red';
+                    } else if (status.toLowerCase() === 'imported') {
+                        color = 'green';
+                    } else if (status.toLowerCase() === 'updated') {
+                        color = 'blue';
+                    } else if (status.toLowerCase() === 'skipped') {
+                        color = 'orange';
+                    }
+                    return '<span style="color: ' + color + '; font-weight: bold;">' + status + '</span>';
+                }
+            });
+            
+            columns.push({
+                field: 'Remark',
+                title: 'Remark',
+                width: 300,
+                headerAttributes: { style: 'text-align: center' },
+                attributes: { style: 'text-align: left' },
+                template: function(dataItem) {
+                    var remark = dataItem.Remark || '';
+                    var color = '';
+                    if (dataItem.Status && dataItem.Status.toLowerCase() === 'error') {
+                        color = 'red';
+                    }
+                    return '<span style="color: ' + color + ';">' + remark + '</span>';
+                }
+            });
+
+            $('#importGrid').kendoGrid({
+                dataSource: {
+                    data: data,
+                    pageSize: 50
+                },
+                sortable: true,
+                filterable: true,
+                pageable: true,
+                resizable: true,
+                scrollable: true,
+                columns: columns,
+                dataBound: function (e) {
+                    var grid = e.sender;
+                    for (var i = 0; i < grid.columns.length; i++) {
+                        grid.autoFitColumn(i);
+                    }
+                }
+            });
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            var k = 1024;
+            var sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            var i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        return {
+            onFileSelect: onFileSelect,
+            onUploadStart: onUploadStart,
+            onUploadSuccess: onUploadSuccess,
+            onUploadError: onUploadError
+        };
+    })();
+</script>
+

@@ -1,0 +1,65 @@
+﻿@model Corno.Web.Areas.Masters.Dtos.Product.ProductDto
+@using Kendo.Mvc.UI
+
+<div class="row">
+    @(Html.Kendo().Grid(Model.ProductStockDtos)
+        .Name("gridStock")
+        .Columns(columns =>
+        {
+            columns.Bound(p => p.Id)
+                .ClientTemplate("<input type='hidden' name='ProductStockDtos[#= index(data, 'gridStock')#].Id' value='#= Id #' />")
+                .Hidden();
+            columns.Bound(p => p.CustomerId)
+                .ClientTemplate("#= CustomerName  #" +
+                                "<input type='hidden' name='ProductStockDtos[#= index(data, 'gridStock')#].CustomerId' value='#= CustomerId #' />").Width(180);
+            /*.EditorViewData(new { DataSource = customerService.GetViewModelList() })
+            .EditorTemplateName(@"/Corno/MultiColumnComboBoxInt").Width(180);*/
+            columns.Bound(p => p.OpeningStock).Title("Opening Stock")
+                .ClientTemplate("#= OpeningStock #" +
+                                "<input type='hidden' name='ProductStockDtos[#= index(data, 'gridStock')#].OpeningStock' value='#= OpeningStock #'   />")
+                //.EditorTemplateName("Number")
+                .Width(50);
+            /*columns.Bound(p => p.CostPrice).Title("Cost Price")
+                .ClientTemplate("#= CostPrice #" +
+                                "<input type='hidden' name='ProductStockDtos[#= index(data, 'gridStock')#].CostPrice' value='#= CostPrice #'   />")
+                //.EditorTemplateName("Number")
+                .Width(50);
+            columns.Bound(p => p.SalesPrice).Title("Sales Price")
+                .ClientTemplate("#= SalesPrice #" +
+                                "<input type='hidden' name='ProductStockDtos[#= index(data, 'gridStock')#].SalesPrice' value='#= SalesPrice #'   />")
+                //.EditorTemplateName("Number")
+                .Width(50);*/
+
+            columns.Command(command =>
+            {
+                command.Edit();
+                command.Destroy();
+            }).Width(100);
+        })
+        .ToolBar(toolbar => toolbar.Create())
+        .Editable(editable => editable.Mode(GridEditMode.PopUp)
+            .TemplateName("/Product/_StockPopup"))
+        .Sortable()
+        .Filterable(f => f.Mode(GridFilterMode.Row))
+        .Pageable()
+        .Scrollable()
+        //.Events(events => events.Edit("onEdit"))
+        .DataSource(dataSource => dataSource
+            .Ajax()
+            .PageSize(20)
+            .Events(events => events.Error("error_handler")
+            /*.Change("onChange")*/)
+            .Model(model =>
+            {
+                model.Id(p => p.Id);
+                model.Field(p => p.OpeningStock).DefaultValue(0);
+            })
+            .ServerOperation(false)
+            .Create(update => update.Action("Inline_Create_Update_Destroy_Stock", "Product", new { area = "Masters" }))
+            .Update(update => update.Action("Inline_Create_Update_Destroy_Stock", "Product", new { area = "Masters" }))
+            .Destroy(update => update.Action("Inline_Create_Update_Destroy_Stock", "Product", new { area = "Masters" }))
+        )
+        .Resizable(resize => resize.Columns(true))
+        .Reorderable(reorder => reorder.Columns(true))
+        )
+</div>

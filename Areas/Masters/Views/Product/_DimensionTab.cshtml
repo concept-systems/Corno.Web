@@ -1,0 +1,145 @@
+﻿@model Corno.Web.Areas.Masters.Dtos.Product.ProductDto
+@using Corno.Web.Extensions
+@using Corno.Web.Globals
+@using Corno.Web.Services.Interfaces
+@using Corno.Web.Windsor
+@using Kendo.Mvc.UI
+
+@{
+    var miscMasterService = Bootstrapper.Get<IMiscMasterService>();
+}
+
+
+
+<div class="row">
+    <div class="col-12 col-sm-4">
+        @*<div class="form-group row">
+                @Html.EditorFor(m => m.ProductTypeId, @"Corno/MultiColumnComboBoxInt",
+                    new
+                    {
+                        DataSource = miscMasterService.GetViewModelList(m => m.MiscType == MiscMasterConstants.PackingType),
+                        Name = "Product Type :"
+                    })
+            </div>
+            <br/>
+            <div class="form-group row">
+                @Html.EditorFor(m => m.UnitId, @"Corno/MultiColumnComboBoxInt",
+                    new
+                    {
+                        DataSource = miscMasterService.GetViewModelList(m => m.MiscType == MiscMasterConstants.Unit),
+                        Name = "Unit :"
+                    })
+            </div>
+            <br/>*@
+        <div class="form-group row">
+            @Html.EditorFor(m => m.ThicknessUnitId, @"Corno/MultiColumnComboBoxInt",
+                new
+                {
+                    DataSource = miscMasterService.GetViewModelList(m => m.MiscType == MiscMasterConstants.Unit),
+                    Name = "Thickness Unit :"
+                })
+        </div>
+        <br />
+        <div class="form-group row">
+            @Html.EditorFor(m => m.LengthUnitId, @"Corno/MultiColumnComboBoxInt",
+                new
+                {
+                    DataSource = miscMasterService.GetViewModelList(m => m.MiscType == MiscMasterConstants.Unit),
+                    Name = "Length Unit :"
+                })
+        </div>
+        <br />
+        <div class="form-group row">
+            @Html.LabelFor(m => m.Color, "Color :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @(Html.Kendo().TextBoxFor(m => m.Color)
+                    .HtmlAttributes(new { @class = "w-100" }))
+            </div>
+        </div>
+        <br />
+        <div class="form-group row">
+            @Html.LabelFor(m => m.TreatmentSide, "Treatment Side :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @(Html.Kendo().TextBoxFor(m => m.TreatmentSide)
+                    .HtmlAttributes(new { @class = "w-100" }))
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-4">
+        <div class="form-group row">
+            @Html.LabelFor(m => m.WeightTolerance, "Weight Tolerance :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @(Html.Kendo().NumericTextBoxFor(m => m.WeightTolerance)
+                    .HtmlAttributes(new { @class = "w-100" }))
+            </div>
+        </div>
+        <br />
+        <div class="form-group row">
+            @Html.LabelFor(m => m.Weight, "Standard Weight :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @(Html.Kendo().NumericTextBoxFor(m => m.Weight)
+                    .HtmlAttributes(new { @class = "w-100" }))
+            </div>
+        </div>
+        <br />
+        <div class="form-group row">
+            @Html.LabelFor(m => m.Diameter, " Diameter :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @(Html.Kendo().NumericTextBoxFor(m => m.Diameter)
+                    .HtmlAttributes(new { @class = "w-100" }))
+            </div>
+        </div>
+        <br />
+        <div class="form-group row">
+            @Html.LabelFor(m => m.LengthTolerance, "Length Tolerance :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @(Html.Kendo().NumericTextBoxFor(m => m.LengthTolerance)
+                    .HtmlAttributes(new { @class = "w-100" }))
+            </div>
+        </div>
+        <br />
+    </div>
+    <div class="col-12 col-sm-4">
+        <div class="form-group row">
+            @Html.LabelFor(m => m.Length, "Length :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @(Html.Kendo().NumericTextBoxFor(m => m.Length)
+                    .HtmlAttributes(new { @class = "w-100" }))
+            </div>
+        </div>
+        <br />
+        <div class="form-group row">
+            @Html.LabelFor(m => m.Width, " Width :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @(Html.Kendo().NumericTextBoxFor(m => m.Width)
+                    .HtmlAttributes(new { @class = "w-100" }))
+            </div>
+        </div>
+        <br />
+        <div class="form-group row">
+            @Html.LabelFor(m => m.Thickness, "Thickness :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @(Html.Kendo().NumericTextBoxFor(m => m.Thickness)
+                    .HtmlAttributes(new { @class = "w-100" }))
+            </div>
+        </div>
+        <br />
+        <div class="form-group row">
+            @Html.LabelFor(m => m.ThicknessTolerance, "Thickness Tolerance :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @(Html.Kendo().NumericTextBoxFor(m => m.ThicknessTolerance)
+                    .HtmlAttributes(new { @class = "w-100" }))
+            </div>
+        </div>
+    </div>
+</div>

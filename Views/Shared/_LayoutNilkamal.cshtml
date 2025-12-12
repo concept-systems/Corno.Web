@@ -1,0 +1,60 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+    <title>localhost</title>
+    <meta content="" name="description">
+    <meta content="" name="keywords">
+
+
+    @*<link href="~/Scripts/assets/img/apple-touch-icon.png" rel="apple-touch-icon">*@
+
+    <!-- Google Fonts -->
+    @*<link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500&family=Inter:wght@400;500&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">*@
+
+    <link href="@Url.Content("~/Content/bootstrap.min.css")" rel="stylesheet" type="text/css" />
+
+    <script src="@Url.Content("~/Scripts/bootstrap.min.js")"></script>
+    <!--<link href="~/Scripts/assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+    <link href="~/Scripts/assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+    <link href="~/Scripts/assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+    <link href="~/Scripts/assets/vendor/aos/aos.css" rel="stylesheet">-->
+    <!-- Main CSS Files -->
+    <!--<link href="~/Scripts/assets/css/variables.css" rel="stylesheet">
+    <link href="~/Scripts/assets/css/main.css" rel="stylesheet">-->
+
+</head>
+<body>
+<div class="k-card">
+<!-- ======= Header ======= -->
+<div class="container-fluid">
+
+<!-- Page Heading -->
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Dashboard</h1>
+    <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+        <i class="fas fa-download fa-sm text-white-50"></i> Generate Report
+    </a>
+</div>
+
+
+
+<!-- ======= Body ======= -->
+<div class="k-card-body">
+    @RenderBody()
+</div>
+<!-- ======= Footer ======= -->
+<footer class="card-footer">
+    <div class="container pb-0" style="text-align: center">
+        <p>Copyright &copy; @DateTime.Now.Year <a href="http://www.concsystems.in" target="_blank">Concept Systems</a>. All Rights Reserved.</p>
+    </div>
+</footer>
+</div>
+</div>
+</body>
+</html>

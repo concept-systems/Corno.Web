@@ -1,0 +1,199 @@
+﻿@using Corno.Globals.Constants
+@using Kendo.Mvc.UI
+@model Corno.Concept.Modules.Masters.Models.Supplier
+
+@{
+
+    Layout = "~/Views/Shared/_LayoutDelete.cshtml";
+}
+@{
+    ViewBag.BoxTitle = "Delete Stoppage : " + Model.Name;
+    ViewBag.Area = "Masters";
+    ViewBag.SubmitAction = "Delete";
+}
+
+@Html.Partial("_Stoppage", Model)
+
+
+<!--@Html.Partial("Partials/_MasterDelete", Model)
+<br />
+<div class="row">
+    <div class="col-sm-12">
+        <nav>
+            <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                <a class="nav-item nav-link active" id="nav-general-tab" data-toggle="tab" href="#nav-general" role="tab" aria-controls="nav-general" aria-selected="true">General</a>
+                <a class="nav-item nav-link" id="nav-cost-tab" data-toggle="tab" href="#nav-cost" role="tab" aria-controls="nav-cost" aria-selected="false">Contact Info</a>
+            </div>
+        </nav>
+        <div class="tab-content" id="nav-tabContent">
+
+            <div class="tab-pane fade show active" id="nav-general" role="tabpanel" aria-labelledby="nav-general-tab">
+                <br />
+                <div class="row">
+
+
+                    <div class="col-sm-6">
+                        <div class="input-group pb-1">
+                            @Html.LabelFor(m => m.GSTIN, "GSTIN :", new { @class = "col-sm-4" })
+                            @(Html.Kendo().TextBoxFor(m => m.GSTIN)
+                                          .HtmlAttributes(new
+                                          {
+                                                  //required = "required",
+                                                  @class = "form-control form-control-sm", @readonly = "readonly"
+                                          })
+                            )
+                        </div>
+
+                    </div>
+                    <div class="col-sm-6">
+
+                        <div class="input-group pb-1">
+                            @Html.LabelFor(m => m.CreditLimit, "Credit Limit :", new { @class = "col-sm-4" })
+                            @(Html.Kendo().NumericTextBoxFor(m => m.CreditLimit)
+                                          .HtmlAttributes(new
+                                          {
+                                                  //required = "required",
+                                                  @class = "form-control form-control-sm",
+                                              @readonly = "readonly"
+
+                                          })
+                            )
+                        </div>
+                        <div class="input-group pb-1">
+                            @Html.LabelFor(m => m.CreditDays, "Credit Days :", new { @class = "col-sm-4" })
+                            @(Html.Kendo().NumericTextBoxFor(m => m.CreditDays)
+                                          .HtmlAttributes(new
+                                          {
+                                                  //required = "required",
+                                                  @class = "form-control form-control-sm",
+                                              @readonly = "readonly"
+                                          })
+                            )
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="nav-cost" role="tabpanel" aria-labelledby="nav-cost-tab">
+                <br />
+                <div class="row">
+                    <div class="col-sm-6">
+
+                        <div class="input-group p-1">
+                            <label class="label"> Address :</label>
+                            @Html.TextAreaFor(m => m.Address, 3, 30,
+                                new { placeholder = "Address here", @class = "form-control form-control-sm", @readonly = "readonly" })-->
+@*.HtmlAttributes(new
+    {
+        placeholder = "Name",
+        required = "required",
+        @class = "form-control"
+    }))*@
+<!--</div>
+                        <div class="input-group p-1">
+                            @Html.LabelFor(m => m.CityId, "City :", new { @class = "col-sm-4", @readonly = "readonly" })
+                            @(Html.Kendo().ComboBoxFor(m => m.CityId)
+                                                  .DataTextField(FieldConstants.Name)
+                                                  .DataValueField(FieldConstants.Id)
+                                                  .HtmlAttributes(new { @class = "form-control" })
+                                                  .Filter("contains")
+                                                  .Placeholder("Select ...")
+                                                  .Suggest(true)
+                                                  .DataSource(source =>
+                                                  {
+                                                      source.Read(read =>
+                                                      {
+                                                          read.Action("GetCity", "Data");
+                                                      })
+                                                          .ServerFiltering(false);
+                                                  }))
+                        </div>
+                        <div class="input-group p-1">
+                            @Html.LabelFor(m => m.StateId, "State :", new { @class = "col-sm-4", @readonly = "readonly" })
+                            @(Html.Kendo().ComboBoxFor(m => m.StateId)
+                                          .DataTextField(FieldConstants.Name)
+                                          .DataValueField(FieldConstants.Id)
+                                          .HtmlAttributes(new { @class = "form-control" })
+                                          .Filter("contains")
+                                          .Placeholder("Select ...")
+                                          .Suggest(true)
+                                          .DataSource(source =>
+                                          {
+                                              source.Read(read =>
+                                              {
+                                                  read.Action("GetState", "Data");
+                                              })
+                                                  .ServerFiltering(false);
+                                          }))
+                        </div>
+                        <div class="input-group pb-1">
+                            @Html.LabelFor(m => m.ContactPerson, "Contact Person :", new { @class = "col-sm-4", @readonly = "readonly" })
+                            @(Html.Kendo().TextBoxFor(m => m.ContactPerson)
+                                          .HtmlAttributes(new
+                                          {
+                                                      //required = "required",
+                                                      @class = "form-control form-control-sm"
+                                          })
+                            )
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="input-group pb-1">
+                            @Html.LabelFor(m => m.Phone, "Phone :", new { @class = "col-sm-4", @readonly = "readonly" })
+                            @(Html.Kendo().TextBoxFor(m => m.Phone)
+                                          .HtmlAttributes(new
+                                          {
+                                                      //required = "required",
+                                                      @class = "form-control form-control-sm"
+                                          })
+                            )
+                        </div>
+                        <div class="input-group pb-1">
+                            @Html.LabelFor(m => m.Mobile, "Mobile :", new { @class = "col-sm-4", @readonly = "readonly" })
+                            @(Html.Kendo().TextBoxFor(m => m.Mobile)
+                                          .HtmlAttributes(new
+                                          {
+                                                      //required = "required",
+                                                      @class = "form-control form-control-sm"
+                                          })
+                            )
+                        </div>
+                        <div class="input-group pb-1">
+                            @Html.LabelFor(m => m.Fax, "Fax :", new { @class = "col-sm-4", @readonly = "readonly" })
+                            @(Html.Kendo().TextBoxFor(m => m.Fax)
+                                          .HtmlAttributes(new
+                                          {
+                                                      //required = "required",
+                                                      @class = "form-control form-control-sm"
+                                          })
+                            )
+                        </div>
+                        <div class="input-group pb-1">
+                            @Html.LabelFor(m => m.Email, "Email :", new { @class = "col-sm-4", @readonly = "readonly" })
+                            @(Html.Kendo().TextBoxFor(m => m.Email)
+                                          .HtmlAttributes(new
+                                          {
+                                                      //required = "required",
+                                                      @class = "form-control form-control-sm"
+                                          })
+                            )
+                        </div>
+                        <div class="input-group pb-1">
+                            @Html.LabelFor(m => m.Website, "WebSite :", new { @class = "col-sm-4", @readonly = "readonly" })
+                            @(Html.Kendo().TextBoxFor(m => m.Website)
+                                          .HtmlAttributes(new
+                                          {
+                                                      //required = "required",
+                                                      @class = "form-control form-control-sm"
+                                          })
+                            )
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+        </div>
+    </div>
+
+</div>-->

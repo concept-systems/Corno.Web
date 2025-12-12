@@ -1,0 +1,59 @@
+﻿@using Corno.Globals.Constants
+@using Corno.Services.Helpers
+@using Corno.Services.Windsor
+@using Kendo.Mvc.UI
+@model Corno.Concept.Portal.Areas.Quality.Models.FinancialYear
+
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+}
+
+@{
+    Page.Title = "FinancialYear";
+    ViewBag.MainMenu = "Masters";
+    ViewBag.CurrentSitemap = "FinancialYear";
+    ViewBag.BoxTitle = "Create New Financial Year";
+    ViewBag.Controller = "FinancialYear";
+    ViewBag.SubmitAction = ViewBag.Create;
+}
+
+@{
+    var financialYearService = Bootstrapper.Get<IFinancialYearService>();
+}
+
+@*@Html.HiddenFor(m => m.Id)*@
+
+<div class="k-card">
+    @*<div class="k-card-header">
+        @Html.Partial("Partials/_MasterEdit", Model)
+    </div>*@
+    <div class="k-card-header">
+        <div class="row">
+            <div class="form-group">
+                <div class="input-group mb-2">
+                    <span class="k-edit-container w-100">
+                        @(Html.Kendo().MultiColumnComboBoxFor(m => m.Financial)
+                                    .DataTextField(FieldConstants.Name)
+                                    .DataValueField(FieldConstants.Id)
+                                    .HtmlAttributes(new {required = "required", @class="w-100"})
+                                    .Filter("contains")
+                                    .Placeholder("Select Financial Year")
+                                    .Suggest(true)
+                                    .Columns(columns =>
+                                    {
+                                        columns.Add().Field(FieldConstants.Id).Title(FieldConstants.Id).Width("100px");
+                                        columns.Add().Field(FieldConstants.Name).Title(FieldConstants.Name).Width("350px");
+                                    })
+                                    .BindTo(financialYearService.GetViewModelList()))
+                          </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+

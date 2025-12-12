@@ -1,0 +1,237 @@
+﻿@using System.ComponentModel
+@using Corno.Web.Globals
+@using Kendo.Mvc.UI
+@model PositionDetailModel
+
+@{
+    Layout = "~/Views/Shared/_LayoutDetails.cshtml";
+}
+@{
+
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+    ViewBag.View = "View";
+    ViewBag.View = "PlanItemDetailView";
+}
+
+@{
+    ViewBag.BoxTitle = "Position Details";
+}
+
+<div class="center">
+    <!-- container templates -->
+    <script id="template-warehouse-Order" type="text/x-kendo-template">
+         <h4>
+             @Html.DisplayFor(m => m.WarehouseOrderNo)
+        </h4>
+    </script>
+    <script id="template-position" type="text/x-kendo-template">
+      <h4>
+          @Html.DisplayFor(m => m.Position)
+     </h4>
+    </script>
+    <script id="template-assemblyCode" type="text/x-kendo-template">
+         <h4>
+         @Html.DisplayFor(m => m.AssemblyCode)
+         </h4>
+    </script>
+    <script id="template-carcassCode" type="text/x-kendo-template">
+         <h4>
+         @Html.DisplayFor(m => m.CarcassCode)
+         </h4>
+    </script>
+    <script id="template-position-labels" type="text/x-kendo-template">
+            @(Html.Kendo().Grid(Model.PositionLabels)
+                .Name("gridLabels")
+                .ToolBar(toolbar =>
+                {
+                    toolbar.Excel();
+                    toolbar.Pdf();
+                    toolbar.Search();
+                })
+                .Pageable()
+                .Sortable(s => s.InitialDirection(ListSortDirection.Descending))
+                .Filterable(f => f.Mode(GridFilterMode.Row))
+                .Resizable(resize => resize.Columns(true)) // Allow column resizing
+                .PersistSelection()
+                .Height(540)
+                .HtmlAttributes(new { style = "height: 200px;" })
+                .Columns(columns =>
+                {
+                    columns.Bound(m => m.LabelDate)
+                        .HtmlAttributes(new { style = "text-align: center" })
+                        .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                        .Format("{0:dd/MM/yyyy}")
+                        .Title("Date");
+                    columns.Bound(m => m.Barcode)
+                        .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                        .HtmlAttributes(new { style = "text-align: center" });
+                    columns.Bound(m => m.Status)
+                        .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                        .HtmlAttributes(new { style = "text-align: center" });
+                    columns.Command(command =>
+                    {
+                        // Show only if Status is "Active";
+                        command.Custom("View").Text(" ").IconClass("k-icon k-i-preview k-i-eye")
+                            .HtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                            .Click("onViewClick");
+                    })
+                        .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                        .HtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                        .Title("Actions"); // Add a class to identify the command column;
+                })
+                .Excel(excel => excel
+                    .FileName("Items.xlsx")
+                    .ProxyURL(Url.Action("Excel_Export_Save", "Corno"))
+                )
+                .Pdf(pdf => pdf
+                    .FileName("Items.pdf")
+                    .ProxyURL(Url.Action("Excel_Export_Save", "Corno"))
+                )
+                .DataSource(dataSource => dataSource
+                    .Ajax()
+                    .ServerOperation(false)
+                    .Model(model => model.Id(FieldConstants.Id))).ToClientTemplate())
+    
+    </script>
+
+    <script id="template-position-cartons" type="text/x-kendo-template">
+           @(Html.Kendo().Grid(Model.PositionCartons)
+                    .Name("gridCartons")
+                    .ToolBar(toolbar =>
+                    {
+                        toolbar.Excel();
+                        toolbar.Pdf();
+                        toolbar.Search();
+                    })
+                    .Pageable()
+                    .Sortable(s => s.InitialDirection(ListSortDirection.Descending))
+                     .Filterable(f => f.Mode(GridFilterMode.Row))
+                    .Resizable(resize => resize.Columns(true)) // Allow column resizing
+                    .PersistSelection()
+                    .Height(540)
+                    .HtmlAttributes(new { style = "height: 200px;" })
+                    .Columns(columns =>
+                    {
+                        columns.Bound(m => m.PackingDate)
+                            .HtmlAttributes(new { style = "text-align: center" })
+                            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                            .Format("{0:dd/MM/yyyy}")
+                            .Title("Date");
+                        columns.Bound(m => m.CartonBarcode)
+                            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                            .HtmlAttributes(new { style = "text-align: center" });
+
+                        columns.Bound(m => m.CartonNo)
+                            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                            .HtmlAttributes(new { style = "text-align: center" });
+
+                        columns.Bound(m => m.Status)
+                            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                            .HtmlAttributes(new { style = "text-align: center" });
+
+                        columns.Command(command =>
+                        {
+                            // Show only if Status is "Active";
+                            command.Custom("View").Text(" ").IconClass("k-icon k-i-preview k-i-eye")
+                                .HtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                            .Click("onCartonViewClick");
+                        })
+                            //.HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                            .HtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                            .Width(10)
+                            .Title("Actions"); // Add a class to identify the command column;
+                    })
+                    .Excel(excel => excel
+                        .FileName("Items.xlsx")
+                        .ProxyURL(Url.Action("Excel_Export_Save", "Corno"))
+                    )
+                    .Pdf(pdf => pdf
+                        .FileName("Items.pdf")
+                        .ProxyURL(Url.Action("Excel_Export_Save", "Corno"))
+                    )
+                    .DataSource(dataSource => dataSource
+                        .Ajax()
+                        .ServerOperation(false)
+                        .Model(model => model.Id(FieldConstants.Id))).ToClientTemplate()
+                    )
+    
+    </script>
+    <div id="tileLayout"></div>
+</div>
+
+@(Html.Kendo().TileLayout()
+    .Name("tileLayout")
+    .Columns(4)
+    .RowsHeight("70px")
+    .ColumnsWidth("350px")
+    .Containers(c => {
+         c.Add()
+            .Header(h => h.Text("Warehouse Order No"))
+            .BodyTemplateId("template-warehouse-Order")
+            .ColSpan(1)
+            .RowSpan(2);
+         c.Add()
+             .Header(h => h.Text("Position"))
+             .BodyTemplateId("template-position")
+             .ColSpan(1)
+             .RowSpan(2);
+         c.Add()
+             .Header(h => h.Text("Assembly Code"))
+             .BodyTemplateId("template-assemblyCode")
+             .ColSpan(1)
+             .RowSpan(2);
+         c.Add()
+             .Header(h => h.Text("Carcass Code"))
+             .BodyTemplateId("template-carcassCode")
+             .ColSpan(1)
+             .RowSpan(2);
+        c.Add()
+           .Header(h => h.Text("Position Labels"))
+           .BodyTemplateId("template-position-labels")
+           .ColSpan(2)
+           .RowSpan(4);
+        c.Add()
+            .Header(h => h.Text("Position Cartons"))
+            .BodyTemplateId("template-position-cartons")
+            .ColSpan(2)
+            .RowSpan(4);
+
+    })
+    .Reorderable(true)
+    .Resizable(true)
+
+    )
+
+<script type="text/javascript">
+
+          function onViewClick(e) {
+             e.preventDefault();
+             var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+             var id = dataItem.Id; // Assuming 'Id' is the field name
+             window.location.href = '@Url.Action("View", "PartLabel")' + '?id=' + id;
+          }
+        function onCartonViewClick(e) {
+            e.preventDefault();
+            var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+            var id = dataItem.Id; // Assuming 'Id' is the field name
+            window.location.href = '@Url.Action("View", "Carton")' + '?id=' + id;
+         }
+    
+            function onBack() {
+                // Try to use referrer if available and from same origin
+                var referrer = document.referrer;
+                if (referrer && referrer.indexOf(window.location.origin) === 0) {
+                    var referrerPath = new URL(referrer).pathname;
+                    if (referrerPath && referrerPath !== window.location.pathname) {
+                        window.location.href = referrer;
+                        return;
+                    }
+                }
+                // Fallback to Request/View or Index
+                window.location.href = '/BoardStore/Request/Index';
+            }
+</script>

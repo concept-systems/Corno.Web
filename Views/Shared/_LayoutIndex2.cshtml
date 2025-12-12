@@ -1,0 +1,83 @@
+﻿@using StringExtensions = Corno.Web.Extensions.StringExtensions
+
+@{
+    Layout = "~/Views/Shared/_LayoutBase.cshtml";
+}
+
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+}
+
+@{
+    string controllerName = ViewBag.Controller;
+    //string importAction = ViewBag.ImportAction as string;
+    //string actionName = "ImportMaster";
+}
+
+@section sectionBaseHeader
+{
+    <div class="row">
+        <h4 class="col-11">
+            <span class="k-icon k-i-plus-outline k-icon-md k-text-success"></span>
+            @StringExtensions.SplitCamelCaseWithNewLine(ViewBag.BoxTitle?.ToString())
+        </h4>
+        <div class="col-1">
+            <a href="@Url.Action(ViewBag.Create, ViewBag.Controller, new {miscType = ViewBag.MiscType})"
+               rel="tooltip" class="k-button-md k-button-rectangle k-rounded-lg k-button-outline k-button-outline-secondary k-button k-rounded-md k-button-outline-tertiary w-100">
+                <span class="k-icon k-i-plus-outline"></span>&nbsp; Add New
+            </a>
+        </div>
+    </div>
+}
+
+<div class="row">
+    <ul class="nav nav-tabs card-header-tabs" data-bs-tabs="tabs">
+        <li class="nav-item">
+            <a class="nav-link active" aria-current="true" data-bs-toggle="tab" href="#search">Search</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#import">Import</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#view">View</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#report">Reports</a>
+        </li>
+    </ul>
+</div>
+<br/>
+    <div class="tab-content">
+        <div class="tab-pane active" id="search">
+            @RenderBody()
+        </div>
+        <div class="tab-pane" id="import">
+            <div class="form-row">
+                <div class="col-12">
+                    @using (Html.BeginForm(ViewBag.ImportAction as string))
+                    {
+                        @Html.Partial("Partials/_Progressbar")
+                    }
+                </div>
+            </div>
+            @*<div class="col-12">
+            @using (Html.BeginForm(ViewBag.ImportAction as string))
+            {
+                @Html.Partial("Partials/_Progressbar")
+            }
+        </div>*@
+        </div>
+        <div class="tab-pane" id="view">
+
+        </div>
+        <div class="tab-pane" id="report">
+
+
+        </div>
+    </div>
+    
+

@@ -1,0 +1,29 @@
+﻿@model Corno.Web.Areas.Masters.Dtos.Item.ItemDto
+
+@{
+    Layout = "~/Views/Shared/_LayoutDelete.cshtml";
+}
+
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+}
+
+@{
+    Page.Title = "Item";
+    ViewBag.MainMenu = "Masters";
+    ViewBag.CurrentSitemap = "Item";
+    ViewBag.Area = "Masters";
+    ViewBag.Controller = "Item";
+    ViewBag.SubmitAction = ViewBag.Delete;
+}
+
+@{
+    ViewBag.BoxTitle = $"Delete Item : {Model.Name}";
+    ViewBag.SubmitAction = "Delete";
+}
+
+@Html.Partial("_Item", Model)

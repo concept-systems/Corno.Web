@@ -1,0 +1,75 @@
+@model Corno.Web.Areas.Masters.Dtos.Product.ProductDto
+@using Corno.Web.Extensions
+@using Corno.Web.Globals
+@using Corno.Web.Services.Interfaces
+@using Corno.Web.Windsor
+@using Kendo.Mvc.UI
+
+@{
+    var miscMasterService = Bootstrapper.Get<IMiscMasterService>();
+}
+
+<div class="row">
+    <div class="col-12 col-sm-6">
+        @Html.EditorFor(m => m.UnitId, @"Corno/MultiColumnComboBoxInt",
+            new
+            {
+                DataSource = miscMasterService.GetViewModelList(m => m.MiscType == MiscMasterConstants.Unit),
+                Name = "Unit :"
+            })
+        <br />
+        @Html.EditorFor(m => m.ProductCategoryId, @"Corno/MultiColumnComboBoxInt",
+            new
+            {
+                DataSource = miscMasterService.GetViewModelList(m => m.MiscType == MiscMasterConstants.ProductCategory),
+                Name = "Category :"
+            })
+        <br />
+        <br />
+        <!--<div class="form-group row">
+            @Html.LabelFor(m => m.Comment, "Comment :",
+                new { @class = "col-sm-4" })
+
+            <div class="col-8">
+                @(Html.Kendo().TextBoxFor(m => m.Comment)
+                                        .HtmlAttributes(new { @class = "w-100" }))
+            </div>
+        </div>-->
+    </div>
+
+    <div class="col-12 col-sm-6">
+        @Html.EditorFor(m => m.ProductTypeId, @"Corno/MultiColumnComboBoxInt",
+            new
+            {
+                DataSource = miscMasterService.GetViewModelList(m => m.MiscType == MiscMasterConstants.ProductType),
+                Name = "Type :"
+            })
+        <br />
+        <div class="form-group row">
+            @Html.LabelFor(m => m.StockQuantity, "StockQuantity :", new { @class = "col-12 col-sm-4" })
+            <div class="col-12 col-sm-8">
+                @(Html.Kendo().NumericTextBoxFor(m => m.StockQuantity)
+                                        .HtmlAttributes(new { @class = "w-100" }))
+            </div>
+        </div>
+        <br />
+        <div class="form-group row">
+            @Html.LabelFor(m => m.Comment, "Comment :",
+                new { @class = "col-12 col-sm-4" })
+            <div class="col-12 col-sm-8">
+                @(Html.Kendo().TextBoxFor(m => m.Comment)
+                                        .HtmlAttributes(new { @class = "w-100" }))
+            </div>
+        </div>
+        <br />
+        <div class="form-group row">
+            @Html.LabelFor(m => m.LabelFormat, "Label Format :",
+                new { @class = "col-12 col-sm-4" })
+            <div class="col-12 col-sm-8">
+                @(Html.Kendo().TextBoxFor(m => m.LabelFormat)
+                                        .HtmlAttributes(new { @class = "w-100" }))
+            </div>
+        </div>
+        <br />
+    </div>
+</div>

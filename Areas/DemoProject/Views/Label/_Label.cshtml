@@ -1,0 +1,212 @@
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@model Corno.Web.Areas.DemoProject.Dtos.LabelDto
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Delete = "Delete";
+    ViewBag.View = "View";
+}
+
+@{
+    var controllerName = "Label";
+    var action = "Label";
+}
+
+@{
+    ViewBag.BoxTitle = "_Label";
+    ViewBag.MainMenu = "Transaction";
+    ViewBag.MainHeader = "Label";
+    ViewBag.CurrentSitemap = "Label";
+    ViewBag.Title = "Label";
+}
+
+<div class="k-content">
+    @using (Ajax.BeginForm(action, controllerName, new AjaxOptions { HttpMethod = "POST", OnComplete = "displayUploadMediaMsg" }, new { enctype = "multipart/form-data", id = "form" }))
+    {
+        @Html.AntiForgeryToken()
+
+        @Html.HiddenFor(m => m.SubmitType)
+
+        <!-- Toggle button visible on mobile to open the responsive panel -->
+        <button id="labelPanelToggle" class="k-button k-button-md k-rounded-md k-button-solid k-button-solid-primary rp-toggle" type="button">
+            <span class="k-icon k-i-menu"></span>
+            Show Details
+        </button>
+
+        @(Html.Kendo().ResponsivePanel()
+            .Name("labelPanel")
+            .Orientation(ResponsivePanelOrientation.Top)
+            .Breakpoint(100)
+            .ToggleButton("#labelPanelToggle")
+            .HtmlAttributes(new { style = "margin-bottom: 20px;" })
+            .Content(@<text>
+                <div class="responsive-panel-container">
+                    <div class="k-widget k-panel mb-4">
+                        <h3 class="k-panel-title">Preview</h3>
+                        <div class="k-panel-content">
+                            <div id="partialViewContainer" style="height: 100%"></div>
+                        </div>
+                    </div>
+
+                    <div class="k-widget k-panel mb-4">
+                        <h3 class="k-panel-title">Label Details</h3>
+                        <div class="k-panel-content">
+                            @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="form-group required row">
+                                        @Html.LabelFor(m => m.ItemId, "Item :", new { @class = "col-12 col-sm-3 col-md-3 col-form-label" })
+                                        <div class="col-12 col-sm-9 col-md-9">
+                                            @(Html.Kendo().MultiColumnComboBoxFor(m => m.ItemId)
+                                                .DataTextField(FieldConstants.Name)
+                                                .DataValueField(FieldConstants.Id)
+                                                .HtmlAttributes(new { required = "required", @class = "w-100" })
+                                                .Filter("contains")
+                                                .Placeholder("Select ...")
+                                                .Suggest(true)
+                                                .Columns(columns =>
+                                                {
+                                                    columns.Add().Field(FieldConstants.Code).Title(FieldConstants.Code).Width("100px");
+                                                    columns.Add().Field(FieldConstants.Name).Title(FieldConstants.Name).Width("600px");
+                                                })
+                                                .DataSource(dataSource => dataSource
+                                                    .Read(read => read.Action("GetItems", "Data", new { area = "" }))
+                                                ))
+                                        </div>
+                                    </div>
+                                    <div class="form-group required row">
+                                        @Html.LabelFor(m => m.ManufacturingDate, "Mfg. Date :", new { @class = "col-12 col-sm-3 col-md-3 col-form-label" })
+                                        <div class="col-12 col-sm-9 col-md-9">
+                                            @(Html.Kendo().DatePickerFor(m => m.ManufacturingDate)
+                                                .HtmlAttributes(new {@class = "w-100"}))
+                                        </div>
+                                    </div>
+                                    <div class="form-group required row">
+                                        @Html.LabelFor(m => m.ExpiryDate, "Exp. Date :", new { @class = "col-12 col-sm-3 col-md-3 col-form-label" })
+                                        <div class="col-12 col-sm-9 col-md-9">
+                                            @(Html.Kendo().DatePickerFor(m => m.ExpiryDate)
+                                                .HtmlAttributes(new {@class = "w-100"}))
+                                        </div>
+                                    </div>
+                                    <div class="form-group required row">
+                                        @Html.LabelFor(m => m.Weight, "Quantity :", new { @class = "col-12 col-sm-3 col-md-3 col-form-label" })
+                                        <div class="col-12 col-sm-9 col-md-9">
+                                            @(Html.Kendo().TextBoxFor(m => m.Weight))
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <hr />
+                            <div class="k-card-actions k-card-actions-horizontal k-card-actions-end">
+                                @(Html.Kendo().Button()
+                                .Name("btnPrint")
+                                .Content("Print")
+                                .ApplyStandardSettingsWithType(ButtonType.Primary, "print", ComponentSize.Medium)
+                                .HtmlAttributes(new
+                                {
+                                    type = "submit",
+                                    name = "action:Print"
+                                }))
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </text>
+            )
+        )
+    }
+</div>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        @*$("#form").kendoValidator({
+            rules: {
+                requiredMultiColumnComboBox: function (input) {
+                    if (input.is("[data-role=multicolumncombobox]")) {
+                        return input.val() !== "";
+                    }
+                    return true;
+                },
+                /*requiredDatePicker: function (input) {
+                    if (input.is("[data-role=datepicker]")) {
+                        var value = input.val();
+                        // Check if the value is a valid datfe
+                        return kendo.parseDate(value) !== null;
+                    }
+                    return true;
+                }*/
+            },
+            messages: {
+                requiredMultiColumnComboBox: function (input) {
+                    var comboBoxName = input.attr("name");
+                    switch (comboBoxName) {
+                        case "WarehouseOrderNo":
+                            return "Please select Warehouse Order No";
+                        case "ItemId":
+                            return "Please select Item.";
+                        // Add cases for other comboboxes as needed
+                        default:
+                            return "Please select a value for the ComboBox.";
+                    }
+                },
+               // requiredDatePicker: "Please select due date."
+            }
+        });*@
+        LoadPartialView()
+    });
+
+    function LoadPartialView(toPrinter) {
+        $.ajax({
+            url: '/PartLabel/LoadPartialView', // Replace with your actual controller and action
+            method: 'GET',
+            data: { 'partialViewName': 'Partials/ReportViewer_New' },
+            success: function (partialHtml) {
+                // Load HTML content into the element
+                $('#partialViewContainer').html(partialHtml, function () {
+                    // This code will execute after the HTML content has been loaded
+                    console.log("HTML content loaded successfully");
+
+                });
+                // Delay the execution of the next statement by a short duration
+                setTimeout(function () {
+                    // This code will execute after a short delay
+                    console.log("Timeout HTML content loaded successfully");
+                    if ('@Model.PrintToPrinter' === 'True') {
+                        printToPrinter();
+                    }
+                }, 1500); // Adjust the delay duration as needed
+            },
+            error: function () {
+                console.error('Failed to load the partial view.');
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        if ('@Model?.PrintToPrinter' === 'True')
+            LoadPartialView()
+    });
+
+    function OnProductChange() {
+        $('#SubmitType').val('@FieldConstants.Item')
+        $("#form").submit();
+    }
+
+    function onDuplicate() {
+        $.ajax({
+            url: '@Url.Action("View", "Label")', // Replace with your actual controller and action
+              method: 'GET',
+              data: { 'warehouseOrderNo': $('#duplicateWarehouseOrderNo').val(), 'position': $('#duplicatePosition').val() },
+              success: function (partialHtml) {
+                  LoadPartialView(partialHtml.PrintToPrinter);
+                  $("#duplicateWarehouseOrderNo").data("kendoTextBox").value("");
+                  $("#duplicatePosition").data("kendoTextBox").value("");
+              },
+               error: function () {
+               console.error('Failed to load the partial view.');
+             }
+         });
+}
+</script>

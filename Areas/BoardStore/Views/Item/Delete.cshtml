@@ -1,0 +1,118 @@
+﻿@using Corno.Web.Globals
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@model Corno.Web.Areas.BoardStore.Models.Item
+
+@{
+    Layout = "~/Views/Shared/_LayoutBase.cshtml";
+}
+
+@{
+    ViewBag.BoxTitle = $"Delete Item : {Model.Name}";
+    ViewBag.SubmitAction = "Delete";
+}
+
+@{
+    ViewBag.MainMenu = "BoardStore";
+    ViewBag.MainHeader = "Item";
+    ViewBag.CurrentSitemap = "Item";
+    ViewBag.Title = "Item";
+    ViewBag.Area = "BoardStore";
+    ViewBag.Controller = "Item";
+}
+
+@section sectionBaseFooter
+{
+    <div class="k-actions k-actions-horizontal k-actions-end">
+        @(Html.Kendo().Button()
+            .Name("btnBack")
+            .Content("Back")
+            .ApplyStandardSettingsWithType(ButtonType.Info, "arrow-60-left", ComponentSize.Medium)
+            .HtmlAttributes(new { onclick = $"window.location.href='{Url.Action("Index", "Item", new { area = "BoardStore" })}'; return false;" }))
+        @(Html.Kendo().Button()
+            .Name("btnDelete")
+            .Content("Delete")
+            .ApplyStandardSettingsWithType(ButtonType.Delete, "trash", ComponentSize.Medium)
+            .Events(e => e.Click("confirmDelete")))
+    </div>
+}
+
+@using (Html.BeginForm("Delete", "Item", new { area = "BoardStore" }, FormMethod.Post, new { id = "crudForm", enctype = "multipart/form-data", @class = "crud-form-wrapper" }))
+{
+    @Html.AntiForgeryToken()
+    @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+    @Html.HiddenFor(m => m.Id)
+
+    <div class="crud-content">
+        @Html.Partial("_Item", Model)
+    </div>
+}
+
+<style>
+    /* Responsive form styles */
+    .crud-form-wrapper {
+        width: 100%;
+    }
+
+    .crud-content {
+        width: 100%;
+        padding: 15px;
+    }
+
+    /* Responsive buttons */
+    .k-actions {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+        .k-actions .k-button {
+            flex: 1 1 auto;
+            min-width: 120px;
+        }
+
+    /* Responsive breakpoints */
+    @@media (max-width: 768px) {
+        .crud-content {
+            padding: 10px;
+        }
+
+        .k-actions {
+            flex-direction: column;
+        }
+
+            .k-actions .k-button {
+                width: 100%;
+                min-width: unset;
+            }
+    }
+
+    @@media (max-width: 576px) {
+        .crud-content {
+            padding: 8px;
+        }
+    }
+</style>
+
+<script type="text/javascript">
+    function confirmDelete() {
+        bootbox.confirm({
+            title: 'Confirm',
+            message: 'Are you sure you want to delete?',
+            buttons: {
+                'cancel': {
+                    label: 'Cancel',
+                    className: 'btn-default pull-left'
+                },
+                'confirm': {
+                    label: 'Delete',
+                    className: 'btn-danger pull-right'
+                }
+            },
+            callback: function (result) {
+                if (true === result) {
+                    $('#crudForm').submit();
+                }
+            }
+        });
+    }
+</script>

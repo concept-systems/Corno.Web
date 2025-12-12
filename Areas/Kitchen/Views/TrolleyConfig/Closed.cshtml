@@ -1,0 +1,12 @@
+﻿@model Corno.Web.Areas.Kitchen.Dto.Put_To_Light.TrolleyConfigIndexDto
+
+@{
+    Layout = "~/Views/Shared/_LayoutEdit.cshtml";
+
+    ViewBag.BoxTitle = "Closed TrolleyConfig";
+
+    ViewBag.Controller = "TrolleyConfig";
+    ViewBag.Action = "Closed";
+}
+
+@Html.Partial("_TrolleyConfig", Model)

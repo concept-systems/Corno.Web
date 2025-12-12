@@ -1,0 +1,32 @@
+@model Corno.Web.Areas.Kitchen.ViewModels.PlanViewModel
+
+@{
+
+    Layout = "~/Views/Shared/_LayoutDelete.cshtml";
+}
+
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+}
+
+@{
+    Page.Title = "Movement";
+    ViewBag.MainMenu = "Movement";
+    ViewBag.CurrentSitemap = "Movement";
+    ViewBag.Area = "BoardStore";
+    ViewBag.Controller = "Movement";
+    ViewBag.SubmitAction = ViewBag.Delete;
+}
+
+@{
+    ViewBag.BoxTitle = $"Delete Movement : {Model.Id}";
+    ViewBag.SubmitAction = "Delete";
+}
+
+@*@Html.HiddenFor(m => m.Plan)*@
+
+@*@Html.Partial("_plan")*@

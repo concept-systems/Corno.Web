@@ -1,0 +1,61 @@
+﻿@using StringExtensions = Corno.Web.Extensions.StringExtensions
+@using Corno.Web.Helper
+
+@{
+    Layout = "~/Views/Shared/_LayoutBase.cshtml";
+}
+
+@section sectionBaseHeader
+{
+    
+    <div class="row col-12 col-sm-12">
+        <div class="col-11 col-sm-9">
+            @*<h6 class="col-11">*@
+            <h6>
+                <span class="k-icon k-i-plus k-text-success k-icon-20"></span>
+                @StringExtensions.SplitCamelCaseWithNewLine(ViewBag.BoxTitle?.ToString())
+            </h6>
+        </div>
+        <div class="col-1 col-sm-3">
+            <div class="k-actions k-actions-horizontal k-actions-end">
+                @(Html.Kendo().Button()
+                    .Name("btnBackToList")
+                    .Content("Back to List")
+                    .ApplyStandardSettingsWithType(ButtonType.Info, "arrow-60-left", ComponentSize.Medium)
+                    .HtmlAttributes(new { onclick = $"window.location.href='{Url.Action(ViewBag.Layout, ViewBag.Controller, new {Layout = ViewBag.Layout})}'; return false;" }))
+            </div>
+        </div>
+    </div>
+
+    @*<div class="row">
+            <div id="divPartial" class="col-12" style="height: 600px">
+                @Html.Partial("Partials/ReportViewer", string.Empty)
+            </div>
+        </div>*@
+    @*<div class="box-title">
+        <div class="span10">
+            <h3><i class="icon-table"></i> @ViewBag.BoxTitle</h3>
+        </div>
+        <div class="span2">
+            <a href="@Url.Action(ViewBag.Index, ViewBag.Controller,new {miscType= ViewBag.MiscType})" rel="tooltip" title="Back to List" class="btn btn-satblue pull-right">
+                <i class="icon-circle-arrow-left large"></i> Back to list
+            </a>
+        </div>
+    </div>*@
+    @*<div class="box-content">
+        <div class="form-horizontal form-validate">
+            @RenderBody()
+            <hr />
+            <div class="control-group">
+                <a href="@Url.Action(ViewBag.Index, ViewBag.Controller,new {miscType= ViewBag.MiscType})" rel="tooltip" title="Back to List" class="btn btn-satblue pull-right">
+                    <i class="icon-circle-arrow-left large"></i> Back to list
+                </a>
+            </div>
+        </div>
+    </div>*@
+   
+
+
+}
+
+@RenderBody()

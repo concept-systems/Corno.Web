@@ -1,0 +1,70 @@
+@using Corno.Web.Globals
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@model Corno.Web.Areas.DemoProject.Dtos.SalesInvoiceDto
+
+@{
+    Layout = "~/Views/Shared/_LayoutBase.cshtml";
+}
+
+@{
+    ViewBag.Title = "New Bill";
+    ViewBag.BoxTitle = "Pack";
+    ViewBag.SubmitAction = "Create";
+}
+
+@{
+    ViewBag.MainMenu = "DemoProject";
+    ViewBag.MainHeader = "Sales Invoice";
+    ViewBag.CurrentSitemap = "Sales Invoice";
+    ViewBag.Title = "Sales Invoice";
+    ViewBag.Area = "DemoProject";
+    ViewBag.Controller = "SalesInvoice";
+}
+
+@section sectionBaseHeader
+{
+    <div class="k-actions k-actions-horizontal k-actions-end">
+        @(Html.Kendo().Button()
+            .Name("btnBack")
+            .Content("Back")
+            .ApplyStandardSettingsWithType(ButtonType.Info, "arrow-60-left", ComponentSize.Medium)
+            .HtmlAttributes(new { onclick = $"window.location.href='{Url.Action("Index", "SalesInvoice", new { area = "DemoProject" })}'; return false;" }))
+    </div>
+}
+
+@using (Html.BeginForm("Create", "SalesInvoice", new { area = "DemoProject" }, FormMethod.Post, new { id = "salesInvoiceForm" }))
+{
+    @Html.AntiForgeryToken()
+    @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+
+    <div class="row">
+        <div class="col-12 col-md-6 mb-3 mb-md-0">
+            @Html.Partial("_ReportViewer", Model)
+        </div>
+        <div class="col-12 col-md-6">
+            @Html.Partial("_UserEntry", Model)
+        </div>
+    </div>
+}
+
+@section sectionBaseFooter
+{
+    <div class="k-actions k-actions-horizontal k-actions-end">
+        @(Html.Kendo().Button()
+            .Name("btnCreate")
+            .Content("Save")
+            .ApplyStandardSettingsWithType(ButtonType.Save, "save", ComponentSize.Medium)
+            .HtmlAttributes(new
+            {
+                type = "button",
+                onclick = "document.getElementById('salesInvoiceForm').submit();"
+            }))
+    </div>
+}
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        LoadPartialView()
+    });
+</script>

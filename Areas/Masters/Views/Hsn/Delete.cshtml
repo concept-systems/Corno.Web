@@ -1,0 +1,14 @@
+﻿@using Corno.Globals.Constants
+@model Corno.Concept.Modules.Masters.Models.Hsn
+
+@{
+
+    Layout = "~/Views/Shared/_LayoutDelete.cshtml";
+}
+@{
+    ViewBag.BoxTitle = "Delete Hsn : " + Model.Name;
+    ViewBag.Area = "Masters";
+    ViewBag.SubmitAction = "Delete";
+}
+
+@Html.Partial("_Hsn", Model)

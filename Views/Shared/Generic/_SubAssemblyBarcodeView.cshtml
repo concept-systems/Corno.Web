@@ -1,0 +1,116 @@
+﻿@*@model Corno.Concept.Modules.Packing.Models.Label*@
+@using Corno.Web.Helper
+@model Corno.Web.Areas.Kitchen.Models.SubAssemblyViewModel
+
+@{
+    string controllerName = ViewBag.Controller;
+    string actionName = ViewBag.SubmitAction;
+}
+
+@{
+    Layout = "~/Views/Shared/_LayoutBase.cshtml";
+}
+
+@if (TempData["Success"] != null)
+{
+    <script type="text/javascript">
+        showSuccessMessage("@TempData["Success"]");
+    </script>
+}
+<div class="container-fluid">
+    @using (Html.BeginForm(actionName, controllerName, null, FormMethod.Post, new { id = "form", @class = "form" }))
+    {
+        <h3><i class="fa fa-indent"></i> @ViewBag.BoxTitle.ToString()</h3>
+        <hr />
+        @Html.AntiForgeryToken()
+
+        <div class="row">
+            <div id="divPartial" class="col-6" style="height: 350px">
+                @RenderSection("WeighingScale", false)
+                @Html.Partial("Partials/ReportViewer_New", string.Empty)
+            </div>
+            <div class="col-6">
+                @RenderBody()
+                <hr />
+                <div class="form-group row">
+                    <div class="col">
+                        <div class="k-card-actions k-card-actions-horizontal k-card-actions-end form-group">
+                            @(Html.Kendo().Button()
+                                .Name("print")
+                                .Content("Print")
+                                .ApplyStandardSettingsWithType(ButtonType.Primary, "print", ComponentSize.Medium)
+                                .Events(ev => ev.Click("onPrintClick"))
+                                .HtmlAttributes(new
+                                {
+                                    type = "submit",
+                                    @class = "offset-6 col-4",
+                                }))
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<script type="text/javascript">
+    function onPrintClick() {
+        var cmbSerialNo = $("#SerialNo").data("kendoMultiColumnComboBox");
+        cmbSerialNo.dataSource.read();
+    };
+    function handle_label_response(result, action) {
+        if (!result.error) {
+            $('#divPartial').html(result);
+            switch (action) {
+                case "Print":
+                    // Printing initiated
+                    PrintToPrinter();
+                    break;
+            case "Duplicate":
+                    window.printToPrinter();
+                    window.clear_controls();
+                break;
+            }
+        } else {
+            showErrorMessage(result.message || "An error occurred.");
+            $('#divPartial').html("");
+        }
+    }
+
+    function handle_label_request(url, formData, action) {
+        $.ajax({
+            type: "POST",
+            enctype: 'multipart/form-data',
+            url: url,
+            data: formData,
+
+            processData: false,
+            contentType: false,
+            cache: false,
+            success: function(result) {
+                handle_label_response(result, action);
+            },
+            error: function(e) {
+                showErrorMessage(e.responseText || "An error occurred while processing the request.");
+            }
+        });
+    }
+
+    function preview_label(action) {
+        var url = '@Url.Action("PreviewLabel", controllerName)'; // url
+        var formData = new FormData($('form')[0]); // Create an arbitrary FormData instance
+        formData.append('action', action);
+
+        handle_label_request(url, formData, action);
+    }
+
+    function UpdateValidationSummary(result) {
+        var validationSummary = $('#validationSummary ul.validation-summary-errors');
+        if (validationSummary.length === 0) {
+            $('#validationSummary').after('<ul class="validation-summary-errors"></ul>');
+            validationSummary = $('#validationSummary ul.validation-summary-errors');
+        }
+        validationSummary.append('<li>' + result.message + '</li>');
+        $("#validationSummary").load(" #validationSummary > *");
+    }
+</script>

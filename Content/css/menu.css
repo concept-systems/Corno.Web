@@ -1,0 +1,154 @@
+/* Shared menu styles for Home dashboard and Drawer TreeView.
+   Uses Kendo k- classes where possible so themes can influence the look. */
+
+.home-menu-container {
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.menu-group-section {
+    margin-bottom: 40px;
+}
+
+.menu-group-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #424242;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.menu-cards-container {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.menu-card-wrapper {
+    height: 100%;
+}
+
+/* Use k-card as base so Kendo themes apply */
+.menu-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 140px;
+    text-decoration: none;
+    color: inherit;
+}
+
+.menu-card:hover {
+    text-decoration: none;
+    color: inherit;
+}
+
+.menu-card.k-card {
+    transition: all 0.2s ease;
+}
+
+.menu-card.k-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.16);
+}
+
+.menu-card-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.menu-card-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+}
+
+.menu-card-icon .k-icon {
+    font-size: 1.6rem;
+}
+
+.menu-card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.menu-card-arrow .k-icon {
+    font-size: 1.2rem;
+}
+
+/* Responsive grid breakpoints */
+@media (min-width: 1600px) {
+    .menu-cards-container {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1200px) and (max-width: 1599px) {
+    .menu-cards-container {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 900px) and (max-width: 1199px) {
+    .menu-cards-container {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 600px) and (max-width: 899px) {
+    .menu-cards-container {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 15px;
+    }
+}
+
+@media (max-width: 768px) {
+    .home-menu-container {
+        padding: 15px;
+    }
+
+    .menu-cards-container {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .menu-cards-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Drawer TreeView items: reuse Kendo defaults + subtle card-like look */
+#mnuTree {
+    padding: 8px 0;
+    font-size: 0.9rem;
+}
+
+#mnuTree .k-group {
+    padding-left: 0;
+}
+
+#mnuTree .k-item {
+    margin: 2px 0;
+}
+
+#mnuTree .k-in {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 36px;
+    padding: 6px 10px;
+}
+
+#mnuTree .k-in .k-icon,
+#mnuTree .k-in .k-sprite {
+    margin-right: 8px;
+}
+
+

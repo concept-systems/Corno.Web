@@ -1,0 +1,188 @@
+﻿@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@model Corno.Web.Areas.Kitchen.Dto.Label.LabelViewDto
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+    ViewBag.View = "View";
+}
+
+@{
+    ViewBag.BoxTitle = "Part Label";
+}
+
+
+@{
+    ViewBag.BoxTitle = "View Label";
+    ViewBag.SubmitButtonText = "Print";
+}
+
+<div class="k-card">
+    <div class="k-card-header">
+        <div class="row">
+            <div class="col-8">
+                <h5>
+                    <span class="k-icon k-i-plus k-icon k-text-success"></span>
+                    @ViewBag.BoxTitle
+                </h5>
+            </div>
+            <div class="col-2">
+                @(Html.Kendo().Button()
+                    .Name("print")
+                    .Content("Print")
+                    .ApplyStandardSettingsWithType(ButtonType.Primary, "print", ComponentSize.Medium)
+                    .Events(e => e.Click("onPrintLabel"))
+                    .HtmlAttributes(new { @class = "w-100" }))
+            </div>
+            <div class="col-1">
+                @(Html.Kendo().Button()
+                    .Name("btnList")
+                    .Content("Back")
+                    .ApplyStandardSettingsWithType(ButtonType.Info, "arrow-left", ComponentSize.Medium)
+                    .Events(e => e.Click("onBack"))
+                    .HtmlAttributes(new{@class = "w-100"}))
+            </div>
+            <div class="col-1">
+                @(Html.Kendo().Button()
+                    .Name("BackToList")
+                    .Content("List")
+                    .ApplyStandardSettingsWithType(ButtonType.Info, "list", ComponentSize.Medium)
+                    .Events(e => e.Click("onBackToList"))
+                    .HtmlAttributes(new{@class = "w-100"}))
+            </div>
+
+        </div>
+
+    </div>
+    <div class="k-card-separator"></div>
+    <div class="k-card-body">
+        <div class="row">
+            <div class="col-6">
+                <!-- Placeholder for the partial view -->
+                <div id="partialViewContainer" style="height: 100%"></div>
+            </div>
+            <div class="col-6">
+                @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+                <div class="row">
+                    <div class="form-group required row">
+                        @Html.LabelFor(m => m.WarehouseOrderNo, "Warehouse Order No :", new { @class = "col-3 form-label" })
+                        <div class="col-9">
+                            @Html.DisplayFor(m => m.WarehouseOrderNo)
+                        </div>
+                    </div>
+                    <div class="form-group required row">
+                        @Html.LabelFor(m => m.Position, "Position :", new { @class = "col-3 form-label" })
+                        <div class="col-9">
+                            @Html.DisplayFor(m => m.Position)
+                        </div>
+                    </div>
+                    <div class="form-group required row">
+                        @Html.LabelFor(m => m.ItemId, "Item", new { @class = "col-3 form-label" })
+                        <div class="col-9">
+                            @Html.DisplayFor(m => m.ItemName)
+                        </div>
+                    </div>
+                    <div class="form-group required row">
+                        @Html.LabelFor(m => m.CarcassCode, "Carcass Code", new { @class = "col-3 form-label" })
+                        <div class="col-9">
+                            @Html.DisplayFor(m => m.CarcassCode)
+                        </div>
+                    </div>
+                    <div class="form-group required row">
+                        @Html.LabelFor(m => m.Quantity, "Quantity", new { @class = "col-3 form-label" })
+                        <div class="col-9">
+                            @Html.DisplayFor(m => m.Quantity)
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <div class="col-12">
+                            @(Html.Kendo().Grid(Model?.LabelViewDetailDto)
+                                .Name("grid")
+                                .ToolBar(t => t.Search())
+                                .Pageable()
+                                .Sortable()
+                                .Filterable()
+                                .Resizable(resize => resize.Columns(true)) // Allow column resizing
+                                .PersistSelection()
+                                .HtmlAttributes(new { @class = "w-100" })
+                                .Columns(columns =>
+                                {
+                                    columns.Bound(m => m.Status)
+                                        .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" });
+                                    columns.Bound(m => m.ScanDate)
+                                        .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                                        .Format("{0:dd/MM/yyyy}")
+                                        .Title("Date");
+                                    columns.Bound(m => m.ModifiedBy)
+                                        .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                                        .Title("User");
+                                }))
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    $(document).ready(function () {
+        LoadPartialView()
+    });
+
+    function LoadPartialView(toPrinter) {
+        $.ajax({
+            url: '/PartLabel/LoadPartialView', // Replace with your actual controller and action
+            method: 'GET',
+            data: { 'partialViewName': 'Partials/ReportViewer_New' },
+            success: function (partialHtml) {
+                // Load HTML content into the element
+                $('#partialViewContainer').html(partialHtml, function () {
+                    // This code will execute after the HTML content has been loaded
+                    console.log("HTML content loaded successfully");
+
+                });
+                // Delay the execution of the next statement by a short duration
+                setTimeout(function () {
+                    // This code will execute after a short delay
+                    console.log("Timeout HTML content loaded successfully");
+                    if ('@Model.PrintToPrinter' === 'True' || toPrinter === true) {
+                        printToPrinter();
+                    }
+                }, 1500); // Adjust the delay duration as needed
+            },
+            error: function () {
+                console.error('Failed to load the partial view.');
+            }
+        });
+    }
+
+    function onBackToList() {
+        window.location.href = '@Url.Action("Index", "StoreKhalapur", new { area = "Kitchen" })';
+    }
+    function onBack() {
+        // Try to use referrer if available and from same origin
+        var referrer = document.referrer;
+        if (referrer && referrer.indexOf(window.location.origin) === 0) {
+            var referrerPath = new URL(referrer).pathname;
+            if (referrerPath && referrerPath !== window.location.pathname) {
+                window.location.href = referrer;
+                return;
+            }
+        }
+        // Fallback to Plan/Index
+        window.location.href = '@Url.Action("Index", "Plan", new { area = "Kitchen" })';
+    }
+    function onPrintLabel() {
+        printToPrinter();
+    }
+</script>

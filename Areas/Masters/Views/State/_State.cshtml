@@ -1,0 +1,55 @@
+﻿@using Corno.Globals.Constants
+@using Corno.Services.Helpers
+@using Corno.Services.Windsor
+@model Corno.Models.Common.State
+
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+}
+
+@{
+    Page.Title = "State";
+    ViewBag.MainMenu = "Masters";
+    ViewBag.CurrentSitemap = "State";
+    ViewBag.BoxTitle = "Create New State";
+    ViewBag.Controller = "State";
+    ViewBag.SubmitAction = ViewBag.Create;
+}
+
+@{
+    var cityService = Bootstrapper.Get<ICityService>();
+    var stateService = Bootstrapper.Get<IStateService>();
+}
+
+@Html.HiddenFor(m => m.Id)
+
+<!-- Toggle button visible on mobile to open the responsive panel -->
+<button id="statePanelToggle" class="k-button k-button-md k-rounded-md k-button-solid k-button-solid-primary rp-toggle" type="button">
+    <span class="k-icon k-i-menu"></span>
+    Show Details
+</button>
+
+@(Html.Kendo().ResponsivePanel()
+    .Name("statePanel")
+    .Orientation(ResponsivePanelOrientation.Top)
+    .Breakpoint(100)
+    .ToggleButton("#statePanelToggle")
+    .HtmlAttributes(new { style = "margin-bottom: 20px;" })
+    .Content(@<text>
+        <div class="responsive-panel-container">
+            <div class="k-widget k-panel mb-4">
+                <h3 class="k-panel-title">Basic Information</h3>
+                <div class="k-panel-content">
+                    @Html.Partial("Partials/_MasterEdit", Model)
+                </div>
+            </div>
+        </div>
+    </text>
+    )
+)
+
+

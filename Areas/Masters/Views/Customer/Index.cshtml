@@ -1,0 +1,179 @@
+﻿@using Corno.Web.Areas.Masters.Dtos.Item
+@using Corno.Web.Globals
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@model  List<Corno.Web.Areas.Masters.ViewModels.Customer.CustomerViewModel>
+
+@{
+    Layout = "~/Views/Shared/_AppLayout.cshtml";
+}
+@{
+    ViewBag.BoxTitle = "Customer";
+}
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+}
+
+@{
+    Page.Title = "Customer";
+
+    ViewBag.MainHeader = "Customer";
+    ViewBag.MainMenu = "Masters";
+    ViewBag.Controller = "Customer";
+    ViewBag.AddNewMethod = "Create";
+    ViewBag.CurrentLink = "Customer";
+}
+
+@*@Html.Partial("Partials/_MasterIndex", Model)*@
+
+<div class="grid-container-full-height">
+    @(Html.Kendo().Grid<ItemIndexDto>()
+        .Name("grid")
+        .ApplyIndexSettings(customToolbar: toolbar =>
+        {
+            toolbar.Custom()
+                .Text("<span class='k-icon k-i-plus'></span> Add New")
+                .HtmlAttributes(new { @class = "k-grid-add-new k-button-add-new-outlined", style = "float: right;", onclick = $"window.location.href='{Url.Action(ViewBag.Create, ViewBag.Controller, new { area = "Masters" })}'; return false;" });
+        }) // 👈 Apply index settings (full height, responsive)
+        .Events(events => events.ApplyCommonEvents())
+    .Columns(columns =>
+    {
+        columns.Bound(m => m.Id);
+        columns.Bound(m => m.Code).Align(TextAlign.Left);
+        columns.Bound(m => m.Name).Align(TextAlign.Left);
+        columns.AddStatusColumn();
+        columns.AddCommandColumns(new List<GridCommandConfig>
+        {
+            new GridCommandConfig { Name = "Edit", Text = " ", IconClass = "k-icon k-i-edit k-text-info", ClickHandler = "onEditClick" },
+            new GridCommandConfig { Name = "Delete", Text = " ", IconClass = "k-icon k-i-delete k-text-error", ClickHandler = "onDeleteClick" },
+            //new GridCommandConfig { Name = "View", Text = " ", IconClass = "k-icon k-i-preview k-i-eye", ClickHandler = "onViewClick" },
+            //new GridCommandConfig { Name = "Print", Text = "", IconClass = "fa fa-print", ClickHandler = "onPrintClick" }
+        });
+    })
+    .DataSource(dataSource => dataSource
+        .ApplyCommonDataSourceSettings("GetIndexViewModels", "Customer", "Masters")
+        .Sort(s => s.Add(FieldConstants.Id).Descending())
+    ))
+</div>
+@*@(Html.Kendo().Grid<ItemIndexDto>()
+    .Name("grid")
+    .ToolBar(toolbar =>
+    {
+        toolbar.Excel();
+        toolbar.Pdf();
+        toolbar.Search();
+    })
+    .Pageable()
+    .Scrollable()
+    .Sortable(s => s.InitialDirection(ListSortDirection.Descending	))
+    .Filterable(f  => f.Mode(GridFilterMode.Row))
+    .Resizable(resize => resize.Columns(true)) // Allow column resizing
+    .PersistSelection()
+    .Height(540)
+    .HtmlAttributes(new { style = "height: 700px;" })
+    .Excel(excel => excel
+        .FileName("Items.xlsx")
+        .ProxyURL(Url.Action("Excel_Export_Save", "Corno")))
+    .Pdf(pdf => pdf
+        .FileName("Items.pdf")
+        .ProxyURL(Url.Action("Excel_Export_Save", "Corno")))
+    //.HtmlAttributes(new { @class = "w-100" })
+    .Columns(columns =>
+    {
+
+        //columns.Select()
+        //    .HtmlAttributes(new { style = "text-align: center" })
+        //    .Width(10);
+        columns.Bound(m => m.Id)
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+            .HtmlAttributes(new { style = "text-align: center" })
+            .Title("Id")
+            .Width(15);
+        columns.Bound(m => m.Code)
+            //.HtmlAttributes(new { style = "text-align: center" })
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+            .Title("Code")
+            .Width(20);
+        columns.Bound(m => m.Name)
+            //.HtmlAttributes(new { style = "text-align: center" })
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+            .Title("Name")
+            .Width(30);
+        columns.Bound(m => m.Status).Width(20).Title("Status")
+            .HtmlAttributes(new { style = "text-align: center" })
+            .ClientTemplate(
+                "<span class='badge' style='background-color: " +
+                "# if (Status == \"Active\") { #" +
+                "green" +
+                "# } else if (Status == \"Deleted\") { #" +
+                "red" +
+                "# } else { #" +
+                "transparent" +
+                "# } #" +
+                "; color: " +
+                "# if (Status == \"Active\" || Status == \"Deleted\") { #" +
+                "white" +
+                "# } else { #" +
+                "black" +
+                "# } #" +
+                "; text-align: center; display: inline-block;'>" +
+                "#= Status #</span>"
+            )
+            .HtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+            .Width(10);
+        columns.Command(command =>
+        {
+            command.Custom("Edit").Text("")
+                .Text("<i class='k-icon k-i-edit k-text-info k-icon-20'></i>")
+                .HtmlAttributes(new { @class = "k-grid-edit" })
+                .Click("onEditClick")
+                .Visible("function(dataItem) { return dataItem.Status === 'Active'; }");
+            // Show only if Status is "Active";
+            command.Custom("Delete").Text("")
+                .Text("<i class='k-icon k-i-delete k-icon-md k-text-error k-icon-20'></i>")
+                .HtmlAttributes(new { @class = "k-grid-delete" })
+                .Click("onDeleteClick")
+                .Visible("function(dataItem) { return dataItem.Status === 'Active'; }");
+        })
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+            .HtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+            .Title("Actions")
+            .Width(8);
+    })
+    .DataSource(dataSource => dataSource
+        .Ajax()
+        .PageSize(20)
+        .Read(read => read.Action("GetIndexViewModels", "Customer"))
+        .Sort(sort => sort.Add(FieldConstants.Id).Descending()) // Initial sort by Id in ascending order
+        .Model(model => model.Id(FieldConstants.Id))
+    ))*@
+
+<script type="text/javascript">
+    function sendData() {
+    }
+
+    function onEditClick(e) {
+        e.preventDefault();
+        var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+        window.location.href = '@Url.Action("Edit", "Customer")' + '/' + dataItem.Id;
+    }
+
+    function onDeleteClick(e) {
+        e.preventDefault();
+        var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+        window.location.href = '@Url.Action("Delete", "Customer")' + '/' + dataItem.Id;
+    }
+
+
+</script>
+
+<style>
+    .k-icon-20 {
+        font-size: 15px;
+    }
+</style>

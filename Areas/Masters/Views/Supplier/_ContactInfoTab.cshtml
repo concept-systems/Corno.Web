@@ -1,0 +1,88 @@
+﻿@using Corno.Web.Extensions
+@using Corno.Web.Globals
+@using Kendo.Mvc.UI
+@model Corno.Web.Areas.Masters.ViewModels.Supplier.SupplierViewModel
+
+
+
+<div class="row">
+    <div class="col-sm-6">
+        <div class="input-group p-1">
+            @(Html.Kendo().TextAreaFor(m => m.Address)
+                .Rows(4)
+                .Label(label => label
+                    .Content(nameof(Model.Address))
+                    .Floating(true))
+                .HtmlAttributes(new
+                {
+                    placeholder = $"Enter {nameof(Model.Address)}",
+                    @class = "required w-100"
+                }))
+        </div>
+        <br />
+        @Html.EditorFor(m => m.CityId, @"Corno/MultiColumnComboBoxInt",
+            new
+            {
+               // DataSource = cityService.GetViewModelList(),
+                Name = "City :"
+            })
+        <br />
+        @Html.EditorFor(m => m.StateId, @"Corno/MultiColumnComboBoxInt",
+            new
+            {
+                //DataSource = stateService.GetViewModelList(),
+                Name = "State :"
+            })
+        <br />
+        <div class="form-group row">
+            @Html.LabelFor(m => m.ContactPerson, "Contact Person :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @Html.EditorFor(m => m.ContactPerson, new { Name = nameof(Model.ContactPerson) })
+            </div>
+        </div>
+
+    </div>
+    <div class="col-sm-6">
+        <div class="form-group row">
+            @Html.LabelFor(m => m.Phone, "Phone :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @Html.EditorFor(m => m.Phone, new { Name = nameof(Model.Phone) })
+            </div>
+        </div>
+        <br />
+        <div class="form-group row">
+            @Html.LabelFor(m => m.Mobile, "Mobile :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @Html.EditorFor(m => m.Mobile, new { Name = nameof(Model.Mobile) })
+            </div>
+        </div>
+        <br />
+        <div class="form-group row">
+            @Html.LabelFor(m => m.Fax, "Fax :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @Html.EditorFor(m => m.Fax, new { Name = nameof(Model.Fax) })
+            </div>
+        </div>
+        <br />
+        <div class="form-group row">
+            @Html.LabelFor(m => m.Email, "Email :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @Html.EditorFor(m => m.Email, new { Name = nameof(Model.Email) })
+            </div>
+        </div>
+        <br />
+        <div class="form-group row">
+            @Html.LabelFor(m => m.Website, "Website :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @Html.EditorFor(m => m.Website, new { Name = nameof(Model.Website) })
+            </div>
+        </div>
+
+    </div>
+</div>

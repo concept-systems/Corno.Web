@@ -1,0 +1,30 @@
+@using Corno.Web.Globals
+@using Corno.Web.Services
+@using Corno.Web.Services.Interfaces
+@using Corno.Web.Windsor
+@model Corno.Models.Base.MasterDto
+
+@{
+    var miscMasterService = (IMiscMasterService)Bootstrapper.GetService(typeof(MiscMasterService));
+}
+
+@*@(Html.Kendo().DropDownListFor(m => m)
+      .DataValueField(FieldConstants.Id)
+      .DataTextField(FieldConstants.Name)
+      //.HtmlAttributes(new { name = "ProductItemMaps[#= index(data)#].PackingType.Name"})
+      .BindTo(miscMasterService.GetList(m => m.MiscType == MiscMasterConstants.PackingType))
+      )*@
+
+@(Html.Kendo().MultiColumnComboBoxFor(m => m)
+      .DataTextField(FieldConstants.Name)
+      .DataValueField(FieldConstants.Id)
+      .HtmlAttributes(new {@class = "w-100"})
+      .Filter("contains")
+      .Placeholder("Select ...")
+      .Suggest(true)
+      .Columns(columns =>
+      {
+          columns.Add().Field(FieldConstants.Code).Title(FieldConstants.Code).Width("250px");
+          columns.Add().Field(FieldConstants.Name).Title(FieldConstants.Name).Width("300px");
+      })
+      .BindTo(miscMasterService.GetList(m => m.MiscType == MiscMasterConstants.PackingType)))

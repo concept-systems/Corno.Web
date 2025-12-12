@@ -1,0 +1,132 @@
+﻿@using Corno.Concept.Portal.Models
+@using Corno.Concept.Portal.Helper
+@model OtpViewModel
+@{
+    Layout = null;
+    // ViewBag.Title = "Login Page";
+}
+
+<link rel="icon" href="~/favicon.png">
+
+<link href="@Url.Content("~/Content/bootstrap.min.css")" rel="stylesheet" type="text/css" />
+<link href="@Url.Content("~/Content/kendo/2021.1.119/kendo.material-v2.min.css")" rel="stylesheet" type="text/css" />
+<script src="@Url.Content("~/Scripts/bootbox.js")"></script>
+
+<script src="@Url.Content("~/Scripts/bootstrap.min.js")"></script>
+<script src="@Url.Content("~/Scripts/kendo/2021.1.119/jquery.min.js")"></script>
+<script src="@Url.Content("~/Scripts/kendo/2021.1.119/jszip.min.js")"></script>
+<script src="@Url.Content("~/Scripts/kendo/2021.1.119/kendo.all.min.js")"></script>
+<script src="@Url.Content("~/Scripts/kendo/2021.1.119/kendo.aspnetmvc.min.js")"></script>
+
+<style>
+    .text-danger,
+    .validation-summary-errors,
+    .validation-summary-errors ul,
+    .validation-summary-errors li {
+        color: #d32f2f !important;
+        font-weight: 500;
+    }
+
+    .validation-summary-errors {
+        background-color: #ffebee;
+        border: 1px solid #d32f2f;
+        border-radius: 4px;
+        padding: 12px;
+        margin-bottom: 1rem;
+    }
+
+    .validation-summary-errors ul {
+        margin: 0;
+        padding-left: 20px;
+    }
+</style>
+
+@*@if (TempData["Success"] != null)
+    {
+        <script type="text/javascript">
+            bootbox.alert("Hi");
+            bootbox.alert('@TempData["Success"]');
+        </script>
+    }*@
+
+<div class="container">
+    <div class="row justify-content-center m-5">
+        <div class="col-12 col-md-8 col-lg-6">
+            <!--Form with header-->
+            @using (Html.BeginForm(null, "Account", FormMethod.Post, new { @class = "form-signin" }))
+            {
+                @Html.AntiForgeryToken()
+
+                <div class="k-card">
+                    <div class="k-card-header">
+                        <div class="text-center mb-4">
+                            <img class="p-1 border border-info" src="~/favicon.png" alt="" width="64" height="64">
+                        </div>
+                        <div class="bg-info text-white text-center p-2">
+                            <h4>User Sign In</h4>
+                        </div>
+                    </div>
+                    <div class="k-card-separator"></div>
+                    <div class="k-card-body">
+                        <div class="form-group">
+                            @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+                        </div>
+                        <div class="form-group row">
+                            @(Html.Kendo().MaskedTextBoxFor(m => m.MobileNo)
+                                .Mask("0000000000")
+                                .Value("9373333210")
+                                .HtmlAttributes(new
+                                {
+                                    placeholder = "Mobile No",
+                                    required = "required",
+                                    @class = "w-100 col-8"
+                                })
+                                )
+                            @(Html.Kendo().Button()
+                                    .Name("send_otp")
+                                    .Content("Send OTP")
+                                    .ApplyStandardSettingsWithType(ButtonType.Success, "hyperlink-open", ComponentSize.Medium)
+                                    .HtmlAttributes(new
+                                    {
+                                        type = "submit",
+                                        name = "action:SendOtp",
+                                        //value = "SendOtp",
+                                        @class = "w-100 col-3"
+                                    }))
+                        </div>
+                        <div class="form-group">
+                            @(Html.Kendo().TextBoxFor(m => m.Otp)
+                                .Value("451551")
+                                .HtmlAttributes(new
+                                {
+                                    type = "Otp",
+                                    placeholder = "OTP",
+                                    //required = "required",
+                                    @class = "w-100 col-5"
+                                }))
+                        </div>
+                    </div>
+                    <div class="k-card-footer k-card-actions-end">
+                        @(Html.Kendo().Button()
+                            .Name("otp_login")
+                            .Content("Log in")
+                            .ApplyStandardSettingsWithType(ButtonType.Primary, "login", ComponentSize.Large)
+                            .HtmlAttributes(new
+                            {
+                                type = "submit",
+                                name = "action:OtpLogin",
+                                //value = "OtpLogin",
+                                @class = "w-100",
+                                style = "height:60px"
+                            }))
+                    </div>
+                </div>
+            }
+            <!--Form with header-->
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}

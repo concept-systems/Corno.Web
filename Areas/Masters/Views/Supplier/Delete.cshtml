@@ -1,0 +1,15 @@
+﻿@using Corno.Web.Globals
+@using Kendo.Mvc.UI
+@model Corno.Web.Areas.Masters.ViewModels.Supplier.SupplierViewModel
+
+@{
+    Layout = "~/Views/Shared/_LayoutDelete.cshtml";
+}
+
+@{
+    ViewBag.BoxTitle = $"Delete Supplier : {Model.Name}";
+    ViewBag.Area = "Masters";
+    ViewBag.SubmitAction = "Delete";
+}
+
+@Html.Partial("_Supplier", Model)

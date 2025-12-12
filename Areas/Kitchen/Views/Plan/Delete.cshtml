@@ -1,0 +1,33 @@
+@using Corno.Web.Globals
+@model Corno.Web.Areas.Kitchen.Dto.Plan.PlanViewDto
+
+@{
+
+    Layout = "~/Views/Shared/_LayoutDelete.cshtml";
+}
+
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+}
+
+@{
+    Page.Title = "Plan";
+    ViewBag.MainMenu = "Planning";
+    ViewBag.CurrentSitemap = "Plan";
+
+    ViewBag.Controller = "Plan";
+    ViewBag.SubmitAction = ViewBag.Delete;
+}
+
+@{
+    ViewBag.BoxTitle = $"Delete Plan : {Model.Id}";
+    ViewBag.SubmitAction = "Delete";
+}
+
+@*@Html.HiddenFor(m => m.Plan)*@
+
+@Html.Partial("_plan")

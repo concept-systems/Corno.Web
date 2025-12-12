@@ -1,0 +1,106 @@
+﻿@using Corno.Web.Globals
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@model Corno.Web.Areas.Admin.Dto.UserCrudDto
+
+@{
+    Layout = "~/Views/Shared/_LayoutBase.cshtml";
+}
+
+@{
+    ViewBag.BoxTitle = $"Edit User : {Model.UserName}";
+    ViewBag.SubmitAction = "Edit";
+
+    var viewDataDictionary = new ViewDataDictionary
+    {
+        { FieldConstants.Title, "Edit User : " + Model.UserName },
+        { FieldConstants.Action, "Edit"}
+    };
+    ViewBag.ControllerName = "User";
+    ViewBag.Action = "Edit";
+}
+
+@{
+    ViewBag.MainMenu = "Admin";
+    ViewBag.MainHeader = "User";
+    ViewBag.CurrentSitemap = "User";
+    ViewBag.Title = "User";
+    ViewBag.Area = "Admin";
+    ViewBag.Controller = "User";
+}
+
+@section sectionBaseFooter
+{
+    <div class="k-actions k-actions-horizontal k-actions-end">
+        @(Html.Kendo().Button()
+            .Name("btnBack")
+            .Content("Back")
+            .ApplyStandardSettingsWithType(ButtonType.Info, "arrow-60-left", ComponentSize.Medium)
+            .HtmlAttributes(new { onclick = $"window.location.href='{Url.Action("Index", "User", new { area = "Admin" })}'; return false;" }))
+        @(Html.Kendo().Button()
+            .Name("btnSave")
+            .Content("Save")
+            .ApplyStandardSettingsWithType(ButtonType.Save, "save", ComponentSize.Medium)
+            .HtmlAttributes(new
+            {
+                type = "submit",
+                form = "crudForm"
+            }))
+    </div>
+}
+
+@using (Html.BeginForm("Edit", "User", new { area = "Admin" }, FormMethod.Post, new { id = "crudForm", enctype = "multipart/form-data", @class = "crud-form-wrapper" }))
+{
+    @Html.AntiForgeryToken()
+    @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+    @Html.HiddenFor(m => m.Id)
+
+    <div class="crud-content">
+        @Html.Partial("~/Areas/Admin/Views/User/_User.cshtml", Model, viewDataDictionary)
+    </div>
+}
+
+<style>
+    /* Responsive form styles */
+    .crud-form-wrapper {
+        width: 100%;
+    }
+
+    .crud-content {
+        width: 100%;
+        padding: 15px;
+    }
+
+    /* Responsive buttons */
+    .k-actions {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+        .k-actions .k-button {
+            flex: 1 1 auto;
+            min-width: 120px;
+        }
+
+    /* Responsive breakpoints */
+    @@media (max-width: 768px) {
+        .crud-content {
+            padding: 10px;
+        }
+
+        .k-actions {
+            flex-direction: column;
+        }
+
+            .k-actions .k-button {
+                width: 100%;
+                min-width: unset;
+            }
+    }
+
+    @@media (max-width: 576px) {
+        .crud-content {
+            padding: 8px;
+        }
+    }
+</style>

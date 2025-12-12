@@ -1,0 +1,27 @@
+﻿@using StringExtensions = Corno.Web.Extensions.StringExtensions
+@using Corno.Web.Helper
+
+@{
+    Layout = "~/Views/Shared/_LayoutCrud.cshtml";
+}
+
+@Html.Partial("Partials/_CommonViewBag")
+
+@Html.AntiForgeryToken()
+@Html.ValidationSummary(false, "", new { @class = "text-danger" })
+
+@section sectionCrudHeader
+{
+    @Html.Partial("Partials/_BackButton")
+}
+
+<div class="crud-content">
+    @RenderBody()
+</div>
+
+@section sectionCrudFooter
+{
+    @Html.Partial("Partials/_DeleteButton")
+}
+
+@Html.Partial("Partials/_ConfirmDeleteScript")

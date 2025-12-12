@@ -1,0 +1,17 @@
+@using Corno.Web.Helper
+@{
+    string formId = ViewBag.FormId ?? "form";
+}
+
+@*<div class="k-actions k-actions-horizontal k-actions-end">*@
+    @(Html.Kendo().Button()
+        .Name("btnSave")
+        .Content("Save")
+        .ApplyStandardSettingsWithType(ButtonType.Save, "save", ComponentSize.Medium)
+        .HtmlAttributes(new
+        {
+            type = "submit",
+            form = formId
+        }))
+@*</div>*@
+

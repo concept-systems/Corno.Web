@@ -1,0 +1,113 @@
+﻿@using Corno.Concept.Portal.Models
+@model LoginViewModel
+@{
+    Layout = null;
+    // ViewBag.Title = "Login Page";
+}
+
+<link rel="icon" href="~/favicon.png">
+
+<link href="@Url.Content("~/Content/bootstrap.min.css")" rel="stylesheet" type="text/css" />
+<link href="@Url.Content("~/Content/kendo/2021.1.119/kendo.material-v2.min.css")" rel="stylesheet" type="text/css" />
+<link href="@Url.Content("~/Content/fontawesome-all.min.css")" rel="stylesheet" type="text/css" />
+
+<script src="@Url.Content("~/Scripts/fontawesome/fontawesome.min.js")"></script>
+<script src="@Url.Content("~/Scripts/bootstrap.min.js")"></script>
+<script src="@Url.Content("~/Scripts/kendo/2021.1.119/jquery.min.js")"></script>
+<script src="@Url.Content("~/Scripts/kendo/2021.1.119/jszip.min.js")"></script>
+<script src="@Url.Content("~/Scripts/kendo/2021.1.119/kendo.all.min.js")"></script>
+<script src="@Url.Content("~/Scripts/kendo/2021.1.119/kendo.aspnetmvc.min.js")"></script>
+
+<div class="container">
+    <div class="row justify-content-center m-5">
+        <div class="col-12 col-md-8 col-lg-6">
+            <!--Form with header-->
+            @using (Html.BeginForm("Login", "Account", FormMethod.Post, new { @class = "form-signin" }))
+            {
+                @Html.AntiForgeryToken()
+
+                <div class="text-center mb-4">
+                    <img class="p-1 border border-info" src="~/favicon.png" alt="" width="64" height="64">
+                </div>
+
+                <div class="card border-info rounded-lg">
+                    <div class="card-header p-0">
+                        <div class="bg-info text-white text-center py-2">
+                            <h3> User Sign In</h3>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+                        </div>
+                        <!--Body-->
+                        <div class="form-group">
+                            <div class="input-group mb-2">
+                                <span class="k-edit-container w-100">
+                                    @*<div class="input-group-prepend">*@
+                                    @*<span class="k-icon k-i-user"></span>*@
+                                    @*<div class="input-group-text"><i class='fa fa-user text-info'></i></div>*@
+                                    @*</div>*@
+                                    @(Html.Kendo().TextBoxFor(m => m.Email)
+                                          .HtmlAttributes(new
+                                          {
+                                              placeholder = "Email",
+                                              required = "required",
+                                              @class = "w-100"
+                                          })
+                                          )
+                                </span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            @*<div class="input-group">*@
+                            <span class="w-100">
+                                @*<span class="k-icon k-i-unlock"></span>*@
+                                @(Html.Kendo().TextBoxFor(m => m.Password)
+                                      .HtmlAttributes(new
+                                      {
+                                          type = "password",
+                                          placeholder = "Password",
+                                          required = "required",
+                                          @class = "w-100"
+                                          //style = "width:100%;"
+                                      }))
+                            </span>
+                            @*</div>*@
+                        </div>
+
+                        <div class="form-group">
+                            @(Html.Kendo().Button()
+                                  .Name("submit")
+                                  .Icon("login")
+                                  .SpriteCssClass("k-icon-64")
+                                  .HtmlAttributes(new
+                                  {
+                                      type = "submit",
+                                      @class = "k-primary rounded-lg text-white k-icon-48 w-100",
+                                      style = "height:60px"
+                                  })
+                                  .Content("Log in"))
+                            @*<button type="submit" class="btn btn-info btn-block rounded-lg">
+                                    <i class="fa fa-sign-in-alt fa-align-center mr-2"></i>   <strong>  Log in</strong>
+                                </button>*@
+                            @*<input type="submit" value="Log in" class="btn btn-info btn-block rounded-0 py-2">*@
+                        </div>
+                    </div>
+                </div>
+            }
+            <!--Form with header-->
+        </div>
+    </div>
+</div>
+
+@*<div class="col-md-4">
+        <section id="socialLoginForm">
+            @Html.Partial("_ExternalLoginsListPartial", new ExternalLoginListViewModel { ReturnUrl = ViewBag.ReturnUrl })
+        </section>
+    </div>*@
+
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}

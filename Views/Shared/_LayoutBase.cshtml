@@ -1,0 +1,24 @@
+﻿@{
+    Layout = "~/Views/Shared/_AppLayout.cshtml";
+}
+
+<div class="layout-wrapper">
+    <div class="layout-header">
+        <div id="validationSummary" class="layout-header-content">
+            <div class="breadcrumb-container">
+                @Html.Partial("~/Views/Shared/Partials/_Breadcrumb.cshtml")
+            </div>
+            <div class="header-actions-container">
+                @RenderSection("sectionBaseHeader", false)
+            </div>
+        </div>
+    </div>
+    
+    <div class="layout-content">
+        @RenderBody()
+    </div>
+    
+    <div class="layout-footer">
+        @RenderSection("sectionBaseFooter", false)
+    </div>
+</div>

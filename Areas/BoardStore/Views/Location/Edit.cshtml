@@ -1,0 +1,17 @@
+﻿@using Corno.Web.Globals
+@model Corno.Web.Areas.BoardStore.Models.Location
+
+@{
+
+    Layout = "~/Views/Shared/_LayoutEdit.cshtml";
+}
+
+@{
+    ViewBag.BoxTitle = "Edit Location";
+    ViewBag.Area = "BoardStore";
+    ViewBag.Controller = "Location";
+    ViewBag.SubmitAction = "Edit";
+}
+
+@Html.Partial("_Location", Model)
+

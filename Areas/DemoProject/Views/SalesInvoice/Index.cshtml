@@ -1,0 +1,74 @@
+﻿@using Corno.Web.Areas.DemoProject.Dtos
+@using Corno.Web.Globals
+@using Kendo.Mvc.UI
+@using Corno.Web.Helper
+
+@{
+    Layout = "~/Views/Shared/_AppLayout.cshtml";
+
+    ViewBag.Controller = FieldConstants.SalesInvoice;
+}
+
+<div class="grid-container-full-height">
+    @(Html.Kendo().Grid<SalesInvoiceIndexDto>()
+        .Name("grid")
+        .ApplyIndexSettings(customToolbar: toolbar =>
+        {
+            toolbar.Custom()
+                .Text("<span class='k-icon k-i-plus'></span> Add New")
+                .HtmlAttributes(new { @class = "k-grid-add-new k-button-add-new-outlined", style = "float: right;", onclick = "onAddNewClick(event); return false;" });
+        })
+        .Events(events => events.ApplyCommonEvents())
+        .Columns(columns =>
+        {
+            columns.Bound(m => m.InvoiceDate).Title("Invoice Date")
+                .Format("{0:dd/MM/yyyy}")
+                .Align(TextAlign.Center);
+            columns.Bound(m => m.InvoiceNo).Title("Invoice No")
+                .Align(TextAlign.Center);
+            columns.Bound(m => m.CustomerName).Title("Customer")
+                .Align(TextAlign.Left);
+            columns.Bound(m => m.Mobile).Title("Mobile")
+                .Align(TextAlign.Center);
+            columns.Bound(m => m.PaymentMode).Title("Payment Mode")
+                .Align(TextAlign.Center);
+            columns.Bound(m => m.PaidAmount).Title("Paid Amount")
+                .Format("{0:N2}")
+                .Align(TextAlign.Right);
+            // Use GridHelper status column
+            columns.AddStatusColumn();
+            columns.AddCommandColumns(new List<GridCommandConfig>
+            {
+                new GridCommandConfig { Name = "Edit", Text = " ", IconClass = "k-icon k-i-edit k-text-info", ClickHandler = "onEditClick" },
+                new GridCommandConfig { Name = "View", Text = " ", IconClass = "k-icon k-i-preview k-i-eye", ClickHandler = "onViewClick" }
+            });
+        })
+        .DataSource(dataSource => dataSource
+            .ApplyCommonDataSourceSettings("GetIndexDtos", "SalesInvoice", "DemoProject")
+            .Sort(sort => sort.Add(p => p.InvoiceDate).Descending())
+        ))
+</div>
+
+<script type="text/javascript">
+    function onEditClick(e) {
+        e.preventDefault();
+        var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+        window.location.href = '@Url.Action("Edit", "SalesInvoice")' + '/' + dataItem.Id;
+    }
+
+    function onViewClick(e) {
+        e.preventDefault();
+        var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+        var id = dataItem.Id;
+        window.location.href = '@Url.Action("View", "SalesInvoice")' + '?id=' + id;
+    }
+
+    function onAddNewClick(e) {
+        e.preventDefault();
+        window.location.href = '@Url.Action("Create", "SalesInvoice", new { area = "DemoProject" })';
+    }
+
+    function sendData() {
+        // Add any additional data parameters here if needed
+    }
+</script>

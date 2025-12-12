@@ -1,0 +1,17 @@
+﻿@{
+    string controllerName = ViewBag.Controller;
+    string actionName = ViewBag.SubmitAction;
+}
+
+@{
+    Layout = "~/Views/Shared/_LayoutReport.cshtml";
+}
+
+
+@*<h3><i class="fa fa-file-pdf"></i> @ViewBag.Title</h3>*@
+<div class="w-100" style="height: 1200px">
+    @Html.Partial("Partials/ReportViewer", string.Empty)
+</div>
+
+
+

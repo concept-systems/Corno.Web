@@ -1,0 +1,148 @@
+﻿body {
+    /*padding-top: 50px;*/
+    padding-top: 0Px;
+    padding-bottom: 20px;
+}
+
+/* Set padding to keep content from hitting the edges */
+.body-content {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+/* Override the default bootstrap behavior where horizontal description lists 
+   will truncate terms that are too long to fit in the left column 
+*/
+.dl-horizontal dt {
+    white-space: normal;
+}
+
+/* Set width on the form input elements since they're 100% wide by default */
+input,
+select,
+textarea {
+    /*max-width: 280px;*/
+    max-width: 100%;
+}
+
+/*
+*
+* ==========================================
+* CUSTOM UTIL CLASSES
+* ==========================================
+*
+*/
+
+.vertical-nav {
+    min-width: 15rem;
+    width: 15rem;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.1);
+    transition: all 0.4s;
+    overflow: auto;
+}
+
+.page-content {
+    width: calc(100% - 15rem);
+    margin-left: 15rem;
+    margin-top: -50px;
+    top: 0;
+    /*position: fixed;*/
+    transition: all 0.4s;
+    /*overflow: auto;*/
+}
+
+/* for toggle behavior */
+
+#sidebar.active {
+    margin-left: -15rem;
+}
+
+#content.active {
+    width: 100%;
+    margin: 0;
+    margin-top: -50px;
+}
+
+.form-group.required .col-form-label:after {
+    content: " *";
+    color: red;
+}
+
+.form-signin {
+    width: 100%;
+    max-width: 420px;
+    padding: 15px;
+    margin: 0 auto;
+}
+
+
+/*.form-control:focus {
+    border-color: deepskyblue !important;
+    box-shadow: 0 0 5px rgba(98, 101, 228, 1) !important;
+}*/
+
+/*.form-control:focus {
+    border-color: #28a745;
+    box-shadow: 0 0 15px rgba(98, 101, 228, 1)
+} */
+
+@media (max-width: 768px) {
+    #sidebar {
+        margin-left: -15rem;
+    }
+
+    #sidebar.active {
+        margin-left: 0;
+    }
+
+    #content {
+        width: 100%;
+        margin: 0;
+    }
+
+    #content.active {
+        margin-left: 15rem;
+        width: calc(100% - 15rem);
+    }
+}
+
+
+@media (max-width: 480px) {
+    .signin {
+        font-size: 1.5rem;
+    }
+
+    .form-container {
+        padding: 10px;
+    }
+}
+
+/*Extra Added*/
+.k-grid .k-grid-header .k-header,
+.k-grid .k-grid-header-locked .k-header {
+    white-space: normal;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.k-grid-content {
+    overflow-x: scroll;
+}
+
+
+.grandParentContaniner {
+    display: table;
+    width: 35%;
+    height: 100%;
+    margin: 0 auto;
+}
+
+.parentContainer {
+    display: table-cell;
+    vertical-align: middle;
+}
+

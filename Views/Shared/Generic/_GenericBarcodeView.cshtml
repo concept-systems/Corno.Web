@@ -1,0 +1,192 @@
+﻿@model Corno.Web.Models.Packing.Label
+
+@{
+    string controllerName = ViewBag.Controller;
+    string actionName = ViewBag.SubmitAction;
+}
+
+@{
+    Layout = "~/Views/Shared/_LayoutBase.cshtml";
+}
+
+@if (TempData["Success"] != null)
+{
+    <script type="text/javascript">
+        showSuccessMessage("@TempData["Success"]");
+    </script>
+}
+<div class="container-fluid">
+    @using (Html.BeginForm(actionName, controllerName, null, FormMethod.Post, new { id = "form", @class = "form" }))
+    {
+        <h3><i class="fa fa-indent"></i> @ViewBag.BoxTitle.ToString()</h3>
+        <hr />
+        @Html.AntiForgeryToken()
+
+        <div class="row">
+            <div id="divPartial" class="col-6" style="height: 350px">
+                @RenderSection("WeighingScale", false)
+                @Html.Partial("Partials/ReportViewer", string.Empty)
+            </div>
+            <div class="col-6">
+                @RenderBody()
+                <hr />
+                <div class="form-group row">
+                    <div class="col">
+                        <button type="button" id="btnPreview" class="k-button k-button-md k-button-outline k-button-outline-info form-control"
+                                onclick="preview_label('Preview')">
+                            <i class="fa fa-eye"></i>
+                            Preview
+                        </button>
+                    </div>
+                    <div class="col">
+                        <button type="button" id="btnDuplicate" class="k-button k-button-md k-button-outline k-button-outline-info form-control"
+                                onclick="duplicate()">
+                            <i class="fa fa-copy"></i>
+                            Duplicate
+                        </button>
+                    </div>
+                    <div class="col">
+                        <button type="button" id="btnPrint" class="k-button k-button-md k-button-outline k-button-outline-info form-control"
+                                onclick="preview_label('Print')">
+                            <i class="fa fa-print"></i>
+                            Print
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<script type="text/javascript">
+    //duplicate = function() {
+    //    bootbox.alert('duplicate function is not implemented.');
+    //}
+
+    function handle_label_response(result, action) {
+        if (!result.error) {
+            $('#divPartial').html(result);
+            switch (action) {
+                case "Print":
+                    // Printing initiated
+                    PrintToPrinter();
+                    break;
+            case "Duplicate":
+                    window.printToPrinter();
+                    window.clear_controls();
+                break;
+            }
+        } else {
+            showErrorMessage(result.message || "An error occurred.");
+            $('#divPartial').html("");
+        }
+    }
+
+    function handle_label_request(url, formData, action) {
+        $.ajax({
+            type: "POST",
+            enctype: 'multipart/form-data',
+            url: url,
+            data: formData,
+
+            processData: false,
+            contentType: false,
+            cache: false,
+            success: function(result) {
+                handle_label_response(result, action);
+            },
+            error: function(e) {
+                showErrorMessage(e.responseText || "An error occurred while processing the request.");
+            }
+        });
+    }
+
+    function preview_label(action) {
+        var url = '@Url.Action("PreviewLabel", controllerName)'; // url
+        var formData = new FormData($('form')[0]); // Create an arbitrary FormData instance
+        formData.append('action', action);
+
+        handle_label_request(url, formData, action);
+
+        //$.ajax({
+        //    type: "POST",
+        //    enctype: 'multipart/form-data',
+        //    url: url,
+        //    data: formData,
+
+        //    processData: false,
+        //    contentType: false,
+        //    cache: false,
+        //    success: function (result) {
+        //        handle_label_result(result);
+        //    },
+        //    error: function (e) {
+        //        bootbox.alert(e.responseText);
+        //    }
+        //});
+
+        //$.post(url, // url
+        //    //formData,
+        //    $('#form').serializeArray(), // data to be submit
+        //    function (result) { // success callback
+        //        if (!result.error) {
+        //            $('#divPartial').html(result);
+        //        }
+        //        else {
+
+        //            var validationSummary = $('#validationSummary ul.validation-summary-errors');
+        //            if (validationSummary.length === 0) {
+        //                $('#validationSummary').after('<ul class="validation-summary-errors"></ul>');
+        //                validationSummary = $('#validationSummary ul.validation-summary-errors');
+        //            }
+        //            validationSummary.append('<li>' + result.message + '</li>');
+        //            $("#validationSummary").load(" #validationSummary > *");
+
+        //            bootbox.alert({
+        //                message: result.message,
+        //                centerVertical: true
+        //            });
+
+        //            $('#divPartial').html("");
+        //        }
+        //    });
+
+
+        @*$('#divPartial').load('@Url.Action("OnReportPreview","MaterialInward")',
+            $('#form').serializeArray(), function(result) {
+                alert("Load was performed." + result);
+            }
+        );*@
+    }
+
+    function UpdateValidationSummary(result) {
+        var validationSummary = $('#validationSummary ul.validation-summary-errors');
+        if (validationSummary.length === 0) {
+            $('#validationSummary').after('<ul class="validation-summary-errors"></ul>');
+            validationSummary = $('#validationSummary ul.validation-summary-errors');
+        }
+        validationSummary.append('<li>' + result.message + '</li>');
+        $("#validationSummary").load(" #validationSummary > *");
+    }
+
+    //$("#btnPreview").click(function (e) {
+    //    preview("Preview");
+    //});
+
+    //$("#btnDuplicate").click(function (e) {
+
+    //});
+
+    //$("#btnPrint").click(function (e) {
+    //    preview("Print");
+    //});
+
+
+    //function onPrintBegin() {
+    //    alert("inward print begin");
+    //    $('#form').submit();
+    //}
+    //function onPrintEnd() {
+    //    alert("inward print End");
+    //}
+</script>

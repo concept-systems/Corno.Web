@@ -1,0 +1,650 @@
+﻿@using Corno.Web.Globals
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@model Corno.Web.Areas.Kitchen.Dto.Plan.PlanViewDto
+
+@{
+    Layout = "~/Views/Shared/_LayoutBase.cshtml";
+
+    ViewBag.BoxTitle = "View Plan ";
+    ViewBag.Area = "Kitchen";
+    ViewBag.Controller = "Plan";
+    ViewBag.Index = "Index";
+
+    var controller = ViewBag.Controller;
+}
+
+<style>
+    .custom-tile-container {
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        margin-bottom: 15px;
+        background: #fff;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .custom-tile-header {
+        background: #f5f5f5;
+        border-bottom: 1px solid #e0e0e0;
+        padding: 10px 15px;
+        font-weight: 600;
+        font-size: 14px;
+        color: #333;
+    }
+    .custom-tile-body {
+        padding: 15px;
+    }
+    .charts-container {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+    .chart-tile {
+        flex: 1;
+        min-width: 0;
+    }
+    @@media (max-width: 768px) {
+        .charts-container {
+            flex-direction: column;
+        }
+    }
+</style>
+
+<div style="overflow-x: auto;">
+    <div id="printable">
+        <!-- 1. Buttons -->
+        <div class="custom-tile-container">
+            @*<div class="custom-tile-header">Actions</div>*@
+            <div class="custom-tile-body">
+                <div class="k-actions k-actions-horizontal k-actions-end">
+                    @(Html.Kendo().Button()
+                        .Name("btnUpdateDueDate")
+                        .Content("Update Due Date")
+                        .ApplyStandardSettingsWithType(ButtonType.Save, "calendar")
+                        .Events(ev => ev.Click("onUpdateDueDateClick"))
+                        .HtmlAttributes(new
+                        {
+                            type = "button",
+                            @class = "me-2"
+                        }))
+                    @(Html.Kendo().Button()
+                        .Name("btnUpdateLotNo")
+                        .Content("Update Lot No")
+                        .ApplyStandardSettingsWithType(ButtonType.Save, "tag")
+                        .Events(ev => ev.Click("onUpdateLotNoClick"))
+                        .HtmlAttributes(new
+                        {
+                            type = "button",
+                            @class = "me-2"
+                        }))
+                    @(Html.Kendo().Button()
+                        .Name("btnDeletePlan")
+                        .Content("Delete Plan")
+                        .ApplyStandardSettingsWithType(ButtonType.Delete, "trash")
+                        .Events(ev => ev.Click("onPlanDeleteClick"))
+                        .HtmlAttributes(new
+                        {
+                            type = "button",
+                            @class = "me-2"
+                        }))
+                    @(Html.Kendo().Button()
+                        .Name("print")
+                        .Content("Print")
+                        .ApplyStandardSettingsWithType(ButtonType.Info, "print")
+                        .Events(ev => ev.Click("printTileLayout"))
+                        .HtmlAttributes(new
+                        {
+                            type = "button",
+                            @class = "me-2"
+                        }))
+                    @(Html.Kendo().Button()
+                        .Name("btnBack")
+                        .Content("List")
+                        .ApplyStandardSettingsWithType(ButtonType.Info, "arrow-left")
+                        .Events(e => e.Click("onList")))
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Plan Header -->
+        <div class="custom-tile-container">
+            <div class="custom-tile-header">Plan Information</div>
+            <div class="custom-tile-body">
+                <table class="table k-table k-table-alt-row w-100">
+                    <colgroup>
+                        <col style="width: auto;">
+                        <col style="width: 35%;">
+                        <col style="width: auto;">
+                        <col style="width: 35%;">
+                    </colgroup>
+                    <tbody>
+                        <tr>
+                            <td> Warehouse Order No :</td>
+                            <td> <strong>@Model.WarehouseOrderNo</strong></td>
+                            <td> So No :</td>
+                            <td><strong>@Model.SoNo</strong></td>
+                        </tr>
+                        <tr>
+                            <td> Lot No :</td>
+                            <td><strong>@Model.LotNo</strong></td>
+                            <td> Due Date :</td>
+                            <td> <strong>@(Model.DueDate.HasValue ? Model.DueDate.Value.ToString("MM/dd/yyyy") : "N/A")</strong></td>
+                        </tr>
+                        <tr>
+                            <td> One Line Item Code :</td>
+                            <td><strong>@Model.OneLineItemCode</strong></td>
+                            <td> Plan Date :</td>
+                            <td> <strong> @(Model.PlanDate.HasValue ? Model.PlanDate.Value.ToString("MM/dd/yyyy") : "N/A")</strong></td>
+                        </tr>
+                        <tr>
+                            <td> Warehouse Name :</td>
+                            <td><strong>@(Model.WarehouseName ?? "N/A")</strong></td>
+                            <td> Import File Name :</td>
+                            <td> <strong>@(Model.ImportFileName ?? "N/A")</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 3. Plan Items Grid -->
+        <div class="custom-tile-container">
+            <div class="custom-tile-header">Plan Item Details</div>
+            <div class="custom-tile-body">
+                <div style="overflow-x: auto;">
+                    <div class="col-12">
+                        @(Html.Kendo().Grid(Model.PlanViewItemDtos)
+                            .Name("gridPlanItems")
+                            .ApplyCommonSettings()
+                            .Events(events => events.ApplyCommonEvents())
+                            .Columns(columns =>
+                            {
+                                columns.AddCommandColumns(new List<GridCommandConfig>
+                                {
+                                    new() { Name = "Delete", Text = ("<i class='k-icon k-i-delete k-text-error'></i>"), IconClass = "fa fa-trash",ClickHandler = "onDeleteClick" },
+                                });
+                                columns.Bound(m => m.Position).Align(TextAlign.Left)
+                                    .ClientTemplate("<a href='" + @Url.Action("PlanDetailView", "Plan") + "?warehouseOrderNo=" + @Model.WarehouseOrderNo + "&position=#=Position#' class='text-primary text-decoration-underline'>#=Position#</a>");
+                                columns.Bound(m => m.SoPosition).Align(TextAlign.Left);
+                                columns.Bound(m => m.WarehousePosition).Align(TextAlign.Left);
+                                columns.Bound(m => m.ItemCode).Align(TextAlign.Left);
+                                columns.Bound(m => m.Description).Align(TextAlign.Left);
+                                columns.Bound(m => m.ProductLine).Align(TextAlign.Left);
+                                columns.Bound(m => m.Group).Align(TextAlign.Left);
+                                columns.Bound(m => m.ItemType);
+                                columns.Bound(m => m.CarcassCode);
+                                columns.Bound(m => m.AssemblyCode).Align(TextAlign.Left);
+                                columns.Bound(m => m.DrawingNo).Align(TextAlign.Left);
+                                columns.Bound(m => m.OrderQuantity).ClientFooterTemplate("#=sum#");
+                                columns.Bound(m => m.PrintQuantity).ClientFooterTemplate("#=sum#");
+                                columns.Bound(m => m.BendQuantity).ClientFooterTemplate("#=sum#");
+                                columns.Bound(m => m.SortQuantity).ClientFooterTemplate("#=sum#");
+                                columns.Bound(m => m.PackQuantity).ClientFooterTemplate("#=sum#");
+                            })
+                            .DataSource(dataSource => dataSource
+                                .Ajax()
+                                .ServerOperation(false)
+                                .Aggregates(aggregates =>
+                                {
+                                    aggregates.Add(p => p.OrderQuantity).Sum();
+                                    aggregates.Add(p => p.PrintQuantity).Sum();
+                                    aggregates.Add(p => p.SortQuantity).Sum();
+                                    aggregates.Add(p => p.BendQuantity).Sum();
+                                    aggregates.Add(p => p.PackQuantity).Sum();
+                                })
+                                .Model(model => model.Id(FieldConstants.Id))
+                            ))
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Labels Grid -->
+        <div class="custom-tile-container">
+            <div class="custom-tile-header">Labels</div>
+            <div class="custom-tile-body">
+                <div style="overflow-x: auto;">
+                    <div class="col-12">
+                        @(Html.Kendo().Grid<Corno.Web.Areas.Kitchen.Dto.Label.LabelIndexDto>()
+                            .Name("gridLabels")
+                            .ApplyCommonSettings()
+                            .Events(events => events.ApplyCommonEvents())
+                            .Columns(columns =>
+                            {
+                                columns.Bound(m => m.LabelDate).Format("{0:dd/MM/yyyy}");
+                                columns.Bound(m => m.Barcode);
+                                columns.Bound(m => m.Position);
+                                columns.Bound(m => m.CarcassCode);
+                                columns.Bound(m => m.AssemblyCode);
+                                columns.Bound(m => m.Family);
+                                columns.Bound(m => m.OrderQuantity);
+                                columns.Bound(m => m.Quantity);
+                                columns.Bound(m => m.Status);
+                            })
+                            .DataSource(dataSource => dataSource
+                                .Ajax()
+                                .Read(read => read.Action("GetLabelsForPlan", "Plan", new { area = "Kitchen" })
+                                    .Data("getLabelsReadData"))
+                                .PageSize(20)
+                                .Model(model => model.Id(FieldConstants.Id))
+                            ))
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Cartons Grid -->
+        <div class="custom-tile-container">
+            <div class="custom-tile-header">Cartons</div>
+            <div class="custom-tile-body">
+                <div style="overflow-x: auto;">
+                    <div class="col-12">
+                        @(Html.Kendo().Grid<Corno.Web.Areas.Kitchen.Dto.Carton.CartonIndexDto>()
+                            .Name("gridCartons")
+                            .ApplyCommonSettings()
+                            .Events(events => events.ApplyCommonEvents())
+                            .Columns(columns =>
+                            {
+                                columns.Bound(m => m.PackingDate).Format("{0:dd/MM/yyyy}");
+                                columns.Bound(m => m.CartonNo);
+                                columns.Bound(m => m.CartonBarcode);
+                                columns.Bound(m => m.SoNo);
+                                columns.Bound(m => m.Status);
+                            })
+                            .DataSource(dataSource => dataSource
+                                .Ajax()
+                                .Read(read => read.Action("GetCartonsForPlan", "Plan", new { area = "Kitchen" })
+                                    .Data("getCartonsReadData"))
+                                .PageSize(20)
+                                .Model(model => model.Id(FieldConstants.Id))
+                            ))
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. Charts -->
+        <div class="charts-container">
+            <div class="custom-tile-container chart-tile">
+                <div class="custom-tile-header">Label Count by Date</div>
+                <div class="custom-tile-body">
+                    @(Html.Kendo().Chart(Model.PlanViewChartDtos)
+                        .Name("chartLabelCountByDate")
+                        .HtmlAttributes(new { style = "width: 100%;height: 400px;" })
+                        .Legend(legend => legend
+                            .Position(ChartLegendPosition.Top)
+                            .Title(labels => labels.Text($"Total Labels: {Model.PlanViewChartDtos.Sum(d => d.Count)}")))
+                        .Series(series => series
+                            .Column(model => model.Count)
+                            .Name("Label Count"))
+                        .CategoryAxis(axis => axis
+                            .Categories(model => model.LabelDate)
+                            .Type(ChartCategoryAxisType.Category)
+                            .Title("Label Date")
+                            .Labels(labels => labels.Format("{0:dd MMM yyyy}")
+                                .Rotation(30)))
+                        .ValueAxis(axis => axis
+                            .Numeric()
+                            .Name("count")
+                            .Title(t => t.Text("Count")))
+                        .Tooltip(tooltip => tooltip
+                            .Visible(true))
+                        )
+                </div>
+            </div>
+            <div class="custom-tile-container chart-tile">
+                <div class="custom-tile-header">Carton Count by Date</div>
+                <div class="custom-tile-body">
+                    @(Html.Kendo().Chart(Model.CartonViewChartDtos)
+                        .Name("cartonCountChart")
+                        .HtmlAttributes(new { style = "width: 100%;height: 400px;" })
+                        .Legend(legend => legend
+                            .Position(ChartLegendPosition.Top)
+                            .Title(labels => labels.Text($"Total Packing: {Model.CartonViewChartDtos.Sum(d => d.Count)}")))
+                        .Series(series => series
+                            .Column(model => model.Count)
+                            .Name("Packing Count"))
+                        .CategoryAxis(axis => axis
+                            .Categories(model => model.PackingDate)
+                            .Type(ChartCategoryAxisType.Category)
+                            .Title("Packing Date")
+                            .Labels(labels => labels.Format("{0:dd MMM yyyy}")
+                                .Rotation(30)))
+                        .ValueAxis(axis => axis
+                            .Numeric()
+                            .Name("count")
+                            .Title(t => t.Text("Count")))
+                        .Tooltip(tooltip => tooltip
+                            .Visible(true))
+                        )
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    function getLabelsReadData() {
+        return {
+            warehouseOrderNo: '@Model.WarehouseOrderNo'
+        };
+    }
+
+    function getCartonsReadData() {
+        return {
+            warehouseOrderNo: '@Model.WarehouseOrderNo'
+        };
+    }
+
+    function onList() {
+        var area = '@ViewBag.Area';
+        var controller = '@ViewBag.Controller';
+        var action = '@ViewBag.Index';
+
+        // Build the URL using ASP.NET MVC routing pattern
+        var url = '/' + area + '/' + controller + '/' + action;
+        // Redirect
+        window.location.href = url;
+    }
+
+    function printTileLayout() {
+        var printContent = document.getElementById("printable").innerHTML;
+        var originalContent = document.body.innerHTML;
+        document.body.innerHTML = printContent;
+        window.print();
+        document.body.innerHTML = originalContent;
+    }
+
+    function onViewClick(e) {
+        e.preventDefault();
+        var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+        window.location.href = '@Url.Action("PlanDetailView", "Plan")' + '?warehouseOrderNo=' + '@Model.WarehouseOrderNo' + '&position=' + dataItem.Position;
+    }
+
+    function onDeleteClick(e) {
+        e.preventDefault();
+        var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+        window.location.href = '@Url.Action("DeletePosition", "Plan")' + '?warehouseOrderNo=' + '@Model.WarehouseOrderNo' + '&position=' + dataItem.Position;
+    }
+
+    function onDataBound(e) {
+        var grid = this;
+        grid.columns.forEach(function (column, index) {
+            grid.autoFitColumn(index);
+        });
+    }
+
+    function isDeleteVisible(dataItem) {
+        return dataItem.PrintQuantity <= 0; // Hide button if PrintQuantity > 0
+    }
+
+    function onPlanDeleteClick(e) {
+        e.preventDefault();
+
+        var warehouseOrderNo = '@Model.WarehouseOrderNo';
+
+        bootbox.confirm({
+            title: "Confirm Deletion",
+            message: "Are you sure you want to delete plan for warehouse order: <strong>" + warehouseOrderNo + "</strong>?<br/><br/><strong>Warning:</strong> This action cannot be undone. All associated labels will also be deleted.",
+            centerVertical: true,
+            buttons: {
+                confirm: {
+                    label: 'Yes, Delete',
+                    className: 'btn-danger'
+                },
+                cancel: {
+                    label: 'Cancel',
+                    className: 'btn-secondary'
+                }
+            },
+            callback: function (result) {
+                if (result) {
+                    // Show progress dialog
+                    var progressDialog = bootbox.dialog({
+                        title: "Deleting Plan",
+                        message: '<div class="text-center"><i class="fa fa-spinner fa-spin fa-3x"></i><br/><br/><p>Deleting plan, please wait...</p><div class="progress" style="margin-top: 20px;"><div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div></div></div>',
+                        centerVertical: true,
+                        closeButton: false,
+                        buttons: {}
+                    });
+
+                    // Use fetch API to delete plan
+                    fetch('@Url.Action("DeletePlan", "Plan")', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: 'warehouseOrderNo=' + encodeURIComponent(warehouseOrderNo)
+                    })
+                    .then(function(response) {
+                        return response.json();
+                    })
+                    .then(function(data) {
+                        progressDialog.modal('hide');
+
+                        if (data.success === true) {
+                            bootbox.alert({
+                                title: "Success",
+                                message: '<i class="fa fa-check-circle" style="color: green; font-size: 24px;"></i><br/><br/><strong>Plan deleted successfully!</strong>',
+                                centerVertical: true,
+                                callback: function() {
+                                    var redirectUrl = '@Url.Action("Index", "Plan", new { area = "Kitchen" })';
+                                    window.location.href = redirectUrl;
+                                }
+                            });
+                        } else {
+                            bootbox.alert({
+                                title: "Error",
+                                message: '<i class="fa fa-exclamation-circle" style="color: red; font-size: 24px;"></i><br/><br/><strong>Delete failed:</strong><br/>' + (data.message || 'An unknown error occurred.'),
+                                centerVertical: true
+                            });
+                        }
+                    })
+                    .catch(function(error) {
+                        progressDialog.modal('hide');
+                        bootbox.alert({
+                            title: "Error",
+                            message: '<i class="fa fa-exclamation-circle" style="color: red; font-size: 24px;"></i><br/><br/><strong>An error occurred:</strong><br/>' + (error.message || 'Failed to delete plan. Please try again.'),
+                            centerVertical: true
+                        });
+                    });
+                }
+            }
+        });
+    }
+
+    function onUpdateDueDateClick(e) {
+        e.preventDefault();
+
+        var warehouseOrderNo = '@Model.WarehouseOrderNo';
+        var currentDueDate = '@(Model.DueDate.HasValue ? Model.DueDate.Value.ToString("yyyy-MM-dd") : "")';
+
+        // Show dialog to get due date input
+        bootbox.prompt({
+            title: "Update Due Date",
+            message: "Enter the new due date for warehouse order: <strong>" + warehouseOrderNo + "</strong>",
+            inputType: 'date',
+            value: currentDueDate,
+            centerVertical: true,
+            buttons: {
+                confirm: {
+                    label: 'Update',
+                    className: 'btn-primary'
+                },
+                cancel: {
+                    label: 'Cancel',
+                    className: 'btn-secondary'
+                }
+            },
+            callback: function (result) {
+                if (result) {
+                    // Show progress dialog
+                    var progressDialog = bootbox.dialog({
+                        title: "Updating Due Date",
+                        message: '<div class="text-center"><i class="fa fa-spinner fa-spin fa-3x"></i><br/><br/><p>Updating due date, please wait...</p><div class="progress" style="margin-top: 20px;"><div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div></div></div>',
+                        centerVertical: true,
+                        closeButton: false,
+                        buttons: {}
+                    });
+
+                    // Use fetch API to update due date
+                    fetch('@Url.Action("UpdateDueDate", "Plan")', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: 'warehouseOrderNo=' + encodeURIComponent(warehouseOrderNo) + '&dueDate=' + encodeURIComponent(result)
+                    })
+                    .then(function(response) {
+                        return response.json();
+                    })
+                    .then(function(data) {
+                        progressDialog.modal('hide');
+
+                        if (data.success === true) {
+                            bootbox.alert({
+                                title: "Success",
+                                message: '<i class="fa fa-check-circle" style="color: green; font-size: 24px;"></i><br/><br/><strong>Due date updated successfully!</strong>',
+                                centerVertical: true,
+                                callback: function() {
+                                    window.location.reload();
+                                }
+                            });
+                        } else {
+                            bootbox.alert({
+                                title: "Error",
+                                message: '<i class="fa fa-exclamation-circle" style="color: red; font-size: 24px;"></i><br/><br/><strong>Update failed:</strong><br/>' + (data.message || 'An unknown error occurred.'),
+                                centerVertical: true
+                            });
+                        }
+                    })
+                    .catch(function(error) {
+                        progressDialog.modal('hide');
+                        bootbox.alert({
+                            title: "Error",
+                            message: '<i class="fa fa-exclamation-circle" style="color: red; font-size: 24px;"></i><br/><br/><strong>An error occurred:</strong><br/>' + (error.message || 'Failed to update due date. Please try again.'),
+                            centerVertical: true
+                        });
+                    });
+                }
+            }
+        });
+    }
+
+    function onUpdateLotNoClick(e) {
+        e.preventDefault();
+
+        var warehouseOrderNo = '@Model.WarehouseOrderNo';
+        var currentLotNo = '@Model.LotNo';
+
+        // Show dialog to get lot no input
+        bootbox.prompt({
+            title: "Update Lot No",
+            message: "Enter the new lot number for warehouse order: <strong>" + warehouseOrderNo + "</strong>",
+            inputType: 'text',
+            value: currentLotNo,
+            centerVertical: true,
+            buttons: {
+                confirm: {
+                    label: 'Update',
+                    className: 'btn-primary'
+                },
+                cancel: {
+                    label: 'Cancel',
+                    className: 'btn-secondary'
+                }
+            },
+            callback: function (result) {
+                if (result) {
+                    // Show progress dialog
+                    var progressDialog = bootbox.dialog({
+                        title: "Updating Lot No",
+                        message: '<div class="text-center"><i class="fa fa-spinner fa-spin fa-3x"></i><br/><br/><p>Updating lot number, please wait...</p><div class="progress" style="margin-top: 20px;"><div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div></div></div>',
+                        centerVertical: true,
+                        closeButton: false,
+                        buttons: {}
+                    });
+
+                    // Use fetch API to update lot no
+                    fetch('@Url.Action("UpdateLotNo", "Plan")', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: 'warehouseOrderNo=' + encodeURIComponent(warehouseOrderNo) + '&lotNo=' + encodeURIComponent(result)
+                    })
+                    .then(function(response) {
+                        return response.json();
+                    })
+                    .then(function(data) {
+                        progressDialog.modal('hide');
+
+                        if (data.success === true) {
+                            bootbox.alert({
+                                title: "Success",
+                                message: '<i class="fa fa-check-circle" style="color: green; font-size: 24px;"></i><br/><br/><strong>Lot No updated successfully!</strong>',
+                                centerVertical: true,
+                                callback: function() {
+                                    window.location.reload();
+                                }
+                            });
+                        } else {
+                            bootbox.alert({
+                                title: "Error",
+                                message: '<i class="fa fa-exclamation-circle" style="color: red; font-size: 24px;"></i><br/><br/><strong>Update failed:</strong><br/>' + (data.message || 'An unknown error occurred.'),
+                                centerVertical: true
+                            });
+                        }
+                    })
+                    .catch(function(error) {
+                        progressDialog.modal('hide');
+                        bootbox.alert({
+                            title: "Error",
+                            message: '<i class="fa fa-exclamation-circle" style="color: red; font-size: 24px;"></i><br/><br/><strong>An error occurred:</strong><br/>' + (error.message || 'Failed to update lot number. Please try again.'),
+                            centerVertical: true
+                        });
+                    });
+                }
+            }
+        });
+    }
+
+    function onDeletePositionClick(e) {
+        var warehouseOrderNo = "";
+        bootbox.prompt({
+            title: "Warehouse Order No!",
+            centerVertical: true,
+            callback: function (promptResult) {
+                warehouseOrderNo = promptResult;
+                bootbox.prompt({
+                    title: "Position!",
+                    centerVertical: true,
+                    callback: function (promptResult) {
+                         var url = '@Url.Action("DeletePosition", ViewBag.Controller)';
+                         var formData = new FormData(); // Create an arbitrary FormData instance
+                         formData.append('warehouseOrderNo', warehouseOrderNo);
+                        formData.append('position', promptResult);
+                        handle_ajax_request(url, formData, "DeletePosition");
+                    }
+                });
+            }
+        });
+    }
+
+    function planChart() {
+        $("#chartLabelCountByDate").data("kendoChart").dataSource.read();
+    }
+    function cartonChart() {
+        $("#cartonCountChart").data("kendoChart").dataSource.read();
+    }
+
+    function sendData() {
+    }
+
+    // Initialize gridPlanItems with model data
+    $(document).ready(function() {
+        var grid = $("#gridPlanItems").data("kendoGrid");
+        if (grid) {
+            var modelData = @Html.Raw(Json.Encode(Model.PlanViewItemDtos));
+            grid.dataSource.data(modelData);
+        }
+    });
+</script>

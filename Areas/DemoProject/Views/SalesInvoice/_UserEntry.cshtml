@@ -1,0 +1,72 @@
+@using Kendo.Mvc.UI
+@model Corno.Web.Areas.DemoProject.Dtos.SalesInvoiceDto
+
+<!-- Toggle button visible on mobile to open the responsive panel -->
+<button id="salesInvoicePanelToggle" class="k-button k-button-md k-rounded-md k-button-solid k-button-solid-primary rp-toggle" type="button">
+    <span class="k-icon k-i-menu"></span>
+    Show Details
+</button>
+
+@(Html.Kendo().ResponsivePanel()
+    .Name("salesInvoicePanel")
+    .Orientation(ResponsivePanelOrientation.Top)
+    .Breakpoint(100)
+    .ToggleButton("#salesInvoicePanelToggle")
+    .HtmlAttributes(new { style = "margin-bottom: 20px;" })
+    .Content(@<text>
+        <div class="responsive-panel-container">
+            <div class="k-widget k-panel mb-4">
+                <h3 class="k-panel-title">Header</h3>
+                <div class="k-panel-content">
+                    @Html.Partial("_CreateHeader", Model)
+                </div>
+            </div>
+
+            <div class="k-widget k-panel mb-4">
+                <h3 class="k-panel-title">Items</h3>
+                <div class="k-panel-content">
+                    @Html.Partial("_CreateEditGrid", Model)
+                </div>
+            </div>
+        </div>
+    </text>
+    )
+)
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#form").kendoValidator({
+            rules: {
+                requiredMultiColumnComboBox: function (input) {
+                    if (input.is("[data-role=multicolumncombobox]")) {
+                        return input.val() !== "";
+                    }
+                    return true;
+                },
+                requiredDatePicker: function (input) {
+                    if (input.is("[data-role=datepicker]")) {
+                        var value = input.val();
+                        // Check if the value is a valid datfe
+                        return kendo.parseDate(value) !== null;
+                    }
+                    return true;
+                }
+            },
+            messages: {
+                requiredMultiColumnComboBox: function (input) {
+                    var comboBoxName = input.attr("name");
+                    switch (comboBoxName) {
+                        case "WarehouseOrderNo":
+                            return "Please select Warehouse Order No";
+                        case "ItemId":
+                            return "Please select Item.";
+                        // Add cases for other comboboxes as needed
+                        default:
+                            return "Please select a value for the ComboBox.";
+                    }
+                },
+                requiredDatePicker: "Please select due date."
+            }
+        });
+    });
+</script>

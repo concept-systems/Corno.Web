@@ -1,0 +1,33 @@
+@using Corno.Web.Globals
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@model Corno.Web.Areas.Kitchen.Dto.Pallet.PalletInViewDto
+
+@{
+    Layout = "~/Views/Shared/_LayoutCrud.cshtml";
+}
+
+@{
+    ViewBag.BoxTitle = "Pallet In";
+    ViewBag.SubmitAction = "Create";
+}
+
+@section sectionCrudFooter
+{
+    <div class="k-card-actions k-card-actions-horizontal k-card-actions-end">
+        @(Html.Kendo().Button()
+            .Name("btnList")
+            .Content("List")
+            .ApplyStandardSettingsWithType(ButtonType.Info, "arrow-left", ComponentSize.Medium)
+            .Events(e => e.Click("onBack")))
+    </div>
+}
+
+@Html.Partial("_PalletIn", Model)
+
+<script>
+    function onBack() {
+        window.location.href = '@Url.Action("Index", "PalletIn", new { area = "Kitchen" })';
+        /* history.back();*/
+    }
+</script>

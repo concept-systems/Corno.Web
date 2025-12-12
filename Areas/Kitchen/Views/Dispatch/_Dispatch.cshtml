@@ -1,0 +1,118 @@
+﻿@using Kendo.Mvc.UI
+@model Corno.Web.Areas.Kitchen.Dto.DispatchViewDto
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+}
+@{
+    ViewBag.BoxTitle = "Dispatch";
+    ViewBag.Title = "Dispatch";
+}
+@(Html.Kendo().TextBoxFor(m => m.LoadNo)
+    .Label(l => l.Content("Load No no here...").Floating(true))
+    .HtmlAttributes(new
+    {
+        style = "width: 100% !important; max-width: 1400px !important;"
+    }))
+
+@(Html.Kendo().TextBoxFor(m => m.WarehouseOrderNo)
+    .Label(l => l.Content("WH Order no here...").Floating(true))
+    .HtmlAttributes(new
+    {
+        style = "width: 100% !important; max-width: 1400px !important;"
+    }))
+           
+@(Html.Kendo().TextAreaFor(m => m.CartonBarcode)
+    .Rows(2)
+    .Label(l => l.Content("Scan Barcode here").Floating(true))
+    .HtmlAttributes(new
+    {
+        style = "width: 100% !important; max-width: 1400px !important;col-form-label"
+    }))
+       <hr/>  
+@(Html.Kendo().Grid(Model.CartonDispatchDtos)
+    .Name("grid")
+    .Columns(columns =>
+    {
+        columns.Bound(m => m.LoadNo)
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+            .ClientTemplate("#= LoadNo #" + "<input type='hidden' name='DispatchDetails[#= index(data)#].LoadNo' value='#= LoadNo #' />   ")
+            .HtmlAttributes(new { style = "text-align: center" });
+        columns.Bound(m => m.WarehouseOrderNo)
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+            .ClientTemplate("#= WarehouseOrderNo #" + "<input type='hidden' name='DispatchDetails[#= index(data)#].WarehouseOrderNo' value='#= WarehouseOrderNo #' />   ")
+            .HtmlAttributes(new { style = "text-align: center" });
+        columns.Bound(m => m.CartonBarcode)
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+            .ClientTemplate("#= CartonBarcode #" + "<input type='hidden' name='DispatchDetails[#= index(data)#].CartonBarcode' value='#= CartonBarcode #' />")
+            .HtmlAttributes(new { style = "text-align: center" });
+    })
+    .Sortable()
+    .Pageable()
+    .Scrollable()
+    .DataSource(dataSource => dataSource
+        .Ajax()
+        .PageSize(20)
+        .ServerOperation(true)
+    )
+    .Resizable(resize => resize.Columns(true))
+    .Reorderable(reorder => reorder.Columns(true)))
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#LoadNo").on("keypress", function (e) {
+            if (e.which === 13) { // Enter key pressed
+                e.preventDefault();
+                 $("#WarehouseOrderNo").data("kendoTextBox").focus();
+            }
+        });
+        // Handle Enter key press in WarehouseOrderNo
+        $("#WarehouseOrderNo").on("keypress", function (e) {
+            if (e.which === 13) { // Enter key pressed
+                e.preventDefault();
+                // Move focus to CartonBarcode
+                $("#CartonBarcode").data("kendoTextArea").focus();
+            }
+        });
+        // Handle Enter key press in CartonBarcode
+        $("#CartonBarcode").on("keypress", function (e) {
+            if (e.keyCode != 13) {
+                //e.preventResult();
+                return;
+            }
+            submitForm("Scan")
+        });
+
+        //function onKeyPress(e) {
+        //    if (e.keyCode != 13) {
+        //        //e.preventResult();
+        //        return;
+        //    }
+        //    submitForm("Scan")
+        //}
+    });
+
+    setTimeout(function () {
+        document.getElementById("CartonBarcode").focus();
+        $('#CartonBarcode').val(''); //txtID is textbox ID
+    }, 100); // Delay to ensure focus is set correctly
+
+    function submitForm(action) {
+        var form = document.getElementById("form");
+
+        @*// Send report type
+        document.getElementById("type").value = type;*@
+
+        // Action Name
+        var input = document.createElement("input");
+        input.type = "hidden";
+        input.name = "action:" + action;
+
+        console.log(action);
+
+        form.appendChild(input);
+        form.submit();
+
+    }
+
+</script>

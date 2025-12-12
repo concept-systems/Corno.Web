@@ -1,0 +1,54 @@
+﻿@using Corno.Web.Areas.Masters.ViewModels.Supplier
+@using Corno.Web.Extensions
+@using Corno.Web.Globals
+@using Kendo.Mvc.UI
+@model SupplierViewModel
+
+
+<div class="row">
+    @(Html.Kendo().Grid(Model.SupplierItemDetails)
+        .Name("grid")
+        .Columns(columns =>
+        {
+            columns.Bound(p => p.Id)
+                .ClientTemplate("<input type='hidden' name='SupplierItemDetails[#= index(data)#].Id' value='#= Id #' />")
+                .Hidden();
+            /*columns.Bound(p => p.Id)
+                .ClientTemplate("#= Id  # " +
+                                "<input type='hidden' name='SupplierItemDetails[#= index(data)#].Id' value='#= Id #' />")
+                .Hidden(true);*/
+            columns.Bound(p => p.ItemId)
+                .ClientTemplate("#= ItemName  #" +
+                                "<input type='hidden' name='SupplierItemDetails[#= index(data)#].ItemId' value='#= ItemId #' />")
+                .Width(180);
+            columns.Command(command =>
+            {
+                command.Edit();
+                command.Destroy();
+            }).Width(200);
+        })
+        .ToolBar(toolbar => toolbar.Create())
+        //.Editable(editable => editable.Mode(GridEditMode.InLine).ConfirmDelete("Continue to delete this record?").DisplayDeleteConfirmation("Continue to delete this record?"))
+        .Editable(editable => editable.Mode(GridEditMode.PopUp)
+            .TemplateName("/Supplier/_ItemDetailPopup"))
+        .Pageable()
+        .Sortable()
+        .Filterable(f => f.Mode(GridFilterMode.Row))
+        .Scrollable()
+        .HtmlAttributes(new { style = "height:500px;" })
+        .DataSource(dataSource => dataSource
+            .Ajax()
+            .PageSize(20)
+            .Events(events => events.Error("error_handler"))
+            //.Model(model => model.Id(p => p.Id))
+            .Model(model =>
+            {
+                model.Id(p => p.Id);
+                //model.Field(p => p.Quantity).DefaultValue(0);
+            })
+        .Create(update => update.Action("Inline_Create_Update_Destroy_Product", "Supplier"))
+        .Update(update => update.Action("Inline_Create_Update_Destroy_Product", "Supplier"))
+        //.Read(read => read.Action("Inline_Read", "Product"))
+        .Destroy(update => update.Action("Inline_Create_Update_Destroy_Product", "Supplier"))
+        ))
+</div>

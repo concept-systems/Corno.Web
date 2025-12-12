@@ -1,0 +1,192 @@
+﻿@using Corno.Web.Helper
+@{
+    string controllerName = ViewBag.Controller;
+    string importAction = ViewBag.ImportAction;
+    RouteValueDictionary routeValues = ViewBag.RouteValues;
+
+}
+
+@*<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jsprintmanager@7.0.2/JSPrintManager.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsprintmanager@7.0.2/JSPrintManager.js"></script>*@
+
+
+<div class="row">
+    <table border="1" style="margin: 10px;" class="col-11">
+        <tr>
+            <td>
+                @(Html.Kendo().Button()
+                    .Name("btnConnect")
+                    .Content("Connect")
+                    .ApplyStandardSettingsWithType(ButtonType.Info, "gear", ComponentSize.Medium)
+                    .HtmlAttributes(
+                        new
+                        {
+                            //@class = "custom-connect-button",
+                            type = "button",
+                            style = "margin: 10px;"
+                        }))
+
+            </td>
+            <td style="padding-left: 20px;background-color: red;">
+                <h1>
+                    <p id="weight" class="mb-0" style="color: white;">0.000</p>
+                </h1>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                @(Html.Kendo().Button()
+                    .Name("btnTare")
+                    .Content("Tare")
+                    .ApplyStandardSettingsWithType(ButtonType.Info, "reset", ComponentSize.Medium)
+                    .HtmlAttributes(
+                        new
+                        {
+                            //@class = "custom-connect-button",
+                            type = "button",
+                            style = "margin: 10px;"
+                        }))
+            </td>
+            <td style="padding-left: 20px; background-color: red;">
+                <p id="tareWeight" class="mb-0" style="color: white;">0.000</p>
+            </td>
+        </tr>
+    </table>
+</div>
+
+
+
+<script>
+    $(document).ready(function () {
+        $("#btnConnect").on("click", async function () { // Mark the function as
+
+            // Connect to serial port
+            var button = $("#btnConnect").data("kendoButton");
+            if (button.element.text().trim() === "Connect") {
+                // First connect
+                await connectSerialPort();
+                $("#btnConnect").kendoButton({
+                    icon: "pause",
+                    //theme: "success"
+                });
+
+            } else {
+                // Disconnect
+                console.log("Disconnecting...");
+                await disconnectSerialPort();
+                // Change button attributes
+                button.element.text("Connect"); // Revert button text
+                button.setOptions({ icon: "play" }); // Revert icon
+            }
+        });
+        
+        $('#btnTare').click(function () {
+            var weightText = $('#weight').text();  // get text from <p>
+            console.log('Weight text:', weightText);
+
+            var weight = parseFloat(weightText);          // parse it to float
+            console.log('Parsed weight:', weight);
+
+            if (isNaN(weight) || weight < 0) {
+                showErrorMessage('Weight is invalid or less than zero');
+                $('#tareWeight').text('Tare Weight: --');
+                return;
+            }
+
+            var tareWeightStr = weight.toFixed(3);       // format to 3 decimals
+
+            $('#tareWeight').text(tareWeightStr);
+            console.log('Tare weight captured:', tareWeightStr);
+
+            $('#weight').text('0.000');
+        });
+
+
+        let port; // Track the serial port connection globally
+        let reader; // Track serial port reader globally.
+        let weightDisplay;
+        let connectionStartTime;
+        let intervalId;
+        let isDisconnecting = false;
+
+        function getLastCharAscii(str) {
+            if (str.length === 0) return null; // Handle empty string case
+            return str.charCodeAt(str.length - 1); // Get ASCII value of the last character
+        }
+
+        async function connectSerialPort() {
+            try {
+                port = await navigator.serial.requestPort();
+                await port.open({ baudRate: 9600 });
+                console.log("Serial port connected 1.");
+
+                // Change button attributes
+                var button = $("#btnConnect").data("kendoButton");
+                var buttonText = "Disconnect";// "<span class='k-icon k-i-pause k-button-icon'></span><span class='k-button-text'>Disconnect</span>";
+                button.element.text(buttonText); // Change button text
+                button.element.find(".k-icon").removeClass("k-i-play").addClass("k-i-pause"); // Change icon
+
+                const textDecoder = new TextDecoderStream();
+                const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
+                reader = textDecoder.readable.getReader();
+
+                // Show Connection Status
+                //document.getElementById("connectionStatus").innerText = "Connected";
+                // Start a timer to update connection duration in HH:MM:SS format
+                //intervalId = setInterval(updateConnectionDuration, 1000);
+
+                let buffer = '';
+
+                //console.log("Going in loop. IsDisconnecting : " + isDisconnecting + ", Reader : " + reader);
+                while (isDisconnecting === false) {
+                    const { value, done } = await reader.read();
+                    //console.log("Value : " + value + ", Done : " + done);
+                    if (done) break;
+                    if (value) {
+                        buffer += value; // Append incoming data
+                        //console.log("Data : " + buffer);
+                        //console.log("ASCII Value:", getLastCharAscii(buffer)); // Output: 57 (ASCII for '9')
+
+                        //console.log("Data : " + buffer + ", Port : " + port);
+
+                        if (buffer.endsWith("\r")) {
+
+                            let lines = buffer.split("\r"); // Split the buffer into lines
+                            let lastLine = lines[lines.length - 2]; // Get the last non-empty line
+                            document.getElementById('weight').innerText = lastLine;
+
+                            //loadLabel(buffer);
+
+                            buffer = '';
+                        }
+                    }
+                }
+
+                console.log("Came out of while loop. Releasing stream.");
+                reader.releaseLock();
+                console.log("Stream released.");
+                await port.close();
+                console.log("Port Closed.");
+                /*// Handle disconnection
+                navigator.serial.addEventListener("disconnect", () => {
+                    clearInterval(intervalId);
+                    document.getElementById("connectionStatus").innerText = "Disconnected";
+                });*/
+            } catch (error) {
+                console.error("Failed to connect to serial port:", error);
+            }
+        }
+
+        async function disconnectSerialPort() {
+            try {
+                console.log("Closing port : " + port);
+                isDisconnecting = true; // Set flag
+
+                await new Promise(resolve => setTimeout(resolve, 5000)); // Wait before ca
+            } catch (error) {
+                console.error("Error closing the serial port:", error);
+            }
+        }
+    });
+
+</script>

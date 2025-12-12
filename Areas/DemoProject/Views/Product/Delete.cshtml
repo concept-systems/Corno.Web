@@ -1,0 +1,33 @@
+@using Corno.Web.Globals
+@model Corno.Web.Areas.Masters.Dtos.Product.ProductDto
+
+@{
+
+    Layout = "~/Views/Shared/_LayoutDelete.cshtml";
+}
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+}
+
+@{
+    Page.Title = "Product";
+    ViewBag.MainMenu = "Masters";
+    ViewBag.CurrentSitemap = "Product";
+    
+
+    ViewBag.Controller = "Product";
+
+    ViewBag.SubmitAction = ViewBag.Delete;
+
+}
+
+@{
+    ViewBag.BoxTitle = "Delete Product : " + Model.Name;
+    ViewBag.SubmitAction = "Delete";
+}
+
+@Html.Partial("_Product", Model)

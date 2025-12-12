@@ -1,0 +1,16 @@
+﻿@using Corno.Globals.Constants
+@model Corno.Concept.Modules.Planning.Models.Plan
+
+@{
+
+    Layout = "~/Views/Shared/_LayoutEdit.cshtml";
+}
+
+@{
+    ViewBag.BoxTitle = "Edit StandardBom";
+    ViewBag.Area = "Masters";
+    ViewBag.Controller = "StandardBom";
+    ViewBag.SubmitAction = "Edit";
+}
+
+@Html.Partial("_StandardBom", Model)

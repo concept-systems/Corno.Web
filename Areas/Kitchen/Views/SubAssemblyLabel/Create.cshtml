@@ -1,0 +1,202 @@
+﻿@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@model Corno.Web.Areas.Kitchen.Dto.Label.SubAssemblyCrudDto
+
+@{
+    Layout = "~/Views/Shared/_LayoutCrud.cshtml";
+}
+
+@{
+    ViewBag.BoxTitle = "Create New Sub Assembly";
+    ViewBag.SubmitAction = "Create";
+}
+@section sectionCrudHeader
+{
+    <div class="k-card-actions k-card-actions-horizontal k-card-actions-end">
+        @(Html.Kendo().Button()
+            .Name("btnList")
+            .Content("List")
+            .ApplyStandardSettingsWithType(ButtonType.Info, "arrow-left", ComponentSize.Medium)
+            .Events(e => e.Click("onBack")))
+    </div>
+}
+@(Html.Kendo().TileLayout()
+    .Name("tileLayout")
+    .Columns(2)
+    .RowsHeight("90px")
+    .ColumnsWidth("100%")
+    .Containers(c => {
+         c.Add()
+             .BodyTemplateId("template-items-Info")
+             .ColSpan(1)
+             .RowSpan(4);
+         c.Add()
+             .BodyTemplateId("template-barcode")
+             .ColSpan(1)
+             .RowSpan(4);
+    })
+    .Reorderable(true)
+    .Resizable(true))
+
+<script id="template-barcode" type="text/x-kendo-template">
+            @Html.AntiForgeryToken()
+            <div class="row required">
+                @Html.LabelFor(m => m.Barcode1, "Barcode 1 :", new { @class = "col-3 col-form-label" })
+                <div class="col-9">
+                     @(Html.Kendo().TextBoxFor(m => m.Barcode1)
+                         //.Events(e => e.Change("onChangeBarcode1"))
+                         .HtmlAttributes(new { @class = "w-100" }).ToClientTemplate())
+                </div>
+            </div>
+            <div class="row required">
+                @Html.LabelFor(m => m.Barcode2, "Barcode 2 :", new { @class = "col-3 col-form-label" })
+                <div class="col-9">
+                    @(Html.Kendo().TextBoxFor(m => m.Barcode2)
+                        //.Events(e => e.Change("onChangeBarcode2"))
+                        .HtmlAttributes(new { @class = "w-100" }).ToClientTemplate())
+                </div>
+            </div>
+            <div class="row required">
+                 @Html.LabelFor(m => m.Barcode3, "Barcode 3 :", new { @class = "col-3 col-form-label" })
+                 <div class="col-9 ">
+                     @(Html.Kendo().TextBoxFor(m => m.Barcode3)
+                         //.Events(e => e.Change("onChangeBarcode3"))
+                         .HtmlAttributes(new { @class = "w-100" }).ToClientTemplate())
+                 </div>
+             </div>
+            <div class="row required">
+                 @Html.LabelFor(m => m.Barcode4, "Barcode 4 :", new { @class = "col-3 col-form-label" })
+                 <div class="col-9 ">
+                    @(Html.Kendo().TextBoxFor(m => m.Barcode4)
+                        //.Events(e => e.Change("onChangeBarcode4"))
+                        .HtmlAttributes(new { @class = "w-100" }).ToClientTemplate())
+                 </div>
+             </div>
+             <div class="row required">
+                  <div class="col-6 offset-3">
+                    @(Html.Kendo().CheckBoxFor(m => m.CheckboxField)
+                        .Checked(true)
+                        .Name("directSubAssembly")
+                        .Label("Direct Sub-Assembly")
+                        .HtmlAttributes(new { tabindex = "0" })
+                        .ToClientTemplate())
+                  </div>
+            </div>
+            <div class="k-card-actions k-card-actions-horizontal k-card-actions-end form-group">
+    @(Html.Kendo().Button()
+        .Name("preview")
+        .Content("Print")
+        .ApplyStandardSettingsWithType(ButtonType.Primary, "print", ComponentSize.Medium)
+        .HtmlAttributes(new
+        {
+            type = "submit",
+            //@class = "w-100"
+        }).ToClientTemplate())
+</script>
+<script id="template-items-Info" type="text/x-kendo-template">
+          <div class="col-12">
+          <!-- Placeholder for the partial view -->
+          <div id="partialViewContainer" style="height: 100%"></div>
+    </div>
+</script>
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+        $("#form").kendoValidator({
+        });
+        LoadPartialView()
+    });
+
+    function LoadPartialView(toPrinter) {
+        $.ajax({
+            url: '/SubAssemblyLabel/LoadPartialView', // Replace with your actual controller and action
+            method: 'GET',
+            data: { 'partialViewName': 'Partials/ReportViewer_New' },
+            success: function (partialHtml) {
+                // Load HTML content into the element
+                $('#partialViewContainer').html(partialHtml, function () {
+                    // This code will execute after the HTML content has been loaded
+                    console.log("HTML content loaded successfully");
+
+                });
+                // Delay the execution of the next statement by a short duration
+                setTimeout(function () {
+                    // This code will execute after a short delay
+                    console.log("Timeout HTML content loaded successfully");
+                    if ('@Model.PrintToPrinter' === 'True' || toPrinter === true) {
+                        printToPrinter();
+                    }
+                }, 1500); // Adjust the delay duration as needed
+            },
+            error: function () {
+                console.error('Failed to load the partial view.');
+            }
+        });
+    }
+
+    setTimeout(function () {
+        document.getElementById("Barcode1").focus();
+        $('#Barcode1').val(''); //txtID is textbox ID
+    }, 100); // Delay to ensure focus is set correctly
+
+    $(document).ready(function () {
+        if ('@Model.PrintToPrinter' === 'True')
+            LoadPartialView()       
+
+        // Handle Enter key press in Barcode1
+        var isChecked = localStorage.getItem("directSubAssembly") === "true";
+        $("#Barcode1").on("keypress", function (e) {
+            if (e.which === 13) { // Enter key pressed
+                e.preventDefault();
+
+                if ($("#directSubAssembly").is(":checked")) {
+                    // If checkbox is checked, submit the form
+                    $("form").submit();
+                } else {
+                    // If checkbox is unchecked, move focus to Barcode2
+                    $("#Barcode2").data("kendoTextBox").focus();
+                }
+            }
+
+        });
+
+        // Handle Enter key press in Barcode2
+        $("#Barcode2").on("keypress", function (e) {
+            if (e.which === 13) { // Enter key pressed
+                e.preventDefault();
+
+                // Move focus to Barcode3
+                $("#Barcode3").data("kendoTextBox").focus();
+            }
+        });
+
+        // Handle Enter key press in Barcode3
+        $("#Barcode3").on("keypress", function (e) {
+            if (e.which === 13) { // Enter key pressed
+                e.preventDefault();
+
+                // Move focus to Barcode4
+                $("#Barcode4").data("kendoTextBox").focus();
+            }
+        });
+
+        // Handle Enter key press in Barcode4
+        $("#Barcode4").on("keypress", function (e) {
+            if (e.which === 13) { // Enter key pressed
+                e.preventDefault();
+
+                $("form").submit();
+            }
+        });
+    });
+
+    function onSaveClick() {
+        var cmbSerialNo = $("#SerialNo").data("kendoMultiColumnComboBox");
+        cmbSerialNo.dataSource.read();
+    };
+
+    function onBack() {
+        window.location.href = '@Url.Action("Index", "SubAssemblyLabel", new { area = "Kitchen" })';
+    }
+</script>

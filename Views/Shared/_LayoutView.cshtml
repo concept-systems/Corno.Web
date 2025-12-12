@@ -1,0 +1,30 @@
+@using Corno.Web.Helper
+@{
+    Layout = "~/Views/Shared/_LayoutBase.cshtml";
+}
+
+@Html.Partial("Partials/_CommonViewBag")
+
+<!-- Render derived view's header section if defined, otherwise use default -->
+@if (IsSectionDefined("sectionBaseHeader"))
+{
+    @RenderSection("sectionBaseHeader", required: false)
+}
+else
+{
+    @Html.Partial("Partials/_BackButton", new { SectionName = "sectionBaseHeader" })
+}
+
+<div class="crud-content">
+    @RenderBody()
+</div>
+
+<!-- Render derived view's footer section if defined, otherwise use default -->
+@if (IsSectionDefined("sectionBaseFooter"))
+{
+    @RenderSection("sectionBaseFooter", required: false)
+}
+else
+{
+    @Html.Partial("Partials/_BackButton", new { SectionName = "sectionBaseFooter" })
+}

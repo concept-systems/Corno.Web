@@ -1,0 +1,10 @@
+@using Corno.Web.Helper
+
+<div class="k-actions k-actions-horizontal k-actions-end">
+    @(Html.Kendo().Button()
+        .Name("btnDelete")
+        .Content("Delete")
+        .ApplyStandardSettingsWithType(ButtonType.Delete, "trash", ComponentSize.Medium)
+        .Events(e => e.Click("confirmDelete")))
+</div>
+

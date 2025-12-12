@@ -1,0 +1,165 @@
+﻿@model Corno.Web.Areas.BoardStore.Models.Movement
+
+@{
+    Layout = "~/Views/Shared/_LayoutDetails.cshtml";
+
+}
+
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+    ViewBag.View = "View";
+    ViewBag.Area = "BoardStore";
+    ViewBag.Controller = "Movement";
+}
+
+@{
+    ViewBag.BoxTitle = "View Request ";
+}
+
+
+
+
+<div class="form-group required row">
+    <div class="col-12">
+        <table class="table table-bordered">
+            <tr>
+                <td>@Html.LabelFor(m => m.Id, "Id:", new { @class = "col-form-label" })</td>
+                <td>@Html.DisplayFor(m => m.Id)</td>
+                <td>
+                </td>
+                <td>@Html.LabelFor(m => m.RequestCode, "Request Code:", new { @class = "col-form-label" })</td>
+                <td>@Html.DisplayFor(m => m.RequestCode)</td>
+            </tr>
+
+            <tr>
+                <td>@Html.LabelFor(m => m.RequestPriority, "Request Priority:", new { @class = "col-form-label" })</td>
+                <td>@Html.DisplayFor(m => m.RequestPriority)</td>
+                <td>
+                </td>
+                <td>@Html.LabelFor(m => m.StackNo, "Stack No:", new { @class = "col-form-label" })</td>
+                <td>@Html.DisplayFor(m => m.StackNo)</td>
+            </tr>
+            <tr>
+                <td>@Html.LabelFor(m => m.StackSerialNo, "Stack Serial No:", new { @class = "col-form-label" })</td>
+                <td>@Html.DisplayFor(m => m.StackSerialNo)</td>
+                <td>
+                </td>
+                <td>@Html.LabelFor(m => m.Quantity, "Quantity:", new { @class = "col-form-label" })</td>
+                <td>@Html.DisplayFor(m => m.Quantity)</td>
+            </tr>
+            <tr>
+                <td>@Html.LabelFor(m => m.Length, "Length:", new { @class = "col-form-label" })</td>
+                <td>@Html.DisplayFor(m => m.Length)</td>
+                <td>
+                </td>
+                <td>@Html.LabelFor(m => m.Width, "Width:", new { @class = "col-form-label" })</td>
+                <td>@Html.DisplayFor(m => m.Width)</td>
+            </tr>
+            <tr>
+                <td>@Html.LabelFor(m => m.FromLocationLength, "From Location Length:", new { @class = "col-form-label" })</td>
+                <td>@Html.DisplayFor(m => m.FromLocationLength)</td>
+                <td>
+                </td>
+                <td>@Html.LabelFor(m => m.ToLocationLength, "To Location Length:", new { @class = "col-form-label" })</td>
+                <td>@Html.DisplayFor(m => m.ToLocationLength)</td>
+            </tr>
+            <tr>
+                <td>@Html.LabelFor(m => m.FromLocationWidth, "From Location Width:", new { @class = "col-form-label" })</td>
+                <td>@Html.DisplayFor(m => m.FromLocationWidth)</td>
+                <td>
+                </td>
+                <td>@Html.LabelFor(m => m.ToLocationWidth, "To Location Width:", new { @class = "col-form-label" })</td>
+                <td>@Html.DisplayFor(m => m.ToLocationWidth)</td>
+            </tr>
+            <tr>
+                <td>@Html.LabelFor(m => m.FromLocationX, "From Location X:", new { @class = "col-form-label" })</td>
+                <td>@Html.DisplayFor(m => m.FromLocationX)</td>
+                <td>
+                </td>
+                <td>@Html.LabelFor(m => m.ToLocationX, "To Location X:", new { @class = "col-form-label" })</td>
+                <td>@Html.DisplayFor(m => m.ToLocationX)</td>
+            </tr>
+            <tr>
+                <td>@Html.LabelFor(m => m.FromLocationY, "From Location Y:", new { @class = "col-form-label" })</td>
+                <td>@Html.DisplayFor(m => m.FromLocationY)</td>
+                <td>
+                </td>
+                <td>@Html.LabelFor(m => m.ToLocationY, "To Location Y:", new { @class = "col-form-label" })</td>
+                <td>@Html.DisplayFor(m => m.ToLocationY)</td>
+            </tr>
+        </table>
+
+
+    </div>
+</div>
+
+
+<script>
+
+    function onContentLoad(e) {
+        if (e.item.textContent == "Generated Report") {
+            initViewer();
+        }
+
+    }
+
+    function getGridData() {
+        var grid = $("#grid").getKendoGrid();
+        var expandedChildGrids = [];
+
+        grid.dataItems().forEach(function (z) {
+            grid.expandRow(z);
+            var childGrid = $("#grid_" + z.EmployeeID).getKendoGrid();
+            if (childGrid) {
+                var childGridData = childGrid.dataSource.data().toJSON();
+                childGridData.forEach(function (d) {
+                    expandedChildGrids.push(d);
+                })
+            }
+        });
+
+        var parentGridData = grid.dataSource.data().toJSON();
+        return {
+            parent: JSON.stringify(parentGridData),
+            child: JSON.stringify(expandedChildGrids)
+        };
+    }
+
+    function onTabChange(e) {
+        if (e.item.textContent == "Generated Report") {
+
+            var viewer = $("#ReportViewer_New").data("telerik_ReportViewer");
+            if (viewer) {
+                viewer.reportSource({
+                    report: getJsonReportSource()
+                });
+                viewer.refreshReport();
+            }
+        }
+    }
+
+    function initViewer() {
+        var mainUrl = window.location.href.indexOf("aspnet-mvc") > 0 ? "/aspnet-mvc" : "";
+        $("#ReportViewer_New").telerik_ReportViewer({
+            serviceUrl: ".." + mainUrl + "/api/reports",
+
+            reportSource: {
+                report: getJsonReportSource()
+            },
+
+            viewMode: telerikReportViewer.ViewModes.INTERACTIVE,
+            scaleMode: telerikReportViewer.ScaleModes.SPECIFIC,
+        });
+    }
+
+    function getJsonReportSource() {
+        return JSON.stringify({
+            name: "DataGridExample.trdx",
+            data: getGridData()
+        })
+    }
+</script>

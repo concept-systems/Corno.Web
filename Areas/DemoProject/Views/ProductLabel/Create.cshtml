@@ -1,0 +1,97 @@
+﻿@using Corno.Web.Globals
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@model Corno.Web.Areas.DemoProject.Dtos.LabelDto
+
+@{
+    Layout = "~/Views/Shared/_LayoutBase.cshtml";
+}
+
+@{
+    ViewBag.BoxTitle = "Create New Product Label";
+    ViewBag.SubmitAction = "Create";
+}
+
+@{
+    ViewBag.MainMenu = "DemoProject";
+    ViewBag.MainHeader = "Product Label";
+    ViewBag.CurrentSitemap = "Product Label";
+    ViewBag.Title = "Product Label";
+    ViewBag.Area = "DemoProject";
+    ViewBag.Controller = "ProductLabel";
+}
+
+@section sectionBaseFooter
+{
+    <div class="k-actions k-actions-horizontal k-actions-end">
+        @(Html.Kendo().Button()
+            .Name("btnBack")
+            .Content("Back")
+            .ApplyStandardSettingsWithType(ButtonType.Info, "arrow-60-left", ComponentSize.Medium)
+            .HtmlAttributes(new { onclick = $"window.location.href='{Url.Action(ViewBag.Index, ViewBag.Controller, new { area = ViewBag.Area, miscType = ViewBag.MiscType })}'; return false;" }))
+        @(Html.Kendo().Button()
+            .Name("preview")
+            .Content("Preview")
+            .ApplyStandardSettingsWithType(ButtonType.Info, "preview", ComponentSize.Medium)
+            .Events(e => e.Click("onPreview")))
+        @(Html.Kendo().Button()
+            .Name("print")
+            .Content("Print")
+            .ApplyStandardSettingsWithType(ButtonType.Primary, "print", ComponentSize.Medium)
+            .Events(e => e.Click("onPrint")))
+    </div>
+}
+
+@Html.Partial(@"~\Areas\DemoProject\Views\ProductLabel\_ProductLabel.cshtml", Model)
+
+<script>
+    // 🔁 Reusable helper to build FormData
+    function buildFormData() {
+        const formData = new FormData();
+        formData.append("ProductId", $("#ProductId").val());
+        formData.append("PackingTypeId", $("#PackingTypeId").val());
+        formData.append("LabelFormatId", $("#LabelFormatId").val());
+        formData.append("ManufacturingDate", $("#ManufacturingDate").val());
+        formData.append("ExpiryDate", $("#ExpiryDate").val());
+        formData.append("Quantity", $("#Quantity").val());
+
+        return formData;
+    }
+
+    function onPrint(e) {
+        e.preventDefault();
+        const formData = buildFormData();
+        fetchAndPrint('/DemoProject/ProductLabel/Print', formData, onPrintSuccess);
+    }
+
+    function onPreview(e) {
+        e.preventDefault();
+        const formData = buildFormData();
+        fetchAndPreviewPdf('/DemoProject/ProductLabel/Preview', formData, "Product Label");
+    }
+
+    function onPrintSuccess() {
+        console.log('print success.');
+
+        // Clear form fields
+        const productComboBox = $("#ProductId").data("kendoMultiColumnComboBox");
+        if (productComboBox) {
+            productComboBox.value("");
+        }
+
+        const packingTypeComboBox = $("#PackingTypeId").data("kendoMultiColumnComboBox");
+        if (packingTypeComboBox) {
+            packingTypeComboBox.value("");
+        }
+
+        const labelFormatComboBox = $("#LabelFormatId").data("kendoMultiColumnComboBox");
+        if (labelFormatComboBox) {
+            labelFormatComboBox.value("");
+        }
+
+        $("#ManufacturingDate").data("kendoDatePicker").value(null);
+        $("#ExpiryDate").data("kendoDatePicker").value(null);
+        $("#Quantity").data("kendoTextBox").value("");
+    }
+</script>
+

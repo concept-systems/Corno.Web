@@ -1,0 +1,186 @@
+﻿@using Corno.Web.Areas.Masters.Dtos.Location
+@using Corno.Web.Globals
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+
+@{
+    Layout = "~/Views/Shared/_AppLayout.cshtml";
+}
+@{
+    ViewBag.BoxTitle = "Location";
+}
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+}
+
+@{
+    Page.Title = "Location";
+
+    ViewBag.MainHeader = "Location";
+    ViewBag.MainMenu = "Masters";
+    ViewBag.Area = "Masters";
+    ViewBag.Controller = "Location";
+    ViewBag.AddNewMethod = "Create";
+    ViewBag.CurrentLink = "Location";
+}
+
+<div class="grid-container-full-height">
+    @(Html.Kendo().Grid<LocationIndexDto>()
+        .Name("grid")
+        .ApplyIndexSettings(customToolbar: toolbar =>
+        {
+            toolbar.Custom()
+                .Text("<span class='k-icon k-i-import'></span> Import")
+                .HtmlAttributes(new { @class = "k-grid-import k-button-import-outlined", style = "float: right;", onclick = $"window.location.href='{Url.Action("Import", "Location", new { area = "Masters" })}'; return false;" });
+            toolbar.Custom()
+                .Text("<span class='k-icon k-i-plus'></span> Add New")
+                .HtmlAttributes(new { @class = "k-grid-add-new k-button-add-new-outlined", style = "float: right;", onclick = $"window.location.href='{Url.Action(ViewBag.Create, ViewBag.Controller, new { area = "Masters" })}'; return false;" });
+        }) // 👈 Apply index settings (full height, responsive)
+    .Events(events => events.ApplyCommonEvents())
+    .Columns(columns =>
+    {
+        columns.Bound(m => m.Id);
+        columns.Bound(m => m.Code).Align(TextAlign.Left);
+        columns.Bound(m => m.Name).Align(TextAlign.Left);
+        columns.Bound(m => m.ProductCode).Align(TextAlign.Left);
+        columns.Bound(m => m.ProductName).Align(TextAlign.Left);
+        columns.AddStatusColumn();
+        columns.AddCommandColumns(new List<GridCommandConfig>
+        {
+            new GridCommandConfig { Name = "Edit", Text = " ", IconClass = "k-icon k-i-edit k-text-info", ClickHandler = "onEditClick" },
+            new GridCommandConfig { Name = "Delete", Text = " ", IconClass = "k-icon k-i-delete k-text-error", ClickHandler = "onDeleteClick" },
+            //new GridCommandConfig { Name = "View", Text = " ", IconClass = "k-icon k-i-preview k-i-eye", ClickHandler = "onViewClick" },
+            //new GridCommandConfig { Name = "Print", Text = "", IconClass = "fa fa-print", ClickHandler = "onPrintClick" }
+        });
+    })
+    .DataSource(dataSource => dataSource
+        .ApplyCommonDataSourceSettings("GetIndexViewModels", "Location", "Masters")
+        .Sort(s => s.Add(FieldConstants.Id).Descending())
+    ))
+</div>
+@*@(Html.Kendo().Grid<LocationIndexDto>()
+    .Name("grid")
+    .ToolBar(toolbar =>
+    {
+        toolbar.Excel();
+        toolbar.Pdf();
+        toolbar.Search();
+    })
+    .Pageable()
+    .Scrollable()
+    .Sortable(s => s.InitialDirection(ListSortDirection.Descending  ))
+    .Filterable(f => f.Mode(GridFilterMode.Row))
+    .Resizable(resize => resize.Columns(true)) // Allow column resizing
+    .PersistSelection()
+    .Height(540)
+    .HtmlAttributes(new { @class="w-100", style = "height: 700px;" })
+    .Excel(excel => excel
+        .FileName("Items.xlsx")
+        .ProxyURL(Url.Action("Excel_Export_Save", "Corno")))
+    .Pdf(pdf => pdf
+        .FileName("Location.pdf")
+        .ProxyURL(Url.Action("Excel_Export_Save", "Corno"))
+    )
+    .Columns(columns =>
+    {
+        columns.Bound(m => m.Id)
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+            .HtmlAttributes(new { style = "text-align: center" })
+            .Title("Id");
+        columns.Bound(m => m.Code)
+            //.HtmlAttributes(new { style = "text-align: center" })
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+            .Title("Code");
+        columns.Bound(m => m.Name)
+            //.HtmlAttributes(new { style = "text-align: center" })
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+            .Title("Name");
+        columns.Bound(m => m.ProductCode)
+            //.HtmlAttributes(new { style = "text-align: center" })
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+            .Title("Product Code");
+        columns.Bound(m => m.ProductName)
+            //.HtmlAttributes(new { style = "text-align: center" })
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+            .Title("Product Name");
+        columns.Bound(m => m.BayId)
+            //.HtmlAttributes(new { style = "text-align: center" })
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+            .Title("Bay");
+        columns.Bound(m => m.RowId)
+            //.HtmlAttributes(new { style = "text-align: center" })
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+            .Title("Row");
+        columns.Bound(m => m.ShelfId)
+            //.HtmlAttributes(new { style = "text-align: center" })
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+            .Title("Shelf");
+        columns.Bound(m => m.Status).Title("Status")
+            .HtmlAttributes(new { style = "text-align: center" })
+            .ClientTemplate(
+                "<span class='badge' style='background-color: " +
+                "# if (Status == \"Active\") { #" +
+                "green" +
+                "# } else if (Status == \"Deleted\") { #" +
+                "red" +
+                "# } else { #" +
+                "transparent" +
+                "# } #" +
+                "; color: " +
+                "# if (Status == \"Active\" || Status == \"Deleted\") { #" +
+                "white" +
+                "# } else { #" +
+                "black" +
+                "# } #" +
+                "; text-align: center; display: inline-block;'>" +
+                "#= Status #</span>"
+            )
+            .HtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" });
+        columns.Command(command =>
+        {
+            command.Custom("Edit").Text("")
+                .Text("<i class='k-icon k-i-edit k-text-info k-icon-20'></i>")
+                .HtmlAttributes(new { @class = "k-grid-edit" })
+                .Click("onEditClick")
+                .Visible("function(dataItem) { return dataItem.Status === 'Active'; }");
+            command.Custom("Delete").Text("")
+                //.Text("<i class='k-icon k-i-delete k-icon-md k-text-error k-icon-20'></i>")
+                .Text("<i class='k-icon k-i-delete k-text-error k-icon-20'></i>")
+                .HtmlAttributes(new { @class = "k-grid-delete" })
+                .Click("onDeleteClick");
+        })
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+            .HtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+            .Title("Actions");
+    })
+    .DataSource(dataSource => dataSource
+        .Ajax()
+        .PageSize(10)
+        .Read(read => read.Action("GetIndexViewModels", "Location"))
+        .Sort(sort => sort.Add(FieldConstants.Id).Descending()) // Initial sort by Id in ascending order
+        .Model(model => model.Id(FieldConstants.Id))
+    ))*@
+
+<script type="text/javascript">
+    function sendData() {
+    }
+
+    function onEditClick(e) {
+        e.preventDefault();
+        var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+        window.location.href = '@Url.Action("Edit", "Location")' + '/' + dataItem.Id;
+    }
+
+    function onDeleteClick(e) {
+        e.preventDefault();
+        var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+        window.location.href = '@Url.Action("Delete", "Location")' + '/' + dataItem.Id;
+    }
+
+
+</script>

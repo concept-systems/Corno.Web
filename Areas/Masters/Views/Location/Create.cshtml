@@ -1,0 +1,17 @@
+﻿@model Corno.Web.Areas.Masters.Dtos.Location.LocationDto
+
+@{
+    Layout = "~/Views/Shared/_LayoutCreate.cshtml";
+}
+
+@{
+    ViewBag.BoxTitle = "Create New Location";
+    ViewBag.Area = "Masters";
+    ViewBag.Controller = "Location";
+    ViewBag.SubmitAction = "Create";
+}
+
+@Html.HiddenFor(m => m.Id)
+
+@Html.Partial("_Location", Model)
+

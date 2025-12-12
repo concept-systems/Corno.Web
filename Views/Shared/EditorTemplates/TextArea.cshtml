@@ -1,0 +1,44 @@
+﻿@using Corno.Web.Extensions
+@using Corno.Web.Globals
+@model object
+
+@{
+    var description = ViewData[FieldConstants.Name]?.ToString().SplitCamelCaseWithNewLine();
+    var labelClass = string.IsNullOrEmpty(ViewData["labelclass"]?.ToString()) ? "col-4" : ViewData["labelclass"]?.ToString();
+    var textClass = string.IsNullOrEmpty(ViewData["textclass"]?.ToString()) ? "col-8" : ViewData["textclass"]?.ToString();
+    var dataType = ViewData["Type"]?.ToString();
+}
+
+<div class="form-group row mb-1">
+    @if (null == description)
+    {
+        @(Html.Kendo().TextAreaFor(m => m)
+            //.Label(label => label
+              //    .Content(description)
+              //    .Floating(false))
+            .HtmlAttributes(new
+              {
+                  //@readonly = false == formEnabled ? "readonly" : string.Empty,
+                  type = dataType,
+                  @class = "w-100"
+              }))
+    }
+    else
+    {
+        @Html.LabelFor(m => m, $"{description} :",
+            new { @class = labelClass })
+        <div class=@textClass>
+            @(Html.Kendo().TextAreaFor(m => m)
+                  //.Label(label => label
+                  //    .Content(description)
+                  //    .Floating(false))
+                  .HtmlAttributes(new
+                  {
+                      type = dataType,
+                      //@readonly = false == formEnabled ? "readonly" : string.Empty,
+                      placeholder = $"Enter {description.ToCamelCase()}",
+                      @class = "w-100"
+                  }))
+        </div>
+    }
+</div>

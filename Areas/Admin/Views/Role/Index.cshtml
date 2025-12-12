@@ -1,0 +1,102 @@
+﻿@using Corno.Web.Areas.Admin.Dto
+@using Corno.Web.Globals
+@using Kendo.Mvc.UI
+
+@using Corno.Web.Helper
+
+@{
+    Layout = "~/Views/Shared/_AppLayout.cshtml";
+
+    ViewBag.BoxTitle = "Index";
+}
+
+<div class="grid-container-full-height">
+    @(Html.Kendo().Grid<RoleDto>()
+        .Name("grid")
+        .ApplyIndexSettings(customToolbar: toolbar =>
+        {
+            toolbar.Custom()
+                .Text("<span class='k-icon k-i-plus'></span> Add New")
+                .HtmlAttributes(new { @class = "k-grid-add-new k-button-add-new-outlined", style = "float: right;", onclick = "onCreate(); return false;" });
+        }) // 👈 Apply index settings (full height, responsive)
+        .Columns(columns =>
+                {
+                    /*columns.Bound(m => m.SerialNo)
+                        .HtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                        .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                        .Title("Sr. No.")
+                        .Width(10);*/
+                    columns.Bound(m => m.Name)
+                        /*.HtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })*/
+                        .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                        .Title("Role Name")
+                        .Width(20);
+                    columns.Command(command =>
+                    {
+                        command.Custom("Edit").Text(" ").IconClass("k-icon k-i-pencil")
+                            .HtmlAttributes(new { @class = "k-grid-edit" });
+                        //.Visible("function(dataItem) { return dataItem.Status === 'Active'; }"); // Show only if Status is "Active";
+                        command.Custom("Delete").Text(" ").IconClass("k-icon k-i-delete k-text-error")
+                            .HtmlAttributes(new { @class = "k-grid-delete" })
+                            .Click("onDeleteClick");
+                        command.Custom("Set").Text(" ").IconClass("k-icon k-i-hyperlink k-text-info")
+                            .HtmlAttributes(new { @class = "k-grid-hyperlink" })
+                            .Click("onSetRoleClick");
+                    })
+                        .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                        .HtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                        .Width(80)
+                        .Title("Actions"); // Add a class to identify the command column;
+
+                })
+        .Events(events => {
+            events.ApplyCommonEvents();
+            events.DataBound("onDataBound");
+        })
+        .DataSource(dataSource => dataSource
+            .Ajax()
+            .Read(read => read.Action("GetIndexModels", "Role"))
+            .Sort(sort => sort.Add(FieldConstants.Id).Descending()) // Initial sort by Id in ascending order
+            .Model(model => model.Id(FieldConstants.Id))
+            .Events(e => e.Error("onGridError"))
+        ))
+</div>
+
+
+<script>
+    function onCreate() {
+        window.location.href = '/Role/Create';
+    }
+
+    function onDataBound(e) {
+        var grid = $("#grid").data("kendoGrid");
+        // Auto-fit each column
+        grid.columns.forEach(function (column, index) {
+            grid.autoFitColumn(index);
+        });
+
+        $(".k-grid-edit").on("click", function () {
+            var grid = $("#grid").data("kendoGrid");
+            var row = $(this).closest("tr");
+            var dataItem = grid.dataItem(row);
+
+            if (dataItem) {
+                var id = dataItem.Id; // Assuming Id is the unique identifier of the item
+                window.location.href = '/Role/Edit/' + id; // Replace with your edit page URL
+            }
+        });
+    }
+
+    function onSetRoleClick(e) {
+    e.preventDefault();
+    var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+    window.location.href = '@Url.Action("SetRole", "Role")' + '/' + dataItem.Id;
+    }
+
+            function onDeleteClick(e) {
+    e.preventDefault();
+    var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+    window.location.href = '@Url.Action("Delete", "Role")' + '/' + dataItem.Id;
+}
+
+</script>

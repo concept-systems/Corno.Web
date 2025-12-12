@@ -1,0 +1,114 @@
+/* ============================================
+   Professional Breadcrumb Styles - Reusable
+   ============================================
+   These styles provide a professional breadcrumb
+   navigation component that can be used across
+   all layouts and pages.
+   ============================================ */
+
+/* Layout Header Content - Flexbox for breadcrumb and actions */
+.layout-header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    gap: 15px;
+}
+
+/* Breadcrumb Container */
+.breadcrumb-container {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+/* Professional Kendo Breadcrumb Styles */
+.breadcrumb-container nav[id^="breadcrumb"] {
+    margin: 0;
+}
+
+/* Kendo Breadcrumb customization */
+.breadcrumb-container .k-breadcrumb {
+    background: transparent;
+    border: none;
+    padding: 0;
+    font-size: 0.875rem;
+}
+
+.breadcrumb-container .k-breadcrumb-item {
+    font-weight: 500;
+}
+
+.breadcrumb-container .k-breadcrumb-item-link {
+    color: #0d6efd;
+    text-decoration: none;
+    transition: all 0.2s ease-in-out;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.breadcrumb-container .k-breadcrumb-item-link:hover {
+    color: #0a58ca;
+    background-color: rgba(13, 110, 253, 0.1);
+    text-decoration: none;
+}
+
+.breadcrumb-container .k-breadcrumb-item-text {
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+.breadcrumb-container .k-breadcrumb-item:last-child .k-breadcrumb-item-text {
+    color: #495057;
+    font-weight: 600;
+}
+
+.breadcrumb-container .k-breadcrumb-item:last-child .k-breadcrumb-item-link {
+    color: #495057;
+    cursor: default;
+    pointer-events: none;
+}
+
+.breadcrumb-container .k-breadcrumb-item:last-child .k-breadcrumb-item-link:hover {
+    background-color: transparent;
+}
+
+/* Header Actions Container */
+.header-actions-container {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .layout-header-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .breadcrumb-container {
+        width: 100%;
+    }
+
+    .header-actions-container {
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .breadcrumb-container .k-breadcrumb {
+        font-size: 0.8125rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .breadcrumb-container .k-breadcrumb {
+        font-size: 0.75rem;
+    }
+
+    .breadcrumb-container .k-breadcrumb-item-link {
+        padding: 2px 6px;
+    }
+}
+

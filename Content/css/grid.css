@@ -1,0 +1,806 @@
+﻿.k-grid td,
+.k-grid th {
+    text-align: center;
+}
+
+/* Make k-content take full height and show scrollbar */
+.k-content {
+    display: flex;
+    flex-direction: column;
+    height: 100vh; /* Full viewport height - AppBar is sticky and doesn't affect flow */
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+/* Make k-card take full height and use flexbox */
+.k-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+}
+
+/* Make k-card-body flex to take remaining space */
+.k-card-body {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* Ensure grids inside card-body can expand to full height */
+.k-card-body .k-grid-full-height {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100% !important;
+}
+
+/* Ensure direct grid children in k-card-body take full height */
+.k-card-body > .k-grid.k-grid-full-height {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100% !important;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Additional rule to ensure grid expands in card body (for PartLabel and similar pages) */
+.k-card-body .k-grid.k-grid-full-height {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    height: 100% !important;
+}
+
+/* Responsive Grid Styles */
+.k-grid-responsive {
+    width: 100%;
+}
+
+/* Full height grid - takes 100% of available card body height */
+.k-grid-full-height {
+    height: 100% !important;
+    min-height: 400px;
+    flex: 1 1 auto;
+}
+
+/* Ensure grid container takes full height */
+.k-card-body .k-grid-full-height,
+.k-card .k-grid-full-height {
+    height: 100% !important;
+    min-height: 400px;
+    flex: 1 1 auto;
+}
+
+/* Responsive adjustments for small screens (mobile) */
+@media (max-width: 768px) {
+    .k-content {
+        height: 100vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+    
+    .k-grid-full-height {
+        min-height: 300px;
+    }
+    
+    .k-card-body .k-grid-full-height,
+    .k-card .k-grid-full-height {
+        min-height: 300px;
+    }
+    
+    .k-grid-responsive .k-grid-header {
+        font-size: 0.85em;
+    }
+    
+    .k-grid-responsive .k-grid-content {
+        overflow-x: auto;
+    }
+}
+
+/* Medium screens (tablets) */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .k-content {
+        height: 100vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+    
+    .k-grid-full-height {
+        min-height: 350px;
+    }
+    
+    .k-card-body .k-grid-full-height,
+    .k-card .k-grid-full-height {
+        min-height: 350px;
+    }
+}
+
+/* Large screens (desktop) */
+@media (min-width: 1025px) {
+    .k-content {
+        height: 100vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+    
+    .k-grid-full-height {
+        min-height: 500px;
+    }
+    
+    .k-card-body .k-grid-full-height,
+    .k-card .k-grid-full-height {
+        min-height: 500px;
+    }
+}
+
+/* Ensure grids with Scrollable() work properly with full height */
+.k-grid-full-height .k-grid-content {
+    overflow-y: auto;
+    overflow-x: auto;
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+/* Remove bottom spacing from grid components */
+.k-grid-full-height {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+.k-grid-full-height .k-grid-table-wrap {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+/* Remove bottom padding from grid pager */
+.k-grid-full-height .k-pager-wrap {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* Remove any bottom margin from grid wrapper */
+.grid-container-full-height .k-grid {
+    margin-bottom: 0 !important;
+}
+
+/* Grid container for pages using _AppLayout directly */
+.grid-container-full-height {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    flex: 1 1 auto;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.grid-container-full-height > .k-grid {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100% !important;
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+}
+
+/* Ensure grid with full-height class takes all available space */
+.grid-container-full-height > .k-grid.k-grid-full-height {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100% !important;
+    margin: 0;
+    padding: 0;
+}
+
+/* Remove any bottom spacing from grid */
+.k-grid-full-height .k-grid-content,
+.k-grid-full-height .k-grid-table-wrap {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+/* Remove bottom padding from grid pager */
+.k-grid-full-height .k-pager-wrap {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+/* Style Import button in grid toolbar with outlined info theme */
+.k-grid-import.k-button-import-outlined {
+    background-color: transparent !important;
+    border: 1px solid #0d6efd !important;
+    color: #0d6efd !important;
+    border-radius: 9999px !important;
+    /*padding: 0.375rem 0.75rem !important;*/
+    font-size: 0.875rem !important;
+    font-weight: 400 !important;
+    transition: all 0.15s ease-in-out !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.375rem !important;
+    float: right !important;
+}
+
+/* Ensure grid toolbar has proper layout - keep left buttons on left, Import on right */
+.k-grid-toolbar {
+    display: flex !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+    position: relative !important;
+    width: 100% !important;
+}
+
+/* Keep default toolbar buttons (Excel, PDF, Search) on the left */
+.k-grid-toolbar > .k-button-group {
+    display: flex !important;
+    gap: 0.5rem !important;
+    flex: 0 0 auto !important;
+}
+
+/* Push only Import button to the right corner */
+.k-grid-toolbar .k-grid-import {
+    margin-left: auto !important;
+    order: 999 !important;
+}
+
+.k-grid-import.k-button-import-outlined:hover {
+    background-color: rgba(13, 110, 253, 0.1) !important;
+    border-color: #0a58ca !important;
+    color: #0a58ca !important;
+}
+
+.k-grid-import.k-button-import-outlined .k-icon {
+    font-size: 1rem !important;
+}
+
+/* Style Add New button in grid toolbar with outlined primary theme */
+.k-grid-add-new.k-button-add-new-outlined {
+    background-color: transparent !important;
+    border: 1px solid #0d6efd !important;
+    color: #0d6efd !important;
+    border-radius: 9999px !important;
+    /*padding: 0.375rem 0.75rem !important;*/
+    font-size: 0.875rem !important;
+    font-weight: 400 !important;
+    transition: all 0.15s ease-in-out !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.375rem !important;
+    float: right !important;
+}
+
+.k-grid-add-new.k-button-add-new-outlined:hover {
+    background-color: rgba(13, 110, 253, 0.1) !important;
+    border-color: #0a58ca !important;
+    color: #0a58ca !important;
+}
+
+.k-grid-add-new.k-button-add-new-outlined .k-icon {
+    font-size: 1rem !important;
+}
+
+/* Push Add New button to the right corner */
+.k-grid-toolbar .k-grid-add-new {
+    margin-left: auto !important;
+    order: 999 !important;
+}
+
+/* ============================================
+   RESPONSIVE STYLES FOR DEMOPROJECT VIEWS
+   ============================================ */
+
+/* Android 4.4 Compatible Fallbacks */
+/* Use display: block instead of flexbox for older Android */
+@supports not (display: flex) {
+    .k-content {
+        display: block;
+        height: auto;
+        min-height: 100vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+    
+    .k-card {
+        display: block;
+        height: auto;
+    }
+    
+    .k-card-body {
+        display: block;
+    }
+    
+    .grid-container-full-height {
+        display: block;
+        height: auto;
+    }
+}
+
+/* Responsive form groups - stack on mobile */
+@media (max-width: 576px) {
+    .form-group.row > .col-3,
+    .form-group.row > .col-4,
+    .form-group.row > .col-9,
+    .form-group.row > .col-8 {
+        flex: 0 0 100%;
+        max-width: 100%;
+        width: 100%; /* Fallback for Android 4.4 */
+        float: none; /* Clear floats for Android 4.4 */
+        display: block; /* Fallback */
+    }
+    
+    /* Make form labels full width on mobile */
+    .form-group.row .col-form-label {
+        margin-bottom: 0.25rem;
+        display: block;
+        width: 100%;
+    }
+    
+    /* Stack two-column layouts on mobile */
+    .row > .col-6 {
+        flex: 0 0 100%;
+        max-width: 100%;
+        width: 100%; /* Fallback for Android 4.4 */
+        margin-bottom: 1rem;
+        float: none; /* Clear floats */
+        display: block; /* Fallback */
+    }
+    
+    /* Make card headers responsive */
+    .k-card-header .row > .col-11,
+    .k-card-header .row > .col-1 {
+        flex: 0 0 100%;
+        max-width: 100%;
+        width: 100%; /* Fallback */
+        margin-bottom: 0.5rem;
+        float: none;
+        display: block;
+    }
+    
+    /* Stack button groups on mobile - Android 4.4 compatible */
+    .k-card-actions-horizontal {
+        flex-direction: column !important;
+        /* gap: 0.5rem !important; */ /* Not supported in Android 4.4 */
+        display: block !important; /* Fallback */
+    }
+    
+    .k-card-actions-horizontal > * {
+        width: 100% !important;
+        margin-bottom: 0.5rem !important; /* Replace gap */
+        display: block !important;
+    }
+    
+    .k-card-actions-horizontal > *:last-child {
+        margin-bottom: 0 !important;
+    }
+    
+    /* Make tables scrollable on mobile */
+    .table-responsive {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Stack table cells on very small screens */
+    .table-bordered {
+        font-size: 0.875rem;
+    }
+    
+    .table-bordered td,
+    .table-bordered th {
+        padding: 0.5rem;
+        white-space: nowrap;
+    }
+}
+
+/* Tablet adjustments */
+@media (min-width: 577px) and (max-width: 768px) {
+    .row > .col-6 {
+        flex: 0 0 100%;
+        max-width: 100%;
+        margin-bottom: 1rem;
+    }
+    
+    .form-group.row > .col-3 {
+        flex: 0 0 30%;
+        max-width: 30%;
+    }
+    
+    .form-group.row > .col-9 {
+        flex: 0 0 70%;
+        max-width: 70%;
+    }
+}
+
+/* Responsive grid columns - hide less important columns on mobile */
+@media (max-width: 768px) {
+    .k-grid-responsive .k-grid-header,
+    .k-grid-responsive .k-grid-content {
+        font-size: 0.85em;
+    }
+    
+    /* Make grid toolbar buttons wrap on mobile - Android 4.4 compatible */
+    .k-grid-toolbar {
+        flex-wrap: wrap !important;
+        /* gap: 0.5rem !important; */ /* Not supported in Android 4.4 */
+        display: block !important; /* Fallback */
+    }
+    
+    .k-grid-toolbar > * {
+        margin-right: 0.5rem !important; /* Replace gap */
+        margin-bottom: 0.5rem !important;
+    }
+    
+    .k-grid-toolbar .k-button-group {
+        flex-wrap: wrap !important;
+        display: inline-block !important; /* Fallback */
+        margin-right: 0.5rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+}
+
+/* Ensure partial view containers are responsive */
+#partialViewContainer {
+    min-height: 300px;
+    width: 100%;
+}
+
+@media (max-width: 768px) {
+    #partialViewContainer {
+        min-height: 250px;
+        margin-bottom: 1rem;
+    }
+}
+
+/* Responsive spacing for form groups */
+@media (max-width: 576px) {
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .form-group.row {
+        margin-left: 0;
+        margin-right: 0;
+    }
+}
+
+/* Make action buttons full width on mobile */
+@media (max-width: 576px) {
+    .k-actions .k-button {
+        width: 100% !important;
+        margin-bottom: 0.5rem !important;
+        display: block !important; /* Android 4.4 fallback */
+        float: none !important;
+    }
+    
+    .k-actions .k-button:last-child {
+        margin-bottom: 0 !important;
+    }
+}
+
+/* ============================================
+   ANDROID 4.4 SPECIFIC FIXES
+   ============================================ */
+
+/* Fix flexbox issues on Android 4.4 */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+    /* Target WebKit browsers (Android 4.4 uses WebView) */
+    .k-content {
+        /* Use min-height instead of height for better compatibility */
+        min-height: 100vh;
+    }
+    
+    /* Fallback for flexbox gaps */
+    .k-card-actions-horizontal > * + * {
+        margin-left: 0.5rem;
+    }
+    
+    @media (max-width: 576px) {
+        .k-card-actions-horizontal > * + * {
+            margin-left: 0;
+            margin-top: 0.5rem;
+        }
+    }
+}
+
+/* Ensure Bootstrap grid works on Android 4.4 */
+.row::before,
+.row::after {
+    content: " ";
+    display: table;
+}
+
+.row::after {
+    clear: both;
+}
+
+/* Float-based fallback for very old browsers */
+@media screen and (max-width: 576px) {
+    .col-12,
+    .col-sm-12,
+    .col-md-6,
+    .col-md-12 {
+        float: none !important;
+        width: 100% !important;
+        display: block !important;
+    }
+}
+
+/* ============================================
+   RESPONSIVE CRUD LAYOUT (Create/Edit/Delete/Details)
+   ============================================ */
+
+/* Ensure k-content-body works as container for CRUD layouts - takes full height */
+.k-content-body {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    height: 100%;
+}
+
+/* Make k-card responsive and properly sized for CRUD layouts - always fill 100% height of body/screen */
+.k-content-body > .k-card {
+    max-width: 100%;
+    margin: 10px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Make header fixed at top of drawer content (k-content-body) */
+.k-content-body > .k-card > .k-card-header {
+    flex-shrink: 0;
+    flex-grow: 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background-color: #fff;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    display: block;
+    visibility: visible;
+    overflow: visible;
+    width: 100%;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    padding-left: 2px !important;
+    padding-right: 2px !important;
+}
+
+/* Make k-card-body scrollable in CRUD layouts - stretches on big screens */
+.k-content-body > .k-card > .k-card-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    padding-left: 2px !important;
+    padding-right: 2px !important;
+}
+
+/* Ensure footer stays fixed at bottom of drawer content (k-content-body) - always at bottom */
+.k-content-body > .k-card > .k-card-footer {
+    flex-shrink: 0;
+    flex-grow: 0;
+    flex-basis: auto;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    background-color: #fff;
+    position: sticky;
+    bottom: 0;
+    z-index: 100;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    padding-left: 2px !important;
+    padding-right: 2px !important;
+    display: block;
+    visibility: visible;
+    overflow: visible;
+    width: 100%;
+    margin-top: auto;
+}
+
+/* Ensure k-actions display properly */
+.k-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.k-actions-horizontal {
+    flex-direction: row;
+}
+
+.k-actions-end {
+    justify-content: flex-end;
+}
+
+/* Ensure header actions are visible */
+.k-content-body > .k-card > .k-card-header .k-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+    .k-content-body {
+        height: 100%;
+    }
+    
+    .k-content-body > .k-card {
+        margin: 5px;
+        height: 100%;
+        min-height: 100%;
+    }
+    
+    .k-content-body > .k-card > .k-card-body {
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        padding-left: 2px !important;
+        padding-right: 2px !important;
+    }
+    
+    .k-content-body > .k-card > .k-card-footer {
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        padding-left: 2px !important;
+        padding-right: 2px !important;
+    }
+    
+    /* Make buttons full width on mobile */
+    .k-content-body > .k-card > .k-card-footer .k-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .k-content-body > .k-card > .k-card-footer .k-actions .k-button {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    .k-content-body > .k-card > .k-card-footer .k-actions .k-button:last-child {
+        margin-bottom: 0;
+    }
+    
+    /* Stack form columns on mobile */
+    .k-content-body > .k-card > .k-card-body .form-group.row > [class*="col-"] {
+        flex: 0 0 100%;
+        max-width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    .k-content-body > .k-card > .k-card-body .row > [class*="col-"] {
+        flex: 0 0 100%;
+        max-width: 100%;
+        margin-bottom: 0.75rem;
+    }
+}
+
+/* Tablet adjustments */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .k-content-body {
+        height: 100%;
+    }
+    
+    .k-content-body > .k-card {
+        margin: 7.5px;
+        height: 100%;
+        min-height: 100%;
+    }
+    
+    .k-content-body > .k-card > .k-card-body {
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        padding-left: 2px !important;
+        padding-right: 2px !important;
+    }
+}
+
+/* Small desktop/laptop (14 inch monitors) */
+@media (min-width: 1025px) and (max-width: 1366px) {
+    .k-content-body {
+        height: 100%;
+    }
+    
+    .k-content-body > .k-card {
+        height: 100%;
+        min-height: 100%;
+    }
+}
+
+/* Large desktop */
+@media (min-width: 1367px) {
+    .k-content-body {
+        height: 100%;
+    }
+    
+    .k-content-body > .k-card {
+        height: 100%;
+        min-height: 100%;
+    }
+}
+
+/* Responsive tabstrip in card body */
+.k-content-body > .k-card > .k-card-body .k-tabstrip {
+    width: 100%;
+}
+
+.k-content-body > .k-card > .k-card-body .k-tabstrip-content {
+    padding: 10px;
+    overflow-y: auto;
+    max-height: calc(100vh - 250px);
+}
+
+@media (max-width: 768px) {
+    .k-content-body > .k-card > .k-card-body .k-tabstrip-content {
+        padding: 8px;
+        max-height: calc(100vh - 200px);
+    }
+    
+    .k-content-body > .k-card > .k-card-body .k-tabstrip-items {
+        flex-wrap: wrap;
+    }
+    
+    .k-content-body > .k-card > .k-card-body .k-tabstrip-item {
+        flex: 1 1 auto;
+        min-width: 80px;
+    }
+}
+
+/* Ensure all Kendo widgets are responsive in CRUD forms */
+.k-content-body > .k-card > .k-card-body .k-widget,
+.k-content-body > .k-card > .k-card-body .k-textbox,
+.k-content-body > .k-card > .k-card-body .k-numerictextbox,
+.k-content-body > .k-card > .k-card-body .k-combobox,
+.k-content-body > .k-card > .k-card-body .k-multicolumncombobox,
+.k-content-body > .k-card > .k-card-body .k-dropdownlist,
+.k-content-body > .k-card > .k-card-body .k-datepicker,
+.k-content-body > .k-card > .k-card-body .k-datetimepicker,
+.k-content-body > .k-card > .k-card-body .k-timepicker {
+    width: 100% !important;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* Compact form spacing */
+.k-content-body > .k-card > .k-card-body .form-group {
+    margin-bottom: 0.75rem;
+}
+
+.k-content-body > .k-card > .k-card-body .form-group.row {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+/* Responsive form labels */
+.k-content-body > .k-card > .k-card-body .form-group.row label {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    margin-bottom: 0.25rem;
+}
+
+@media (max-width: 576px) {
+    .k-content-body > .k-card > .k-card-body .form-group.row label {
+        display: block;
+        width: 100%;
+    }
+}

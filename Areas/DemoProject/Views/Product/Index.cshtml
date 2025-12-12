@@ -1,0 +1,284 @@
+﻿@using Corno.Web.Areas.Masters.Dtos.Product
+@using Corno.Web.Globals
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@{
+    Layout = "~/Views/Shared/_AppLayout.cshtml";
+    ViewBag.BoxTitle = "Product";
+}
+
+<div class="grid-container-full-height">
+    @(Html.Kendo().Grid<ProductIndexDto>()
+        .Name("grid")
+        .ApplyIndexSettings() // 👈 Apply index settings (full height, responsive)
+        .AddExportToolBar(enableExcel: true, enablePdf: true, enableSearch: true, customToolbar: toolbar =>
+        {
+            toolbar.Custom()
+                .Text("<span class='k-icon k-i-plus'></span> Add New")
+                .HtmlAttributes(new { @class = "k-grid-add-new k-button-add-new-outlined", style = "float: right;", onclick = "onAddNewClick(event); return false;" });
+        })
+        .Events(events => events
+            .ApplyCommonEvents()
+            .DetailInit("onDetailInit"))
+        .Columns(columns =>
+        {
+            columns.Bound(m => m.Id);
+            columns.Bound(m => m.Code)
+                .Title("Code");
+            columns.Bound(m => m.Name)
+                .Title("Name");
+            columns.AddStatusColumn();
+            columns.Command(command =>
+            {
+                command.Custom("Edit").Text("")
+                    .IconClass("k-icon k-i-edit k-text-info")
+                    .Click("onEditClick")
+                    .Visible("function(dataItem) { return dataItem.Status === 'Active'; }");
+                command.Custom("Delete").Text("")
+                    .IconClass("k-icon k-i-delete k-text-error")
+                    .Click("onDeleteClick")
+                    .Visible("function(dataItem) { return dataItem.Status === 'Active'; }");
+            })
+            .Title("Actions")
+            .Width(100);
+        })
+        .DataSource(dataSource => dataSource
+            .ApplyCommonDataSourceSettings("GetIndexViewModels", "Product", "DemoProject")
+            .Sort(s => s.Add(FieldConstants.Id).Descending())
+        ))
+</div>
+
+<script type="text/javascript">
+    function onAddNewClick(e) {
+        e.preventDefault();
+        window.location.href = '@Url.Action("Create", "Product")';
+    }
+
+    function onEditClick(e) {
+        e.preventDefault();
+        var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+        window.location.href = '@Url.Action("Edit", "Product")' + '/' + dataItem.Id;
+    }
+
+    function onDeleteClick(e) {
+        e.preventDefault();
+        var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+        if (confirm("Are you sure you want to delete this product?")) {
+            window.location.href = '@Url.Action("Delete", "Product")' + '/' + dataItem.Id;
+        }
+    }
+
+    function onDetailInit(e) {
+        var productId = e.data.Id;
+        var detailRow = e.detailRow;
+        
+        // Get the detail cell (Kendo automatically creates a TD that spans all columns)
+        var detailCell = detailRow.find("td").first();
+        
+        // Create professional detail container that spans all columns
+        detailCell.html("<div class='detail-container'>" +
+                      "<div class='detail-header'>" +
+                      "<h5>Packet Details</h5>" +
+                      "</div>" +
+                      "<div class='detail-loading' id='loading_" + productId + "'>Loading packet details...</div>" +
+                      "<div id='detailGrid_" + productId + "' style='width: 100%; display: none;'></div>" +
+                      "</div>");
+        
+        // Load packet details via AJAX (lazy loading)
+        $.ajax({
+            url: '@Url.Action("GetProductPacketDetails", "Product")',
+            type: 'GET',
+            data: { productId: productId },
+            success: function (response) {
+                $("#loading_" + productId).hide();
+                $("#detailGrid_" + productId).show();
+                var packets = response.packets || [];
+                var unitName = response.unitName || "";
+                
+                // Add unitName to each packet item for template access
+                packets.forEach(function(item) {
+                    item.UnitName = unitName;
+                });
+                
+                $("#detailGrid_" + productId).kendoGrid({
+                    dataSource: {
+                        data: packets,
+                        pageSize: 10,
+                        schema: {
+                            model: {
+                                fields: {
+                                    Quantity: { type: "number" },
+                                    Mrp: { type: "number" }
+                                }
+                            }
+                        }
+                    },
+                    height: 300,
+                    scrollable: true,
+                    sortable: true,
+                    filterable: true,
+                    pageable: {
+                        pageSizes: [10, 20, 50],
+                        buttonCount: 5
+                    },
+                    resizable: true,
+                    columns: [
+                        {
+                            field: "PackingTypeName",
+                            title: "Packet Name",
+                            width: 250,
+                            headerAttributes: { style: "text-align: center; font-weight: 600;" },
+                            attributes: { style: "text-align: left;" }
+                        },
+                        {
+                            field: "Quantity",
+                            title: "Quantity",
+                            width: 120,
+                            format: "{0:n2}",
+                            headerAttributes: { style: "text-align: center; font-weight: 600;" },
+                            attributes: { style: "text-align: right;" }
+                        },
+                        {
+                            field: "UnitName",
+                            title: "Unit",
+                            width: 120,
+                            headerAttributes: { style: "text-align: center; font-weight: 600;" },
+                            attributes: { style: "text-align: center;" }
+                        },
+                        {
+                            field: "Mrp",
+                            title: "Rate (MRP)",
+                            width: 150,
+                            format: "{0:n2}",
+                            headerAttributes: { style: "text-align: center; font-weight: 600;" },
+                            attributes: { style: "text-align: right;" }
+                        }
+                    ]
+                });
+            },
+            error: function () {
+                $("#loading_" + productId).hide();
+                var errorCell = detailRow.find("td").first();
+                errorCell.html("<div class='detail-container'><div class='alert alert-danger' style='margin: 10px; padding: 15px; border-radius: 4px;'>Error loading packet details. Please try again.</div></div>");
+            }
+        });
+    }
+
+    function sendData() {
+    }
+
+    // Calculate and adjust page size based on available grid height
+    function adjustGridPageSize() {
+        var grid = $("#grid").data("kendoGrid");
+        if (!grid) return;
+
+        try {
+            // Get grid container height
+            var gridElement = grid.element;
+            var gridHeight = gridElement.height();
+            
+            // Get heights of grid components
+            var toolbarHeight = gridElement.find(".k-grid-toolbar").outerHeight() || 0;
+            var headerHeight = gridElement.find(".k-grid-header").outerHeight() || 0;
+            var pagerHeight = gridElement.find(".k-pager-wrap").outerHeight() || 0;
+            var filterRowHeight = gridElement.find(".k-grid-header .k-filter-row").outerHeight() || 0;
+            
+            // Calculate available height for data rows
+            var availableHeight = gridHeight - toolbarHeight - headerHeight - pagerHeight - filterRowHeight - 10; // 10px buffer
+            
+            // Estimate row height (typically around 30-35px per row)
+            var estimatedRowHeight = 35;
+            
+            // Calculate optimal page size (ensure at least 1 row)
+            var optimalPageSize = Math.max(1, Math.floor(availableHeight / estimatedRowHeight));
+            
+            // Set reasonable limits
+            optimalPageSize = Math.min(optimalPageSize, 1000); // Max 1000 rows
+            optimalPageSize = Math.max(optimalPageSize, 5); // Min 5 rows
+            
+            // Update page size if different from current
+            var currentPageSize = grid.dataSource.pageSize();
+            if (currentPageSize !== optimalPageSize) {
+                grid.dataSource.pageSize(optimalPageSize);
+                grid.dataSource.page(1); // Reset to first page
+                grid.refresh();
+            }
+        } catch (e) {
+            console.log("Error adjusting grid page size:", e);
+        }
+    }
+
+    $(document).ready(function () {
+        // Adjust page size on load
+        setTimeout(function () {
+            adjustGridPageSize();
+        }, 500);
+
+        // Adjust page size on window resize
+        var resizeTimer;
+        $(window).on('resize', function () {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(function () {
+                adjustGridPageSize();
+            }, 250);
+        });
+
+        // Adjust page size after grid data is bound
+        $("#grid").on("dataBound", function () {
+            setTimeout(function () {
+                adjustGridPageSize();
+            }, 100);
+        });
+    });
+</script>
+
+<style>
+    /* Professional styling for hierarchical grid detail rows */
+    .k-grid .k-detail-row {
+        border: none !important;
+    }
+    
+    .k-grid .k-detail-row > td {
+        padding: 0 !important;
+        border: none !important;
+        background-color: #f8f9fa !important;
+    }
+    
+    .detail-container {
+        width: 100%;
+        padding: 20px;
+        background-color: #f8f9fa;
+        border-top: 2px solid #007bff;
+        margin: 0;
+        box-sizing: border-box;
+    }
+    
+    .detail-header {
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .detail-header h5 {
+        margin: 0;
+        color: #495057;
+        font-weight: 600;
+        font-size: 16px;
+    }
+    
+    /* Ensure detail grid is properly styled */
+    #grid .k-detail-row .k-grid {
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        background-color: white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    /* Loading indicator */
+    .detail-loading {
+        text-align: center;
+        padding: 20px;
+        color: #6c757d;
+        font-style: italic;
+    }
+</style>

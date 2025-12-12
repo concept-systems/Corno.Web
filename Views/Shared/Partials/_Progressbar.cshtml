@@ -1,0 +1,98 @@
+﻿@using Corno.Web.Helper
+@{
+    string controllerName = ViewBag.Controller;
+    string importAction = ViewBag.ImportAction;
+    RouteValueDictionary routeValues = ViewBag.RouteValues;
+
+}
+
+<div class="form-group row">
+    <div class="col-10">
+        @(Html.Kendo().Upload()
+            .Name("files")
+            .HtmlAttributes(new {aria_label = "file"})
+            .Validation(v => v.AllowedExtensions(new[] {".xls", ".xlsx"}))
+            //.Async(a => a
+            //    .Save("Async_Save", "Upload")
+            //    .Remove("Async_Remove", "Upload")
+            //    .AutoUpload(true)
+            )
+    </div>
+
+    <div class="col-2">
+        @(Html.Kendo().Button()
+            .Name("btnImport")
+            .Content("Import")
+            .ApplyStandardSettingsWithType(ButtonType.Import, "import", ComponentSize.Medium)
+            .HtmlAttributes(new{@class = "w-100"}))
+    </div>
+</div>
+
+<div class="form-group row">
+    <div class="col-12">
+        <div id="progress"></div>
+        @*@(Html.Kendo().ProgressBar()
+        .Name("progressBar")
+        .Min(0)
+        .Max(10)
+        .HtmlAttributes(new { @class = "w-100 text-center" })
+        .Type(ProgressBarType.Percent)
+        /*.Events(e => {
+            e.Change("onChange");
+            e.Complete("onComplete");
+        })*/
+        )*@
+    </div>
+</div>
+
+
+<script>
+        $(document).ready(function () {
+            $('#progress').kendoProgressBar({
+                type: "percent"
+            });
+
+            $('#btnImport').click(function () {
+                var files = $("#files").getKendoUpload().getFiles();
+                if (files.length === 0) {
+                    showWarningMessage("Please select one or more files.");
+                    return;
+                }
+
+                var progressBar = $('#progress').data("kendoProgressBar");
+                progressBar.value(0);
+
+                var formData = new FormData();
+                $.each(files, function (index, file) {
+                    formData.append('files', file.rawFile);
+                });
+
+                $.ajax({
+                    url: '@Url.Action(importAction, controllerName)',
+                    type: 'POST',
+                    xhr: function () {
+                        var xhr = new window.XMLHttpRequest();
+                        xhr.upload.addEventListener("progress", function (evt) {
+                            if (evt.lengthComputable) {
+                                console.log(evt.loaded);
+                                var percentComplete = evt.loaded / evt.total * 100;
+                                $('#progress').text(percentComplete.toFixed(2) + '%');
+                            }
+                        }, false);
+                        return xhr;
+                    },
+                    success: function (data) {
+                        // Handle success
+                    },
+                    error: function () {
+                        // Handle error
+                    },
+                    data: formData,
+                    cache: false,
+                    contentType: false,
+                    processData: false
+                });
+            });
+        });
+
+</script>

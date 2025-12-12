@@ -1,0 +1,18 @@
+@using Corno.Web.Dtos
+@using Corno.Web.Extensions
+@using Corno.Web.Globals
+@model Corno.Web.Dtos.MasterDto
+
+@(Html.Kendo().MultiColumnComboBoxFor(m => m)
+      .DataTextField(FieldConstants.Name)
+      .DataValueField(FieldConstants.Id)
+      .HtmlAttributes(new {@class = "w-100", data_multicolumn_filter = "true"})
+      .Filter("contains")
+      .Placeholder("Select ...")
+      .Suggest(true)
+      .Columns(columns =>
+      {
+          columns.Add().Field(FieldConstants.Code).Title(FieldConstants.Code);
+          columns.Add().Field(FieldConstants.Name).Title(FieldConstants.Name);
+      })
+      .BindTo((IList<MasterDto>) ViewData[FieldConstants.DataSource]))

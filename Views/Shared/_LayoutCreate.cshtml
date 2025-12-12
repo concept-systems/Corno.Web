@@ -1,0 +1,30 @@
+﻿@using Corno.Web.Helper
+@{
+    Layout = "~/Views/Shared/_LayoutCrud.cshtml";
+}
+
+@Html.Partial("Partials/_CommonViewBag")
+
+<!-- Render derived view's header section if defined, otherwise use default -->
+@if (IsSectionDefined("sectionCrudHeader"))
+{
+    @RenderSection("sectionCrudHeader", required: false)
+}
+
+@RenderBody()
+
+<!-- Render derived view's footer section if defined, otherwise use default -->
+@if (IsSectionDefined("sectionCrudFooter"))
+{
+    @RenderSection("sectionCrudFooter", required: false)
+}
+else
+{
+    @section sectionCrudFooter
+    {
+        <div class="k-actions k-actions-horizontal k-actions-end">
+            @Html.Partial("Partials/_BackButton")
+            @Html.Partial("Partials/_SaveButton")
+        </div>
+    }
+}

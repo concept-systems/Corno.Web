@@ -1,0 +1,105 @@
+﻿@using System.ComponentModel
+@using Kendo.Mvc.UI
+@model Corno.Web.Areas.Kitchen.Dto.Put_To_Light.TrolleyConfigIndexDto
+
+
+@(Html.Kendo().Grid(Model.TrolleyLightDetailDtos)
+    .Name("grid")
+    .Columns(columns =>
+    {
+        columns.Bound(p => p.Id)
+            .ClientTemplate("<input type='hidden' name='TrolleyLightDetailDtos[#= index(data)#].Id' value='#= Id #' />")
+            .Hidden();
+        columns.Bound(p => p.TrolleyConfigId)
+            .ClientTemplate("<input type='hidden' name='TrolleyLightDetailDtos[#= index(data)#].TrolleyConfigId' value='#= TrolleyConfigId #' />")
+            .Hidden();
+        columns.Bound(p => p.LocationId)
+            .ClientTemplate("#= LocationName  #" +
+                            "<input type='hidden' name='TrolleyLightDetailDtos[#= index(data)#].LocationId' value='#= LocationId #' />")
+            .Title("Location");
+        columns.Bound(p => p.ColorId)
+            .ClientTemplate("#= ColorName  #" +
+                            "<input type='hidden' name='TrolleyLightDetailDtos[#= index(data)#].ColorId' value='#= ColorId #' />")
+            .Title("Shade");
+        columns.Command(command =>
+        {
+            command.Edit();
+            command.Destroy();
+        }).Title("Action");
+    })
+    .ToolBar(toolbar => toolbar.Create())
+    .Editable(editable => editable.Mode(GridEditMode.PopUp)
+        .TemplateName("_LocationPopup"))
+    
+    .Filterable(f => f.Mode(GridFilterMode.Row))
+    .Scrollable()
+    .Sortable(s => s.InitialDirection(ListSortDirection.Descending))
+    .Resizable(resize => resize.Columns(true)) // Allow column resizing
+    .PersistSelection()
+    .Height(540)
+    .DataSource(dataSource => dataSource
+        .Ajax()
+        //.Read(read => read.Action("Excel_Export_Save", "Corno"))
+        .ServerOperation(false)
+        .Model(model =>
+        {
+            model.Id(p => p.Id);
+        })
+        .Create(update => update.Action("Inline_Create_Update_Destroy_Config", "TrolleyConfig", new { area = "Kitchen" }))
+        .Update(update => update.Action("Inline_Create_Update_Destroy_Config", "TrolleyConfig", new { area = "Kitchen" }))
+        .Destroy(update => update.Action("Inline_Create_Update_Destroy_Config", "TrolleyConfig", new { area = "Kitchen" }))
+    ))
+@*<div class="form-group required row">
+    <div class="k-actions k-actions-horizontal k-actions-end">
+        @(Html.Kendo().Button()
+            .Name("btnCreate")
+            .Icon("save")
+            .FillMode(ButtonFillMode.Outline)
+            .ThemeColor(ThemeColor.Success)
+            .Content("Save")
+            .HtmlAttributes(new
+            {
+                type = "submit",
+                name = "action:Create",
+                @class = ""
+            }))
+    </div>
+</div>*@
+
+@*@(Html.Kendo().Grid(Model?.TrolleyLightDetailDtos)
+    .Name("grid")
+    .ToolBar(toolbar =>
+    {
+        toolbar.Search();
+    })
+    .Pageable()
+    .Sortable(s => s.InitialDirection(ListSortDirection.Descending))
+    .Filterable(f => f.Mode(GridFilterMode.Row))
+    .Resizable(resize => resize.Columns(true)) // Allow column resizing
+    .PersistSelection()
+    .HtmlAttributes(new { @class = "w-100" })
+    .Columns(columns =>
+    {
+        columns.Bound(m => m.LocationId)
+            .ClientTemplate("#= LocationName #" + "<input type='hidden' name='Details[#= index(data)#].LocationNo' value='#= LocationNo #' />")
+            .HtmlAttributes(new { style = "text-align: left" })
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" });
+        columns.Bound(m => m.ColorId)
+            .ClientTemplate("#= ColorName #" + "<input type='hidden' name='Details[#= index(data)#].ShadeCode' value='#= ShadeCode #' />")
+            .HtmlAttributes(new { style = "text-align: left" })
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" });
+    })
+    .Sortable()
+    //.Pageable()
+    .Scrollable()
+    .DataSource(dataSource => dataSource
+        .Ajax()
+        .ServerOperation(false)
+    /*.Events(e => e.Error("onError"))*/)
+    .Resizable(resize => resize.Columns(true))
+    .Reorderable(reorder => reorder.Columns(true)))*@
+<script type="text/javascript">
+    function onButtonSave() {
+        $("form").submit();
+    }
+</script>

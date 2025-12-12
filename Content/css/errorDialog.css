@@ -1,0 +1,145 @@
+/* Professional Error Dialog Styling */
+
+.bootbox-error-dialog .modal-header {
+    background-color: #dc3545;
+    color: white;
+    border-bottom: 2px solid #c82333;
+    padding: 15px 20px;
+}
+
+.bootbox-error-dialog .modal-header .modal-title {
+    font-weight: 600;
+    font-size: 1.1em;
+}
+
+.bootbox-error-dialog .modal-header .close {
+    color: white;
+    opacity: 0.9;
+    text-shadow: none;
+}
+
+.bootbox-error-dialog .modal-header .close:hover {
+    opacity: 1;
+    color: white;
+}
+
+.bootbox-error-dialog .modal-body {
+    padding: 20px;
+}
+
+.bootbox-error-dialog .alert-danger {
+    border-left: 4px solid #dc3545;
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    color: #212529; /* Regular text color, not red */
+    padding: 15px;
+    border-radius: 4px;
+}
+
+.bootbox-error-dialog .btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    font-weight: 500;
+    padding: 8px 20px;
+}
+
+.bootbox-error-dialog .btn-danger:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+}
+
+/* Icon styling */
+.bootbox-error-dialog .fa-exclamation-circle {
+    color: #dc3545;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+/* Warning dialog styling */
+.bootbox-warning-dialog .modal-header {
+    background-color: #ffc107;
+    color: #856404;
+    border-bottom: 2px solid #e0a800;
+}
+
+.bootbox-warning-dialog .alert-warning {
+    border-left: 4px solid #ffc107;
+    background-color: #fff3cd;
+    border-color: #ffeaa7;
+    color: #856404;
+}
+
+/* Info dialog styling */
+.bootbox-info-dialog .modal-header {
+    background-color: #17a2b8;
+    color: white;
+    border-bottom: 2px solid #138496;
+}
+
+.bootbox-info-dialog .alert-info {
+    border-left: 4px solid #17a2b8;
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+    color: #0c5460;
+}
+
+/* Success dialog styling */
+.bootbox-success-dialog .modal-header {
+    background-color: #28a745;
+    color: white;
+    border-bottom: 2px solid #218838;
+    padding: 15px 20px;
+}
+
+.bootbox-success-dialog .modal-header .modal-title {
+    font-weight: 600;
+    font-size: 1.1em;
+}
+
+.bootbox-success-dialog .modal-header .close {
+    color: white;
+    opacity: 0.9;
+    text-shadow: none;
+}
+
+.bootbox-success-dialog .modal-header .close:hover {
+    opacity: 1;
+    color: white;
+}
+
+.bootbox-success-dialog .modal-body {
+    padding: 20px;
+}
+
+.bootbox-success-dialog .alert-success {
+    border-left: 4px solid #28a745;
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+    color: #212529; /* Regular text color */
+    padding: 15px;
+    border-radius: 4px;
+}
+
+.bootbox-success-dialog .btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
+    font-weight: 500;
+    padding: 8px 20px;
+}
+
+.bootbox-success-dialog .btn-success:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+}
+

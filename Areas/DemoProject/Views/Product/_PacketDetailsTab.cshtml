@@ -1,0 +1,56 @@
+﻿@model Corno.Web.Areas.Masters.Dtos.Product.ProductDto
+@using Kendo.Mvc.UI
+
+<div class="row">
+    @(Html.Kendo().Grid(Model.ProductPacketDtos)
+        .Name("grid")
+        .Columns(columns =>
+        {
+            columns.Bound(p => p.Id)
+                .ClientTemplate("<input type='hidden' name='ProductPacketDtos[#= index(data)#].Id' value='#= Id #' />")
+                .Hidden();
+            columns.Bound(p => p.PackingTypeId)
+                .ClientTemplate("#= PackingTypeName  #" +
+                                "<input type='hidden' name='ProductPacketDtos[#= index(data)#].PackingTypeId' value='#= PackingTypeId #' />")
+                .Width(180);
+            columns.Bound(p => p.Quantity)
+                .ClientTemplate("#= Quantity #" +
+                                "<input type='hidden' name='ProductPacketDtos[#= index(data)#].Quantity' value='#= Quantity #'   />")
+                .Width(50);
+            columns.Bound(p => p.Mrp)
+                .ClientTemplate("#= Mrp #" +
+                                "<input type='hidden' name='ProductPacketDtos[#= index(data)#].Mrp' value='#= Mrp #'   />")
+                .Width(50)
+                .Title("MRP");
+            columns.Command(command =>
+            {
+                command.Edit();
+                command.Destroy();
+            }).Width(200);
+        })
+        .ToolBar(toolbar => toolbar.Create())
+        //.Editable(editable => editable.Mode(GridEditMode.InLine).ConfirmDelete("Continue to delete this record?").DisplayDeleteConfirmation("Continue to delete this record?"))
+        .Editable(editable => editable.Mode(GridEditMode.PopUp)
+            /*.TemplateName(@"~/Areas/DemoProject/Views/Product/_PacketPopup"))*/
+            .TemplateName("_PacketPopup1"))
+        .Pageable()
+        .Filterable(f => f.Mode(GridFilterMode.Row))
+        .Sortable()
+        .Scrollable()
+        //.HtmlAttributes(new { style = "height:550px;" })
+        .DataSource(dataSource => dataSource
+            .Ajax()
+            .PageSize(20)
+            .Events(events => events.Error("error_handler"))
+            //.Model(model => model.Id(p => p.Id))
+            .Model(model =>
+            {
+                model.Id(p => p.Id);
+                model.Field(p => p.Quantity).DefaultValue(0);
+                model.Field(p => p.Mrp).DefaultValue(0);
+            })
+            .Create(update => update.Action("Inline_Create_Update_Destroy_Packet", "Product", new { area = "DemoProject" }))
+            .Update(update => update.Action("Inline_Create_Update_Destroy_Packet", "Product", new { area = "DemoProject" }))
+            .Destroy(update => update.Action("Inline_Create_Update_Destroy_Packet", "Product", new { area = "DemoProject" }))
+        ))
+</div>

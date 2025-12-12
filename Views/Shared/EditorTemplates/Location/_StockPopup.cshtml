@@ -1,0 +1,43 @@
+﻿@using Corno.Web.Globals
+@using Kendo.Mvc.UI
+@model Corno.Web.Areas.Masters.Dtos.Location.LocationStockDto
+
+@Html.HiddenFor(model => model.Id)
+
+<div class="form-group">
+    @Html.LabelFor(m => m.ItemId, "Item", new { @class = "col-sm-4" })
+    <div class="col-sm-10">
+        @(Html.Kendo().MultiColumnComboBoxFor(m => m.ItemId)
+            .DataTextField(FieldConstants.Name)
+            .DataValueField(FieldConstants.Id)
+            .HtmlAttributes(new { @class = "w-100" })
+            .Filter("contains")
+            .FilterFields(new string[] { FieldConstants.Code, FieldConstants.Name })
+            .Placeholder("Select ...")
+            .Suggest(true)
+            .Columns(columns =>
+            {
+                columns.Add().Field(FieldConstants.Code).Title(FieldConstants.Code).Width("250px");
+                columns.Add().Field(FieldConstants.Name).Title(FieldConstants.Name).Width("300px");
+            })
+            //.BindTo(miscMaster.GetViewModelList(m => m.MiscType == MiscMasterConstants.Unit))
+            .DataSource(source =>
+            {
+                source.Read(read => { read.Action("GetItems", "Data", new { area = ""}); })
+                    .ServerFiltering(false);
+            }))
+    </div>
+</div>
+
+<div class="form-group">
+    <div class="col-sm-10">
+        @(Html.Kendo().NumericTextBoxFor(m => m.Quantity)
+        .Label(c => c.Content("Quantity").Floating(true))
+        .HtmlAttributes(new
+        {
+        @class = "w-100"
+        }))
+    </div>
+</div>
+
+

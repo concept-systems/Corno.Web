@@ -1,0 +1,129 @@
+﻿@using Corno.Concept.Modules.Masters.Services.Interfaces
+@using Corno.Services.Windsor
+@using Kendo.Mvc.UI
+@model IEnumerable<Corno.Concept.Modules.Planning.Models.Plan>
+
+@{
+    Layout = "~/Views/Shared/_AppLayout.cshtml";
+}
+
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+}
+@{
+    ViewBag.BoxTitle = "StandardBom";
+}
+@{
+    Page.Title = "StandardBom";
+
+    ViewBag.MainHeader = "StandardBom";
+    ViewBag.MainMenu = "Masters";
+    ViewBag.Controller = "StandardBom";
+    ViewBag.AddNewMethod = "Create";
+    ViewBag.CurrentLink = "StandardBom";
+
+    ViewBag.ImportAction = "ImportPlan";
+
+}
+
+@{
+    var productService = Bootstrapper.Get<IProductService>();
+    var rowNo = 1;
+}
+
+@using Corno.Concept.Portal.Helper
+
+<div class="grid-container-full-height">
+    @(Html.Kendo().Grid(Model)
+        .Name("grid")
+        .ApplyIndexSettings(customToolbar: toolbar =>
+        {
+            toolbar.Custom()
+                .Text("<span class='k-icon k-i-import'></span> Import")
+                .HtmlAttributes(new { @class = "k-grid-import k-button-import-outlined", style = "float: right;", onclick = $"window.location.href='{Url.Action(ViewBag.ImportAction, ViewBag.Controller, new { area = "Masters" })}'; return false;" });
+            toolbar.Custom()
+                .Text("<span class='k-icon k-i-plus'></span> Add New")
+                .HtmlAttributes(new { @class = "k-grid-add-new k-button-add-new-outlined", style = "float: right;", onclick = $"window.location.href='{Url.Action(ViewBag.Create, ViewBag.Controller, new { area = "Masters" })}'; return false;" });
+        }) // 👈 Apply index settings (full height, responsive)
+        .Events(events => events.ApplyCommonEvents())
+      .Columns(columns =>
+      {
+          columns.Bound(c => c.SerialNo).Title("Sr<br/>.No").Width(70);
+          columns.Bound(c => c.Id).Title("Item <br/>Id").Width(80).HeaderHtmlAttributes(
+              new { style = "white-space: normal" });
+          columns.Bound(c => c.Code).Title("Panel <br/>No").Width(85).HeaderHtmlAttributes(
+              new { style = "white-space: normal" });
+          columns.Bound(c => c.Code).Title("Panel Code").Width(150).HeaderHtmlAttributes(
+              new { style = "white-space: normal" });
+          columns.Bound(c => productService.GetById(c.ProductId).Name).Width(300).Title("Panel Description");
+          columns.Bound(c => c.OrderQuantity).Title("Quantity").Width(110).HeaderHtmlAttributes(
+              new { style = "white-space: normal" });
+          columns.Bound(c => c.PrintQuantity).Title("Assembly <br/> Sequence").Width(110).HeaderHtmlAttributes(
+              new { style = "white-space: normal" }); 
+          columns.Bound(c => c.CutQuantity).Title("Assembly <br/> Quantity").Width(110).HeaderHtmlAttributes(
+              new { style = "white-space: normal" });
+          columns.Bound(c => c.CutQuantity).Title("Layer").Width(80).HeaderHtmlAttributes(
+              new { style = "white-space: normal" });
+          columns.Bound(c => c.CutQuantity).Title("Process Sequence").Width(110).HeaderHtmlAttributes(
+              new { style = "white-space: normal" });
+          columns.Bound(c => c.CutQuantity).Title("Lenght").Width(90).HeaderHtmlAttributes(
+              new { style = "white-space: normal" });
+          columns.Bound(c => c.CutQuantity).Title("Width").Width(90).HeaderHtmlAttributes(
+              new { style = "white-space: normal" });
+          columns.Bound(c => c.CutQuantity).Title("Thickness").Width(110).HeaderHtmlAttributes(
+              new { style = "white-space: normal" });
+          columns.Bound(c => c.CutQuantity).Title("Board Type").Width(90).HeaderHtmlAttributes(
+              new { style = "white-space: normal" });
+          columns.Bound(c => c.CutQuantity).Title("Color").Width(90).HeaderHtmlAttributes(
+              new { style = "white-space: normal" });
+          columns.Bound(c => c.CutQuantity).Title("Parent <br/>OSl<br/>Bsl").Width(90).HeaderHtmlAttributes(
+              new { style = "white-space: normal" });
+          columns.Bound(c => c.CutQuantity).Title("parent<br/>Board<br/>Size").Width(100).HeaderHtmlAttributes(
+              new { style = "white-space: normal" });
+          columns.Bound(c => c.CutQuantity).Title("R").Width(60).HeaderHtmlAttributes(
+              new { style = "white-space: normal" });
+          columns.Bound(c => c.CutQuantity).Title("G").Width(60).HeaderHtmlAttributes(
+              new { style = "white-space: normal" });
+          columns.Bound(c => c.CutQuantity).Title("B").Width(60).HeaderHtmlAttributes(
+              new { style = "white-space: normal" });
+          columns.Command(command =>
+          {
+              command.Custom("Edit").IconClass("k-icon k-i-edit k-icon k-text-info k-icon-20")
+                  .Text("")
+                  //.Text("<i class='fa fa-edit fa-lg text-info'></i>")
+
+                  .DataRouteValues(routeValues =>
+                  {
+                      routeValues.Add(routeValue => routeValue.Id);
+                  })
+                  .Action(ViewBag.Edit, ViewBag.Controller);
+
+              command.Custom("Delete").IconClass("k-icon k-i-delete k-icon k-text-error k-icon-20")
+                  .Text("")
+                  //.Text("<i class='fa fa-trash fa-lg text-danger'></i>")
+                  .DataRouteValues(routeValues =>
+                  {
+                      routeValues.Add(routeValue => routeValue.Id);
+
+                  })
+                  .Action(ViewBag.Delete, ViewBag.Controller);
+
+          }).Title("Action").Width(250);
+      })
+                .Scrollable()
+                .Groupable()
+                .Sortable()
+                .Filterable()
+                )
+</div>
+  
+<style>
+    .k-icon-20 {
+        font-size: 20px; /* Sets icon size to 48px */
+    }
+</style>
+

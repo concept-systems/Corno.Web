@@ -1,0 +1,81 @@
+﻿@using Kendo.Mvc.UI
+@model Corno.Web.Areas.Masters.ViewModels.Supplier.SupplierViewModel
+
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+}
+
+@{
+    Page.Title = "Supplier";
+    ViewBag.MainMenu = "Masters";
+    ViewBag.CurrentSitemap = "Supplier";
+    ViewBag.BoxTitle = "Create New Supplier";
+    ViewBag.Controller = "Supplier";
+    ViewBag.SubmitAction = ViewBag.Create;
+}
+
+@{
+}
+
+@Html.HiddenFor(m => m.Id)
+
+<!-- Toggle button visible on mobile to open the responsive panel -->
+<button id="supplierPanelToggle" class="k-button k-button-md k-rounded-md k-button-solid k-button-solid-primary rp-toggle" type="button">
+    <span class="k-icon k-i-menu"></span>
+    Show Details
+</button>
+
+@(Html.Kendo().ResponsivePanel()
+    .Name("supplierPanel")
+    .Orientation(ResponsivePanelOrientation.Top)
+    .Breakpoint(100)
+    .ToggleButton("#supplierPanelToggle")
+    .HtmlAttributes(new { style = "margin-bottom: 20px;" })
+    .Content(@<text>
+        <div class="responsive-panel-container">
+            <div class="k-widget k-panel mb-4">
+                <h3 class="k-panel-title">Basic Information</h3>
+                <div class="k-panel-content">
+                    @Html.Partial("Partials/_MasterEdit", Model)
+                </div>
+            </div>
+
+            <div class="k-widget k-panel mb-4">
+                <h3 class="k-panel-title">Details</h3>
+                <div class="k-panel-content">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            @(Html.Kendo().TabStrip()
+                                .Name("tabstrip")
+                                .Items(tabstrip =>
+                                {
+                                    tabstrip.Add().Text("General")
+                                        .Content(@<text>
+                                                     @Html.Partial("~/Areas/Masters/Views/Supplier/_GeneralTab.cshtml", Model)
+                                                  </text>);
+
+                                    tabstrip.Add().Text("Contact Info")
+                                        .Content(@<text>
+                                                     @Html.Partial("~/Areas/Masters/Views/Supplier/_ContactInfoTab.cshtml", Model)
+                                                  </text>);
+                                    tabstrip.Add().Text("Item Details")
+                                        .Content(@<text>
+                                                     @Html.Partial("~/Areas/Masters/Views/Supplier/_ItemDetailsTab.cshtml", Model)
+                                                  </text>);
+                                })
+                                .SelectedIndex(0)
+                            )
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </text>
+    )
+)
+
+

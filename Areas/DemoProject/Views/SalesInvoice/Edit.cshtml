@@ -1,0 +1,95 @@
+@using Corno.Web.Globals
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@model Corno.Web.Areas.DemoProject.Dtos.SalesInvoiceDto
+
+@{
+    Layout = "~/Views/Shared/_LayoutCrud.cshtml";
+}
+
+@{
+    ViewBag.Title = "Edit invoice";
+    ViewBag.BoxTitle = $"Edit Invoice : {Model.InvoiceNo}";
+
+    ViewBag.ControllerName = "SalesInvoice";
+    ViewBag.ActionName = "Edit";
+}
+
+@section sectionCrudHeader{
+    <div class="row col-md-12 col-sm-12">
+        <div class="col-12 col-md-11">
+            <h5>
+                <span class="k-icon k-i-plus k-icon k-text-success"></span>
+                @ViewBag.Title
+            </h5>
+        </div>
+        <div class="col-12 col-md-1">
+            @(Html.Kendo().Button()
+            .Name("BackToList")
+            .Content("List")
+            .ApplyStandardSettingsWithType(ButtonType.Info, "arrow-left", ComponentSize.Medium)
+            .Events(e => e.Click("onBackToList"))
+            .HtmlAttributes(new{@class = "w-100"}))
+        </div>
+    </div>
+}
+
+@Html.HiddenFor(m => m.Id);
+
+<div class="row">
+    <div class="col-12 col-md-6 mb-3 mb-md-0">
+        @Html.Partial("_ReportViewer", Model)
+    </div>
+    <div class="col-12 col-md-6">
+        @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+
+        @Html.Partial("_UserEntry", Model)
+    </div>
+</div>
+
+@section sectionCrudFooter
+{
+    <div class="k-card-actions k-card-actions-horizontal k-card-actions-end">
+        @(Html.Kendo().Button()
+                .Name("btnCreate")
+                .Content("Save")
+                .ApplyStandardSettingsWithType(ButtonType.Save, "save", ComponentSize.Medium)
+                .HtmlAttributes(new
+                {
+                    type = "submit",
+                    name = "action:Create"
+                }))
+        @(Html.Kendo().Button()
+                .Name("btnPreview")
+                .Content("Preview")
+                .ApplyStandardSettingsWithType(ButtonType.View, "preview", ComponentSize.Medium)
+                .HtmlAttributes(new
+                {
+                    type = "submit",
+                    name = "action:Preview"
+                }))
+        @(Html.Kendo().Button()
+                .Name("btnPrint")
+                .Content("Print")
+                .ApplyStandardSettingsWithType(ButtonType.Primary, "print", ComponentSize.Medium)
+                .HtmlAttributes(new
+                {
+                    type = "submit",
+                    name = "action:Print"
+                }))
+    </div>
+}
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        LoadPartialView()
+    });
+
+    function onBackToList() {
+        window.location.href = '/DemoProject/SalesInvoice/Index';
+    }
+
+    function onButtonSave() {
+        $("form").submit();
+    }
+</script>

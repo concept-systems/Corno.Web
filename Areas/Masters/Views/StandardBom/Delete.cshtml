@@ -1,0 +1,15 @@
+﻿@using Corno.Globals.Constants
+@model Corno.Concept.Modules.Planning.Models.Plan
+
+@{
+
+    Layout = "~/Views/Shared/_LayoutDelete.cshtml";
+}
+
+@{
+    ViewBag.BoxTitle = "Delete StandardBom : " + Model.Code;
+    ViewBag.Area = "Masters";
+    ViewBag.SubmitAction = "Delete";
+}
+
+@Html.Partial("_StandardBom", Model)

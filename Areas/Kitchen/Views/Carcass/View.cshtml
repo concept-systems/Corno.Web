@@ -1,0 +1,255 @@
+﻿@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@model Corno.Web.Areas.Kitchen.Dto.Carcass.CarcassViewDto
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+    ViewBag.View = "View";
+}
+
+@{
+    ViewBag.BoxTitle = "Carcass View";
+    ViewBag.SubmitButtonText = "Print";
+}
+
+<!-- container templates -->
+<script id="template-partial-view" type="text/x-kendo-template">
+    <!-- Placeholder for the partial view -->
+            <div id="partialViewContainer" style="height: 100%"></div>
+</script>
+<script id="template-header" type="text/x-kendo-template">
+   <table class="k-table k-table-auto table table-bordered">
+    <tr>
+        <td>
+            Due Date :
+        </td>
+        <td>
+            @(Model.DueDate.HasValue ? Model.DueDate.Value.ToString("MM/dd/yyyy") : "N/A")
+        </td>
+    </tr>
+     <tr>
+         <td>
+             Warehouse Order No :
+         </td>
+         <td>
+              @Html.DisplayFor(m => m.WarehouseOrderNo)
+         </td>
+     </tr>
+     <tr>
+        <td>
+            Lot No :
+        </td>
+        <td>
+            @Html.DisplayFor(m => m.LotNo)
+        </td>
+     </tr>
+     <tr>
+         <td>
+             Print Quantity :
+         </td>
+         <td>
+             @Html.DisplayFor(m => m.PrintQuantity)
+         </td>
+     </tr>
+</table>
+</script>
+<script id="template-racking-detail">
+        @(Html.Kendo().Grid(Model?.RackingDetails)
+            .Name("rackingDetails")
+            .Scrollable()
+            .Sortable()
+            .Filterable(f => f.Mode(GridFilterMode.Row))
+            .PersistSelection()
+            .Resizable(resize => resize.Columns(true)) // Allow column resizing
+            .PersistSelection()
+            .HtmlAttributes(new { style = "height: 250px;" })
+            .Columns(columns =>
+            {
+                columns.Bound(m => m.ScanDate)
+                    .HtmlAttributes(new { style = "text-align: center" })
+                    .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                    .Format("{0:dd/MM/yyyy}")
+                    .Title("Date");
+                columns.Bound(m => m.PalletNo)
+                    .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                    .HtmlAttributes(new { style = "text-align: center" })
+                    .Title("Pallet No");
+                columns.Bound(m => m.RackNo)
+                    .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                    .HtmlAttributes(new { style = "text-align: center" })
+                    .Title("Rack No");
+                columns.Bound(m => m.Status)
+                    .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                    .HtmlAttributes(new { style = "text-align: center" });
+            })
+           .ToClientTemplate())
+</script>
+<div class="k-card-header">
+    <div class="row">
+        <div class="col-6">
+            <h5>
+                <span class="k-icon k-i-plus k-icon k-text-success"></span>
+                @ViewBag.BoxTitle
+            </h5>
+        </div>
+        <div class="col-6 k-card-actions k-card-actions-horizontal k-card-actions-end">
+            @(Html.Kendo().Button()
+                .Name("print")
+                .Content("Print")
+                .ApplyStandardSettingsWithType(ButtonType.Primary, "print", ComponentSize.Medium)
+                .Events(e => e.Click("onPrintLabel")))
+            @(Html.Kendo().Button()
+                .Name("btnList")
+                .Content("Back")
+                .ApplyStandardSettingsWithType(ButtonType.Info, "arrow-left", ComponentSize.Medium)
+                .Events(e => e.Click("onBack")))
+            @(Html.Kendo().Button()
+                .Name("BackToList")
+                .Content("List")
+                .ApplyStandardSettingsWithType(ButtonType.Info, "list", ComponentSize.Medium)
+                .Events(e => e.Click("onBackToList")))
+        </div>
+    </div>
+</div>
+
+@(Html.Kendo().TileLayout()
+    .Name("tileLayout")
+    .Columns(4)
+    .RowsHeight("100px")
+    .ColumnsWidth("25%")
+    .Containers(c => {
+
+             c.Add()
+                 .BodyTemplateId("template-partial-view")
+                 .Header(h => h.Text("Label"))
+                 .ColSpan(2)
+                 .RowSpan(5);
+             c.Add()
+                 .BodyTemplateId("template-header")
+                 .Header(h => h.Text("Header Info"))
+                 .ColSpan(2)
+                 .RowSpan(2);
+             c.Add()
+                 .BodyTemplateId("template-racking-detail")
+                 .Header(h => h.Text("Item Info"))
+                 .ColSpan(2)
+                 .RowSpan(3);
+    })
+    .Reorderable(true)
+    .Resizable(true)
+    )
+
+@(Html.Kendo().Grid(Model?.CartonDetails)
+    .Name("cartonDetails")
+    .ToolBar(toolbar =>
+    {
+        toolbar.Search();
+    })
+    .Pageable()
+    .Sortable()
+    .Filterable(f => f.Mode(GridFilterMode.Row))
+    .Scrollable()
+    .Resizable(resize => resize.Columns(true)) // Allow column resizing
+    .Height(440)
+    .PersistSelection()
+    .HtmlAttributes(new { @class = "w-100" })
+    .Columns(columns =>
+    {
+        columns.Bound(m => m.WarehousePosition)
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+            .HtmlAttributes(new { style = "text-align: center" })
+            .Title("Warehouse Position");
+        columns.Bound(m => m.Position)
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+            .HtmlAttributes(new { style = "text-align: center" })
+            .Title("Position");
+        columns.Bound(m => m.AssemblyCode)
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+            .HtmlAttributes(new { style = "text-align: center" })
+            .Title("Assembly Code");
+        columns.Bound(m => m.CarcassCode)
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+            .HtmlAttributes(new { style = "text-align: center" })
+            .Title("Carcass Code");
+        columns.Bound(m => m.NetWeight)
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+            .HtmlAttributes(new { style = "text-align: center" })
+            .Title("Net Weight");
+        columns.Bound(m => m.Tolerance)
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+            .HtmlAttributes(new { style = "text-align: center" })
+            .Title("Tolerance");
+        columns.Bound(m => m.Quantity)
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+            .HtmlAttributes(new { style = "text-align: center" })
+            .Title("Quantity");
+        columns.Bound(m => m.OrderQuantity)
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+            .HtmlAttributes(new { style = "text-align: center" })
+            .Title("Order Qty");
+    })
+    .DataSource(dataSource => dataSource
+        .Ajax()
+        .PageSize(9)
+        .ServerOperation(false)))
+
+<script>
+    $(document).ready(function () {
+        LoadPartialView()
+    });
+
+    function LoadPartialView(toPrinter) {
+        $.ajax({
+            url: '/Carcass/LoadPartialView', // Replace with your actual controller and action
+            method: 'GET',
+            data: { 'partialViewName': 'Partials/ReportViewer_New' },
+            success: function (partialHtml) {
+                // Load HTML content into the element
+                $('#partialViewContainer').html(partialHtml, function () {
+                    // This code will execute after the HTML content has been loaded
+                    console.log("HTML content loaded successfully");
+
+                });
+                // Delay the execution of the next statement by a short duration
+                setTimeout(function () {
+                    // This code will execute after a short delay
+                    console.log("Timeout HTML content loaded successfully");
+                    if ('@Model.PrintToPrinter' === 'True' || toPrinter === true) {
+                        printToPrinter();
+                    }
+                }, 1500); // Adjust the delay duration as needed
+            },
+            error: function () {
+                console.error('Failed to load the partial view.');
+            }
+        });
+    }
+
+    function onBackToList() {
+        window.location.href = '@Url.Action("Index", "Carcass", new { area = "Kitchen" })';
+    }
+    function onBack() {
+        // Try to use referrer if available and from same origin
+        var referrer = document.referrer;
+        if (referrer && referrer.indexOf(window.location.origin) === 0) {
+            var referrerPath = new URL(referrer).pathname;
+            if (referrerPath && referrerPath !== window.location.pathname) {
+                window.location.href = referrer;
+                return;
+            }
+        }
+        // Fallback to Plan/Index
+        window.location.href = '@Url.Action("Index", "Plan", new { area = "Kitchen" })';
+    }
+    function onPrintLabel() {
+        printToPrinter();
+    }
+</script>

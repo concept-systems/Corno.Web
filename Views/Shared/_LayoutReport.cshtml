@@ -1,0 +1,70 @@
+﻿@{
+    Layout = "~/Views/Shared/_LayoutBase.cshtml";
+}
+
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+
+    ViewBag.ImportAction = "ImportMaster";
+}
+
+@{
+    string controllerName = ViewBag.Controller;
+}
+
+@section sectionBaseHeader
+{
+    @Html.Partial("Partials/_BackButton")
+}
+
+@RenderBody()
+
+
+<style>
+    .k-icon-20 {
+        font-size: 18px; /* Sets icon size to 48px */
+    }
+</style>
+
+<script type="text/javascript">
+    function onBackReport() {
+        @{
+            // Get values from ViewBag or fall back to route data
+            var area = ViewBag.Area as string ?? ViewContext.RouteData.DataTokens["area"] as string ?? "";
+            var controller = ViewBag.Controller as string ?? ViewContext.RouteData.Values["controller"] as string ?? "";
+            var action = ViewBag.Index as string ?? "Index";
+
+            // Build URL using Url.Action to ensure proper routing
+            string backUrl;
+            if (!string.IsNullOrEmpty(area))
+            {
+                backUrl = Url.Action(action, controller, new { area = area });
+            }
+            else if (!string.IsNullOrEmpty(controller))
+            {
+                backUrl = Url.Action(action, controller);
+            }
+            else
+            {
+                backUrl = Url.Action("Index", "Home");
+            }
+        }
+
+        // Try to use referrer if available and from same origin
+        var referrer = document.referrer;
+        if (referrer && referrer.indexOf(window.location.origin) === 0) {
+            var referrerPath = new URL(referrer).pathname;
+            if (referrerPath && referrerPath !== window.location.pathname) {
+                window.location.href = referrer;
+                return;
+            }
+        }
+        // Fallback to generated URL
+        var url = '@Html.Raw(backUrl)';
+        window.location.href = url;
+    }
+</script>

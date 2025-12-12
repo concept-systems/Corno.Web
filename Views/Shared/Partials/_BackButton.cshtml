@@ -1,0 +1,13 @@
+@using Corno.Web.Helper
+@{
+    string indexAction = ViewBag.Index ?? "Index";
+    string controller = ViewBag.Controller;
+    string area = ViewBag.Area;
+    object miscType = ViewBag.MiscType;
+}
+
+    @(Html.Kendo().Button()
+        .Name("btnBack")
+        .Content("Back")
+        .ApplyStandardSettingsWithType(ButtonType.Info, "arrow-60-left", ComponentSize.Medium)
+        .HtmlAttributes(new { onclick = $"window.location.href='{Url.Action(indexAction, controller, new { area = area, miscType = miscType })}'; return false;" }))

@@ -1,0 +1,30 @@
+@using Corno.Web.Extensions
+@using Corno.Web.Globals
+@using Kendo.Mvc.UI
+@model Corno.Web.Areas.Admin.Dto.RoleDto
+
+@{
+    var action = ViewBag.Action as string;
+}
+
+<div class="form-group row">
+    <div class="col-sm-12">
+        @(Html.Kendo().TextBoxFor(m => m.Name)
+                //.Enable(action == ModelConstants.Create)
+                .Rounded(Rounded.Medium)
+                                .Label(label => label
+                    .Content("Role Name")
+                    .Floating(true))
+                .HtmlAttributes(new
+                {
+                    @class = "required w-100"
+                }))
+    </div>
+</div>
+
+<script>
+    function onBackToList() {
+        window.location.href = '/Masters/Role/Index';
+    }
+
+</script>

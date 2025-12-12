@@ -1,0 +1,31 @@
+﻿@using Corno.Web.Globals
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@model Corno.Web.Areas.Kitchen.Dto.StoreShirwalLabel.StoreShirwalCrudDto
+
+@{
+    Layout = "~/Views/Shared/_LayoutCrud.cshtml";
+}
+
+@{
+    ViewBag.BoxTitle = "Create New Store Shirwal";
+    ViewBag.SubmitAction = "Create";
+}
+@section sectionCrudHeader
+{
+    <div class="k-card-actions k-card-actions-horizontal k-card-actions-end">
+        @(Html.Kendo().Button()
+            .Name("btnList")
+            .Content("List")
+            .ApplyStandardSettingsWithType(ButtonType.Info, "arrow-left", ComponentSize.Medium)
+            .Events(e => e.Click("onBack")))
+    </div>
+}
+@Html.Partial("_StoreShirwal", Model)
+
+<script>
+    function onBack() {
+        window.location.href = '@Url.Action("Index", "StoreShirwal", new { area = "Kitchen" })';
+        /* history.back();*/
+    }
+</script>

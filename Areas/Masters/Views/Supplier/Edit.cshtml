@@ -1,0 +1,17 @@
+﻿@using Corno.Web.Globals
+@using Kendo.Mvc.UI
+@model Corno.Web.Areas.Masters.ViewModels.Supplier.SupplierViewModel
+
+@{
+    Layout = "~/Views/Shared/_LayoutEdit.cshtml";
+}
+
+@{
+    ViewBag.BoxTitle = "Edit Supplier";
+    ViewBag.Area = "Masters";
+    ViewBag.Controller = "Supplier";
+    ViewBag.SubmitAction = "Edit";
+}
+
+@Html.Partial("_Supplier", Model)
+

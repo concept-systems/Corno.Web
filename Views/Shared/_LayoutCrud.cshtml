@@ -1,0 +1,41 @@
+﻿@{
+    Layout = "~/Views/Shared/_AppLayout.cshtml";
+}
+
+@{
+    string controllerName = ViewBag.Controller;
+    string actionName = ViewBag.SubmitAction;
+    string area = ViewBag.Area;
+    object routeValues = null;
+
+    if (!string.IsNullOrEmpty(area))
+    {
+        routeValues = new { area = area };
+    }
+}
+
+<div class="layout-wrapper">
+    <div class="layout-header">
+        <div id="validationSummary" class="layout-header-content">
+            <div class="breadcrumb-container">
+                @Html.Partial("~/Views/Shared/Partials/_Breadcrumb.cshtml")
+            </div>
+            <div class="header-actions-container">
+                @RenderSection("sectionCrudHeader", false)
+            </div>
+        </div>
+    </div>
+    @using (Html.BeginForm(actionName, controllerName, routeValues, FormMethod.Post, new { id = "form", enctype = "multipart/form-data", @class = "layout-form" }))
+    {
+        @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+        @Html.AntiForgeryToken()
+
+        <div class="layout-content">
+            @RenderBody()
+        </div>
+        
+        <div class="layout-footer">
+            @RenderSection("sectionCrudFooter", false)
+        </div>
+    }
+</div>

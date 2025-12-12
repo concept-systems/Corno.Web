@@ -1,0 +1,48 @@
+﻿@model IEnumerable<Corno.Web.Dtos.MasterDto>
+
+@*@(Html.Kendo().Grid(Model.OrderByDescending(m => m.Id))
+    .Name("grid")
+    .Columns(columns =>
+    { 
+        //columns.AutoGenerate(true);
+        columns.Bound(c => c.Id).Width(100);
+        columns.Bound(c => c.Code).Width(200);
+        columns.Bound(c => c.Name);
+        columns.Command(command =>
+        {
+            //Html.RenderPartial("Partials/_Actions", command);
+            command.Custom("Edit").IconClass("k-icon k-i-edit k-icon k-text-info k-icon-20")
+                .Text("")
+                //.Text("<i class='fa fa-edit fa-lg text-info'></i>")
+                .DataRouteValues(routeValues =>
+                {
+                    routeValues.Add(routeValue => routeValue.Id);
+                })
+                .Action(ViewBag.Edit, ViewBag.Controller);
+
+            command.Custom("Delete").IconClass("k-icon k-i-delete k-icon k-text-error k-icon-20")
+                .Text("")
+                //.Text("<i class='fa fa-trash fa-lg text-danger'></i>")
+                .DataRouteValues(routeValues =>
+                {
+                    routeValues.Add(routeValue => routeValue.Id);
+
+                })
+                .Action(ViewBag.Delete, ViewBag.Controller);
+
+        }).Title("Action").Width(170);
+    })
+    .HtmlAttributes(new { style = "height: 700px;" })
+    .Scrollable()
+    .Groupable()
+    .Sortable()
+    .Filterable()
+    .Pageable(pageable => pageable
+        .Refresh(true)
+        .PageSizes(true)
+        .ButtonCount(5)))
+<style>
+    .k-icon-20 {
+        font-size: 20px; /* Sets icon size to 48px */
+    }
+</style>*@

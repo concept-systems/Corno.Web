@@ -1,0 +1,208 @@
+@using Corno.Web.Globals
+@using Kendo.Mvc.UI
+@model Corno.Web.Areas.DemoProject.Dtos.LabelDto
+
+@{
+    var controllerName = "ProductLabel";
+    var action = "Label";
+
+    ViewBag.BoxTitle = "_Label";
+    ViewBag.MainMenu = "Transaction";
+    ViewBag.MainHeader = "Label";
+    ViewBag.CurrentSitemap = "Label";
+    ViewBag.Title = "Label";
+}
+
+@Html.HiddenFor(m => m.SubmitType)
+
+<!-- Toggle button visible on mobile to open the responsive panel -->
+<button id="productLabelPanelToggle" class="k-button k-button-md k-rounded-md k-button-solid k-button-solid-primary rp-toggle" type="button">
+    <span class="k-icon k-i-menu"></span>
+    Show Details
+</button>
+
+@(Html.Kendo().ResponsivePanel()
+    .Name("productLabelPanel")
+    .Orientation(ResponsivePanelOrientation.Top)
+    .Breakpoint(100)
+    .ToggleButton("#productLabelPanelToggle")
+    .HtmlAttributes(new { style = "margin-bottom: 20px;" })
+    .Content(@<text>
+        <div class="responsive-panel-container">
+            <div class="k-widget k-panel mb-4">
+                <h3 class="k-panel-title">Preview</h3>
+                <div class="k-panel-content">
+                    <div id="partialViewContainer" style="height: 100%"></div>
+                </div>
+            </div>
+
+            <div class="k-widget k-panel mb-4">
+                <h3 class="k-panel-title">Label Details</h3>
+                <div class="k-panel-content">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="form-group required row">
+                                @Html.LabelFor(m => m.ProductId, "Product :", new { @class = "col-12 col-sm-3 col-md-3 col-form-label" })
+                                <div class="col-12 col-sm-9 col-md-9">
+                                    @(Html.Kendo().MultiColumnComboBoxFor(m => m.ProductId)
+                                        .DataTextField(FieldConstants.Name)
+                                        .DataValueField(FieldConstants.Id)
+                                        .HtmlAttributes(new { required = "required", @class = "w-100" })
+                                        .Filter("contains")
+                                        .Placeholder("Select ...")
+                                        .Suggest(true)
+                                        .Columns(columns =>
+                                        {
+                                            columns.Add().Field(FieldConstants.Code).Title(FieldConstants.Code).Width("100px");
+                                            columns.Add().Field(FieldConstants.Name).Title(FieldConstants.Name).Width("600px");
+                                        })
+                                        .DataSource(dataSource => dataSource
+                                            .Read(read => read.Action("GetProducts", "Data", new { area = "" }))
+                                        ))
+                                </div>
+                            </div>
+                            <div class="form-group required row">
+                                @Html.LabelFor(m => m.PackingTypeId, "Packet :", new { @class = "col-12 col-sm-3 col-md-3 col-form-label" })
+                                <div class="col-12 col-sm-9 col-md-9">
+                                    @(Html.Kendo().MultiColumnComboBoxFor(m => m.PackingTypeId)
+                                        .DataTextField(FieldConstants.NameWithCode)
+                                        .DataValueField(FieldConstants.Id)
+                                        .HtmlAttributes(new { required = "required", @class = "w-100" })
+                                        .Filter("contains")
+                                        .Placeholder("Select ...")
+                                        .Suggest(true)
+                                        .Columns(columns =>
+                                        {
+                                            columns.Add().Field(FieldConstants.Id).Title(FieldConstants.Id).Width("100px");
+                                            columns.Add().Field(FieldConstants.Name).Title(FieldConstants.Name).Width("400px");
+                                            columns.Add().Field(FieldConstants.Quantity).Title(FieldConstants.Quantity).Width("200px");
+                                        })
+                                        .DataSource(dataSource =>
+                                        {
+                                            dataSource.Read(read =>
+                                            {
+                                                read.Action("GetProductPackingTypes", "Data", new { area = "" })
+                                                    .Data("filterPackingTypes");
+                                            })
+                                                .ServerFiltering(true);
+                                        })
+                                        .Enable(false)
+                                        .AutoBind(false)
+                                        .CascadeFrom(FieldConstants.ProductId)
+                                        )
+                                    <script>
+                                        function filterPackingTypes() {
+                                            return {
+                                                productId: $("#ProductId").val()
+                                            };
+                                        }
+                                    </script>
+                                </div>
+                            </div>
+                            <div class="form-group required row">
+                                @Html.LabelFor(m => m.LabelFormatId, "Label :", new { @class = "col-12 col-sm-3 col-md-3 col-form-label" })
+                                <div class="col-12 col-sm-9 col-md-9">
+                                    @(Html.Kendo().MultiColumnComboBoxFor(m => m.LabelFormatId)
+                                        .DataTextField(FieldConstants.Name)
+                                        .DataValueField(FieldConstants.Id)
+                                        .HtmlAttributes(new { required = "required", @class = "w-100" })
+                                        .Filter("contains")
+                                        .Placeholder("Select ...")
+                                        .Suggest(true)
+                                        .Columns(columns =>
+                                        {
+                                            columns.Add().Field(FieldConstants.Id).Title(FieldConstants.Id).Width("100px");
+                                            columns.Add().Field(FieldConstants.Name).Title(FieldConstants.Name).Width("600px");
+                                        })
+                                        .DataSource(dataSource => dataSource
+                                            .Read(read => read.Action("GetLabelFormats", "ProductLabel", new { area = "" }))
+                                        ))
+                                </div>
+                            </div>
+                            <div class="form-group required row">
+                                @Html.LabelFor(m => m.ManufacturingDate, "Mfg. Date :", new { @class = "col-12 col-sm-3 col-md-3 col-form-label" })
+                                <div class="col-12 col-sm-9 col-md-9">
+                                    @(Html.Kendo().DatePickerFor(m => m.ManufacturingDate)
+                                        .HtmlAttributes(new {@class = "w-100"}))
+                                </div>
+                            </div>
+                            <div class="form-group required row">
+                                @Html.LabelFor(m => m.ExpiryDate, "Exp. Date :", new { @class = "col-12 col-sm-3 col-md-3 col-form-label" })
+                                <div class="col-12 col-sm-9 col-md-9">
+                                    @(Html.Kendo().DatePickerFor(m => m.ExpiryDate)
+                                        .HtmlAttributes(new {@class = "w-100"}))
+                                </div>
+                            </div>
+                            <div class="form-group required row">
+                                @Html.LabelFor(m => m.Quantity, "Quantity :", new { @class = "col-12 col-sm-3 col-md-3 col-form-label" })
+                                <div class="col-12 col-sm-9 col-md-9">
+                                    @(Html.Kendo().TextBoxFor(m => m.Quantity)
+                                        .HtmlAttributes(new {@class = "w-100"}))
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </text>
+    )
+)
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        LoadPartialView()
+    });
+
+    function LoadPartialView(toPrinter) {
+        $.ajax({
+            url: '/PartLabel/LoadPartialView', // Replace with your actual controller and action
+            method: 'GET',
+            data: { 'partialViewName': 'Partials/ReportViewer_New' },
+            success: function (partialHtml) {
+                // Load HTML content into the element
+                $('#partialViewContainer').html(partialHtml, function () {
+                    // This code will execute after the HTML content has been loaded
+                    console.log("HTML content loaded successfully");
+
+                });
+                // Delay the execution of the next statement by a short duration
+                setTimeout(function () {
+                    // This code will execute after a short delay
+                    if ('@Model.PrintToPrinter' === 'True') {
+                        printToPrinter();
+                    }
+                }, 500); // Adjust the delay duration as needed
+            },
+            error: function () {
+                console.error('Failed to load the partial view.');
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        if ('@Model.PrintToPrinter' === 'True')
+            LoadPartialView()
+    });
+
+    function OnProductChange() {
+        $('#SubmitType').val('@FieldConstants.Product')
+        $("#form").submit();
+    }
+
+    function onDuplicate() {
+        $.ajax({
+            url: '@Url.Action("View", "ProductLabel", new {area = "DemoProject"})', // Replace with your actual controller and action
+              method: 'GET',
+              data: { 'warehouseOrderNo': $('#duplicateWarehouseOrderNo').val(), 'position': $('#duplicatePosition').val() },
+              success: function (partialHtml) {
+                  LoadPartialView(partialHtml.PrintToPrinter);
+                  $("#duplicateWarehouseOrderNo").data("kendoTextBox").value("");
+                  $("#duplicatePosition").data("kendoTextBox").value("");
+              },
+               error: function () {
+               console.error('Failed to load the partial view.');
+             }
+         });
+}
+</script>

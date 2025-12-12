@@ -1,0 +1,25 @@
+﻿@model Corno.Web.Areas.Masters.ViewModels.Customer.CustomerViewModel
+
+@{
+    Layout = "~/Views/Shared/_LayoutCreate.cshtml";
+}
+
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+}
+
+@{
+    Page.Title = "Customer";
+    ViewBag.MainMenu = "Masters";
+    ViewBag.CurrentSitemap = "Customer";
+    ViewBag.BoxTitle = "Create New Customer";
+    ViewBag.Area = "Masters";
+    ViewBag.Controller = "Customer";
+    ViewBag.SubmitAction = ViewBag.Create;
+}
+
+@Html.Partial("_Customer", Model)

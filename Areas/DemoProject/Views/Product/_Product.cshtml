@@ -1,0 +1,57 @@
+@using System.Web.Mvc.Html
+@using Corno.Web.Extensions
+@using Corno.Web.Globals
+@using Kendo.Mvc.UI
+@model Corno.Web.Areas.Masters.Dtos.Product.ProductDto
+
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+}
+
+@{
+    Page.Title = "Product";
+    ViewBag.MainMenu = "DemoProject";
+    ViewBag.CurrentSitemap = "Product";
+    ViewBag.Controller = "Product";
+}
+
+@Html.HiddenFor(m => m.Id)
+
+<!-- Toggle button visible on mobile to open the responsive panel -->
+<button id="productEditPanelToggle" class="k-button k-button-md k-rounded-md k-button-solid k-button-solid-primary rp-toggle" type="button">
+    <span class="k-icon k-i-menu"></span>
+    Show Details
+</button>
+
+@(Html.Kendo().ResponsivePanel()
+    .Name("productEditPanel")
+    .Orientation(ResponsivePanelOrientation.Top)
+    .Breakpoint(100)
+    .ToggleButton("#productEditPanelToggle")
+    .HtmlAttributes(new { style = "margin-bottom: 20px;" })
+    .Content(@<text>
+        <div class="responsive-panel-container">
+            <!-- Basic Information Section -->
+            <div class="k-widget k-panel mb-4">
+                <h3 class="k-panel-title">Basic Information</h3>
+                <div class="k-panel-content">
+                    @Html.Partial("Partials/_MasterViewModelEdit", Model)
+                </div>
+            </div>
+
+            <!-- Packet Details Section -->
+            <div class="k-widget k-panel mb-4">
+                <h3 class="k-panel-title">Packet Details</h3>
+                <div class="k-panel-content">
+                    @Html.Partial("~/Areas/DemoProject/Views/Product/_PacketDetailsTab.cshtml", Model)
+                </div>
+            </div>
+        </div>
+    </text>
+    )
+)
+

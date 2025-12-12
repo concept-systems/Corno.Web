@@ -1,0 +1,210 @@
+﻿@using Kendo.Mvc.UI
+@model Corno.Models.ViewModels.SearchViewModel
+
+@{
+    var planSearchService = ViewData.ContainsKey("SearchService") ? (IBaseSearchService)(ViewData["SearchService"]) : null;
+    var controllerName = ViewData.ContainsKey("Controller") ? (ViewData["Controller"]).ToString() : null;
+    var searchArea = ViewData.ContainsKey("Area") ? (ViewData["Area"]).ToString() : null;
+}
+
+<div class="row">
+    <div class="col-11">
+        <div class="form-group row mb-2">
+            @Html.Label("lblSearchBy", @"Filter",
+                new { @class = "col-2 form-label" })
+            <div class="col-3">
+                @(Html.Kendo().MultiColumnComboBox()
+                    .Name("SearchBy")
+                    .DataTextField("Name")
+
+                    .DataValueField("Id")
+                    .Placeholder("Select ...")
+                    .HtmlAttributes(new { @class = "col-12 form-label" })
+                    .BindTo(planSearchService?.GetFilters())
+                    .Events(e => e.Select("OnSearchBySelect")))
+            </div>
+        </div>
+        <br/>
+        <div class="form-group row mb-2">
+            @Html.LabelFor(m => m.FromDate, "From Date :",
+                new { id = "lblFromDate", @class = "col-2 col-form-label" })
+            <div class="col-3">
+                @(Html.Kendo().DatePickerFor(m => m.FromDate)
+                    .Value(DateTime.Now)
+                    .HtmlAttributes(new { @class = "w-100" }))
+            </div>
+            @Html.LabelFor(m => m.ToDate, "To Date :",
+                new { id = "lblToDate", @class = "col-1 col-form-label" })
+            <div class="col-3">
+                @(Html.Kendo().DatePickerFor(m => m.ToDate)
+                    .Value(DateTime.Now)
+                    .HtmlAttributes(new { @class = "w-100" }))
+            </div>
+        </div>
+        <div class="form-group row mb-2">
+            @Html.LabelFor(m => m.WarehouseOrderNo, "Warehouse Order No :",
+                new { id = "lblWarehouseOrderNo", @class = "col-2 col-form-label" })
+            <div class="col-3">
+                @(Html.Kendo().TextBoxFor(m => m.WarehouseOrderNo)
+                    .HtmlAttributes(new { @class = "w-100" }))
+            </div>
+        </div>
+        <div class="form-group row mb-2">
+            @Html.LabelFor(m => m.ProductionOrderNo, "Production Order :",
+                new { id = "lblProductionOrder", @class = "col-2 col-form-label" })
+            <div class="col-3">
+                @(Html.Kendo().TextBoxFor(m => m.ProductionOrderNo)
+                    .HtmlAttributes(new { @class = "w-100" }))
+            </div>
+        </div>
+        <div class="form-group row mb-2">
+            @Html.LabelFor(m => m.SoNo, "So No :",
+                new { id = "lblSoNo", @class = "col-2 col-form-label" })
+            <div class="col-3">
+                @(Html.Kendo().TextBoxFor(m => m.SoNo)
+                    .HtmlAttributes(new { @class = "w-100" }))
+            </div>
+        </div>
+
+    </div>
+    <div class="col-1">
+        @(Html.Kendo().SplitButton()
+            .Name("btnAction")
+            .Text("Search")
+            .Icon("search")
+            .ThemeColor(ThemeColor.Tertiary)
+            .FillMode(FillMode.Outline)
+            .Events(e => e.Click("onActionClick"))
+            .Items(items =>
+            {
+                items.Add().Id("btnImport").Text("Import").Icon("filter-add-group");
+                items.Add().Id("btnDelete").Text("Delete").Icon("borders-show-hide");
+                //items.Add().Id("btnLotNo").Text("Update Lot No").Icon("borders-show-hide");
+                //items.Add().Id("btnDeletePosition").Text("Delete Position").Icon("borders-show-hide");
+            }))
+    </div>
+    
+    <br/>
+</div>
+
+<script type="text/javascript">
+
+        // A $( document ).ready() block.
+        $(document).ready(function() {
+            // Hide all search controls
+            hide_all_search_controls();
+
+            $("#tableColumns-filter").kendoSortable({
+                filter: ".sortable",
+                hint: function (element) {
+                    return element.clone().addClass("hint");
+                },
+                placeholder: function (element) {
+                    return element.clone().addClass("placeholder");
+                }
+            });
+
+            $('.dropdown-toggle').on('click', function(event){
+                $(this).parent().find('.dropdown-menu').slideToggle();
+                //event.stopPropagation();
+            });
+
+            $('.dropdown-toggle').focusout(function(event){
+                $(this).parent().find('.dropdown-menu').slideToggle();
+                event.stopPropagation();
+            });
+        });
+
+    function getAdditionalData(e) {
+        /*alert($("#SearchBy").data("kendoMultiColumnComboBox").value());*/
+        console.log("Search By Value : " + $("#SearchBy").data("kendoMultiColumnComboBox").value());
+        return {
+            searchViewModel: '@Model',
+            searchBy: $("#SearchBy").val(),
+            fromDate: $("#FromDate").val(),
+            toDate: $("#ToDate").val(),
+            warehouseOrderNo: $("#WarehouseOrderNo").val(),
+            productionOrderNo: $("#ProductionOrderNo").val(),
+            soNo: $("#SoNo").val()
+        };
+    }
+
+    function LoadGrid() {
+        //bootbox.alert("search clicked.");
+        var grid = $("#grid").data("kendoGrid");
+        grid.dataSource.read();
+    }
+
+    //function onSearchClick(e) {
+    //        LoadGrid();
+    //}
+
+    function onActionClick(e) {
+        //alert(e.id);
+        if (e.id === "btnImport")
+            onImportClick(e)
+         if (e.id === "btnDelete")
+            onDeleteClick(e)
+        //else if (e.id === "btnDueDate")
+        //    onDueDateClick(e)
+        //else if (e.id === "btnLotNo")
+        //    onLotNoClick(e)
+        //else if (e.id === "btnDeletePosition")
+        //    onDeletePositionClick(e)
+        else
+            LoadGrid();
+    }
+
+
+    function hide_all_search_controls() {
+        $("#lblWarehouseOrderNo").hide();
+        $("#WarehouseOrderNo").data("kendoTextBox").wrapper.hide();
+        $("#lblProductionOrder").hide();
+        $("#ProductionOrderNo").data("kendoTextBox").wrapper.hide();
+        $("#lblSoNo").hide();
+        $("#SoNo").data("kendoTextBox").wrapper.hide();
+        $("#lblFromDate").hide();
+        $("#FromDate").data("kendoDatePicker").wrapper.hide();
+        $("#lblToDate").hide();
+        $("#ToDate").data("kendoDatePicker").wrapper.hide();
+    }
+
+    function OnSearchBySelect(e) {
+        if (e.item) {
+            var dataItem = this.dataItem(e.item.index());
+            console.log('Data item : ' + JSON.stringify(dataItem));
+
+            //alert('@SearchByEnum.SoNo.ToString().ToCamelCase()');
+            hide_all_search_controls();
+
+            switch (dataItem.Name)
+            {
+                case '@SearchByEnum.DueDate.ToString().ToCamelCase()':
+                case '@SearchByEnum.PlanDate.ToString().ToCamelCase()':
+                case '@SearchByEnum.WorkOrderDate.ToString().ToCamelCase()':
+                // code block
+                $("#lblFromDate").show();
+                $("#FromDate").data("kendoDatePicker").wrapper.show();
+                $("#lblToDate").show();
+                    $("#ToDate").data("kendoDatePicker").wrapper.show();
+                break;
+                case '@SearchByEnum.SoNo.ToString().ToCamelCase()':
+                    // code block
+                    $("#lblSoNo").show();
+                    $("#SoNo").data("kendoTextBox").wrapper.show();
+                    break;
+                case '@SearchByEnum.ProductionOrder.ToString().ToCamelCase()':
+                    // code block
+                    $("#lblProductionOrder").show();
+                    $("#ProductionOrderNo").data("kendoTextBox").wrapper.show();
+                    break;
+                case '@SearchByEnum.WarehouseOrder.ToString().ToCamelCase()':
+                    // code block
+                    $("#lblWarehouseOrderNo").show();
+                    $("#WarehouseOrderNo").data("kendoTextBox").wrapper.show();
+                    break;
+            }
+        }
+    }
+
+</script>

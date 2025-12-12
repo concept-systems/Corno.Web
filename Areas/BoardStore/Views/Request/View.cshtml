@@ -1,0 +1,78 @@
+﻿@using System.ComponentModel
+@using Corno.Web.Globals
+@using Kendo.Mvc.UI
+@model Corno.Web.Areas.BoardStore.Models.Request
+
+@{
+    Layout = "~/Views/Shared/_LayoutDetails.cshtml";
+
+}
+
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+    ViewBag.View = "View";
+    ViewBag.Area = "BoardStore";
+    ViewBag.Controller = "Request";
+}
+
+@{
+    ViewBag.BoxTitle = "View Request ";
+}
+
+<div class="col-12">
+    @(Html.Kendo().Grid(Model.Stacks)
+        .Name("grid")
+        .ToolBar(toolbar =>
+        {
+            toolbar.Excel();
+            toolbar.Pdf();
+            toolbar.Search();
+        })
+        .Scrollable()
+        .Pageable()
+        .Sortable(s => s.InitialDirection(ListSortDirection.Descending))
+        .Filterable(f => f.Mode(GridFilterMode.Row))
+        .Resizable(resize => resize.Columns(true)) // Allow column resizing
+        .PersistSelection()
+        .Height(540)
+        .HtmlAttributes(new { style = "height: 500px;" })
+        .Columns(columns =>
+        {
+            columns.Select()
+                .HtmlAttributes(new { style = "text-align: center" })
+                .Width(40);
+            columns.Bound(m => m.Id)
+                .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" });
+            columns.Bound(m => m.RequestId)
+                .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                .Title("Request Id");
+            columns.Bound(m => m.RequestNo)
+                .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                .Title("Request No");
+            columns.Bound(m => m.StackNo)
+                .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                .Title("Stack No");
+            columns.Bound(m => m.BayNo)
+                .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" });
+           })
+        .Excel(excel => excel
+            .FileName("Items.xlsx")
+            .ProxyURL(Url.Action("Excel_Export_Save", "Corno"))
+        )
+        .Pdf(pdf => pdf
+            .FileName("Items.pdf")
+            .ProxyURL(Url.Action("Excel_Export_Save", "Corno")))
+        .Navigatable()
+        .DataSource(dataSource => dataSource
+            .Ajax()
+            .ServerOperation(false)
+            .PageSize(9)
+            .Model(model => model.Id(FieldConstants.Id))
+        ))
+
+</div>
+

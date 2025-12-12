@@ -1,0 +1,210 @@
+/* ============================================
+   Responsive Layout Styles - Reusable
+   ============================================
+   These styles provide a fixed header/footer layout
+   with scrollable content area, fully responsive.
+   ============================================ */
+
+/* Base Layout Wrapper - Flexbox Container */
+.layout-wrapper {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 20px);
+    /*height: calc(100vh - 120px);*/
+    min-height: 400px;
+    background: #fff;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+/* Form inside layout-wrapper must also be a flex container */
+.layout-wrapper > form.layout-form {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
+    overflow: hidden;
+}
+
+/* Header Section - Fixed at top */
+.layout-header {
+    flex: 0 0 auto;
+    background: #fff;
+    border-bottom: 1px solid #e5e5e5;
+    padding: 10px 15px;
+    z-index: 10;
+}
+
+/* Content Section - Scrollable area */
+.layout-content {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    /*padding: 15px;*/
+    -webkit-overflow-scrolling: touch;
+    background: #fff;
+    position: relative;
+}
+
+/* Ensure scrollbar is visible */
+.layout-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.layout-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.layout-content::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.layout-content::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Ensure content inside layout-content can scroll properly */
+.layout-content > * {
+    max-width: 100%;
+}
+
+/* Fix for Kendo TileLayout inside scrollable container */
+.layout-content .k-tilelayout {
+    height: auto !important;
+    min-height: 400px;
+}
+
+.layout-content .k-tilelayout-item {
+    height: auto !important;
+}
+
+/* Footer Section - Fixed at bottom */
+.layout-footer {
+    flex: 0 0 auto;
+    background: #fff;
+    border-top: 1px solid #e5e5e5;
+    padding: 10px 15px;
+    z-index: 10;
+}
+
+/* ============================================
+   Responsive Breakpoints
+   ============================================ */
+
+/* Tablet and smaller desktop (max-width: 992px) */
+@media (max-width: 992px) {
+    .layout-wrapper {
+        height: calc(100vh - 10px);
+        /*height: calc(100vh - 100px);*/
+        min-height: 350px;
+    }
+}
+
+/* Mobile landscape and small tablets (max-width: 768px) */
+@media (max-width: 768px) {
+    .layout-wrapper {
+        height: calc(100vh - 10px);
+        /*height: calc(100vh - 90px);*/
+        min-height: 300px;
+    }
+
+    .layout-header,
+    .layout-footer {
+        padding: 8px 12px;
+    }
+
+    .layout-content {
+        padding: 12px;
+    }
+}
+
+/* Mobile portrait (max-width: 576px) */
+@media (max-width: 576px) {
+    .layout-wrapper {
+        height: calc(100vh - 10px);
+        /*height: calc(100vh - 80px);*/
+        min-height: 250px;
+    }
+
+    .layout-header,
+    .layout-footer {
+        padding: 6px 10px;
+    }
+
+    .layout-content {
+        padding: 10px;
+    }
+}
+
+/* Small mobile devices (max-width: 480px) */
+@media (max-width: 480px) {
+    .layout-wrapper {
+        height: calc(100vh - 10px);
+        /*height: calc(100vh - 70px);*/
+        min-height: 200px;
+    }
+
+    .layout-header,
+    .layout-footer {
+        padding: 5px 8px;
+    }
+
+    .layout-content {
+        padding: 8px;
+    }
+}
+
+/* ============================================
+   Variant Classes (Optional)
+   ============================================ */
+
+/* Compact variant - smaller padding */
+.layout-wrapper.compact .layout-header,
+.layout-wrapper.compact .layout-footer {
+    padding: 5px 10px;
+}
+
+.layout-wrapper.compact .layout-content {
+    padding: 10px;
+}
+
+/* Spacious variant - larger padding */
+.layout-wrapper.spacious .layout-header,
+.layout-wrapper.spacious .layout-footer {
+    padding: 15px 20px;
+}
+
+.layout-wrapper.spacious .layout-content {
+    padding: 20px;
+}
+
+/* No border variant */
+.layout-wrapper.no-border .layout-header {
+    border-bottom: none;
+}
+
+.layout-wrapper.no-border .layout-footer {
+    border-top: none;
+}
+
+/* Custom height variants */
+.layout-wrapper.height-small {
+    height: calc(100vh - 10px);
+    /*height: calc(100vh - 100px);*/
+}
+
+.layout-wrapper.height-medium {
+    height: calc(100vh - 10px);
+    /*height: calc(100vh - 120px);*/
+}
+
+.layout-wrapper.height-large {
+    height: calc(100vh - 10px);
+    /*height: calc(100vh - 140px);*/
+}
+

@@ -1,0 +1,145 @@
+/* Common Responsive Styles for Kendo TileLayout */
+
+/* Base TileLayout Styles */
+.k-tilelayout {
+    height: auto !important;
+    min-height: 400px;
+    max-height: none;
+    width: 100%;
+}
+
+/* Ensure TileLayout works within scrollable container (layout-content) */
+.layout-content .k-tilelayout {
+    height: auto !important;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.layout-content .k-tilelayout-item {
+    height: auto !important;
+}
+
+/* Ensure TileLayout tiles are scrollable when content overflows */
+.k-tilelayout-item-body {
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Common tile content styling */
+.tile-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0;
+}
+
+/* Ensure tiles don't overflow on small screens */
+.k-tilelayout-item {
+    box-sizing: border-box;
+}
+
+/* Responsive tile content */
+.k-tilelayout-item-content {
+    overflow-x: auto;
+    overflow-y: auto;
+}
+
+/* Responsive breakpoints for TileLayout */
+@media (max-width: 1200px) {
+    .k-tilelayout {
+        min-height: 350px;
+    }
+}
+
+@media (max-width: 992px) {
+    .k-tilelayout {
+        min-height: 300px;
+    }
+}
+
+@media (max-width: 768px) {
+    .k-tilelayout {
+        min-height: 250px;
+    }
+    
+    /* Stack tiles vertically on mobile */
+    #tileLayout .k-tile-container {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    #tileLayout .k-tile {
+        width: 100% !important;
+    }
+    
+    .k-tilelayout-item {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    .tile-content {
+        padding: 10px !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .k-tilelayout {
+        min-height: 200px;
+    }
+    
+    .tile-content {
+        padding: 8px !important;
+    }
+}
+
+/* Responsive tables inside TileLayout */
+.k-tilelayout table {
+    width: 100%;
+    table-layout: auto;
+}
+
+.k-tilelayout table td {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+/* Responsive table adjustments for mobile */
+@media (max-width: 768px) {
+    .k-tilelayout table {
+        font-size: 0.9em;
+    }
+    
+    .k-tilelayout table td {
+        padding: 8px 4px;
+    }
+}
+
+@media (max-width: 576px) {
+    .k-tilelayout table {
+        font-size: 0.85em;
+    }
+    
+    .k-tilelayout table td {
+        padding: 6px 3px;
+    }
+}
+
+/* Responsive buttons inside TileLayout */
+.k-tilelayout .k-button-group,
+.k-tilelayout .k-button-group-vertical {
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+@media (max-width: 768px) {
+    .k-tilelayout .k-button-group {
+        flex-direction: column;
+    }
+    
+    .k-tilelayout .k-button-group .k-button {
+        width: 100%;
+        min-width: unset;
+    }
+}

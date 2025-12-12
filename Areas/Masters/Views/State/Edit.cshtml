@@ -1,0 +1,15 @@
+﻿@using Corno.Globals.Constants
+@model Corno.Models.Common.State
+
+@{
+    Layout = "~/Views/Shared/_LayoutEdit.cshtml";
+}
+
+@{
+    ViewBag.BoxTitle = $"Edit State : {Model.Name}";
+    ViewBag.Area = "Masters";
+    ViewBag.Controller = "State";
+    ViewBag.SubmitAction = "Edit";
+}
+
+@Html.Partial("_State", Model)

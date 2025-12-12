@@ -1,0 +1,86 @@
+﻿@using Corno.Web.Areas.Masters.ViewModels
+@using Corno.Web.Globals
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@model IEnumerable<Corno.Web.Dtos.MasterDto>
+
+@{
+    Layout = "~/Views/Shared/_AppLayout.cshtml";
+}
+
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+}
+
+@{
+    Page.Title = ViewBag.MiscType;
+    ViewBag.BoxTitle = ViewBag.MiscType;
+
+    ViewBag.MainHeader = ViewBag.MiscType;
+    ViewBag.MainMenu = "Masters";
+    ViewBag.Controller = "MiscMaster";
+    ViewBag.AddNewMethod = "Create";
+    ViewBag.CurrentLink = ViewBag.MiscType;
+
+    ViewBag.ImportAction = "ImportMiscMaster";
+}
+
+<div class="grid-container-full-height">
+    @(Html.Kendo().Grid<MiscMasterIndexModel>()
+        .Name("grid")
+        .ApplyIndexSettings(customToolbar: toolbar =>
+        {
+            toolbar.Custom()
+                .Text("<span class='k-icon k-i-plus'></span> Add New")
+                .HtmlAttributes(new { @class = "k-grid-add-new k-button-add-new-outlined", style = "float: right;", onclick = $"window.location.href='{Url.Action(ViewBag.Create, ViewBag.Controller, new { miscType = ViewBag.MiscType, area = "Masters" })}'; return false;" });
+        }) // 👈 Apply index settings (full height, responsive)
+        .Events(events => events.ApplyCommonEvents())
+        .Columns(columns =>
+        {
+            columns.Bound(m => m.Id);
+            columns.Bound(m => m.Code).Align(TextAlign.Left);
+            columns.Bound(m => m.Name).Align(TextAlign.Left);
+            columns.Bound(m => m.Description).Align(TextAlign.Left);
+            columns.AddStatusColumn();
+            columns.AddCommandColumns(new List<GridCommandConfig>
+            {
+                new GridCommandConfig { Name = "Edit", Text = " ", IconClass = "k-icon k-i-edit k-text-info", ClickHandler = "onEditClick" },
+                new GridCommandConfig { Name = "Delete", Text = " ", IconClass = "k-icon k-i-delete k-text-error", ClickHandler = "onDeleteClick" },
+                //new GridCommandConfig { Name = "View", Text = " ", IconClass = "k-icon k-i-preview k-i-eye", ClickHandler = "onViewClick" },
+                //new GridCommandConfig { Name = "Print", Text = "", IconClass = "fa fa-print", ClickHandler = "onPrintClick" }
+            });
+        })
+        .DataSource(dataSource => dataSource
+            .ApplyCommonDataSourceSettings("GetIndexViewModels", "MiscMaster", "Masters")
+            .Read(read => read.Action("GetIndexViewModels", "MiscMaster", new { miscType = @ViewBag.MiscType })
+                .Data("filterMiscMasters"))
+            .Sort(s => s.Add(FieldConstants.Id).Descending())
+        ))
+</div>
+
+<script type="text/javascript">
+    function filterMiscMasters() {
+        return {
+            miscType: '@ViewBag.MiscType'
+        };
+    }
+
+    function sendData() {
+    }
+
+             function onEditClick(e) {
+                 e.preventDefault();
+                 var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+                 window.location.href = '@Url.Action("Edit", "MiscMaster")' + '/' + dataItem.Id;
+             }
+
+         function onDeleteClick(e) {
+             e.preventDefault();
+             var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+             window.location.href = '@Url.Action("Delete", "MiscMaster")' + '/' + dataItem.Id;
+         }
+</script>

@@ -1,0 +1,69 @@
+﻿@using Corno.Web.Extensions
+@using Corno.Web.Globals
+@using Corno.Web.Services.Interfaces
+@using Corno.Web.Services.Masters.Interfaces
+@using Corno.Web.Windsor
+@model Corno.Web.Areas.Masters.ViewModels.Customer.CustomerViewModel
+
+@{
+    var miscMasterService = Bootstrapper.Get<IMiscMasterService>();
+    var itemService = Bootstrapper.Get<IBaseItemService>();
+    var customerService = Bootstrapper.Get<ICustomerService>();
+}
+
+
+<div class="row">
+
+    <div class="col-sm-6">
+        @Html.EditorFor(m => m.CustomerTypeId, @"Corno/MultiColumnComboBoxInt",
+            new
+            {
+                //DataSource = CustomerService.GetViewModelList(),
+                Name = "Customer Type :"
+            })
+        <br />
+        <div class="form-group row">
+            @Html.LabelFor(m => m.GSTIN, "GSTIN :",
+                new { @class = "col-sm-4" })
+            <div class="col-sm-8">
+                @Html.EditorFor(m => m.GSTIN, new { Name = nameof(Model.GSTIN) })
+            </div>
+        </div>
+        <br />
+        <div class="form-group row">
+            @Html.LabelFor(m => m.SupplierCode, "Supplier Code :",
+                new { @class = "col-sm-4" })
+            <div class="col-sm-8">
+                @Html.EditorFor(m => m.SupplierCode, new { Name = "Supplier Code" })
+            </div>
+        </div>
+
+        <br />
+    </div>
+    <div class="col-sm-6">
+        @Html.EditorFor(m => m.CustomerCategoryId, @"Corno/MultiColumnComboBoxInt",
+            new
+            {
+                //DataSource = CustomerService.GetViewModelList(),
+                Name = "Customer Category :"
+            })
+        <br />
+        <div class="form-group row">
+            @Html.LabelFor(m => m.CreditLimit, "Credit Limit :",
+                new { @class = "col-sm-4" })
+            <div class="col-sm-8">
+                @Html.EditorFor(m => m.CreditLimit, new { Name = nameof(Model.CreditLimit) })
+            </div>
+        </div>
+        <br />
+        <div class="form-group row">
+            @Html.LabelFor(m => m.CreditDays, "Credit Days :",
+                new { @class = "col-sm-4" })
+            <div class="col-sm-8">
+                @Html.EditorFor(m => m.CreditDays, new { Name = nameof(Model.CreditDays) })
+            </div>
+        </div>
+        <br />
+    </div>
+
+</div>

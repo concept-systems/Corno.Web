@@ -1,0 +1,52 @@
+@using Corno.Web.Globals
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@model Corno.Web.Areas.Masters.Dtos.Product.ProductDto
+
+@{
+    Layout = "~/Views/Shared/_LayoutBase.cshtml";
+}
+
+@{
+    ViewBag.BoxTitle = "Create New Product";
+    ViewBag.SubmitAction = "Create";
+}
+
+@{
+    ViewBag.MainMenu = "DemoProject";
+    ViewBag.MainHeader = "Product";
+    ViewBag.CurrentSitemap = "Product";
+    ViewBag.Title = "Product";
+    ViewBag.Area = "DemoProject";
+    ViewBag.Controller = "Product";
+}
+
+@section sectionBaseHeader
+{
+    <div class="k-actions k-actions-horizontal k-actions-end">
+        @(Html.Kendo().Button()
+            .Name("btnBack")
+            .Content("Back")
+            .ApplyStandardSettingsWithType(ButtonType.Info, "arrow-60-left", ComponentSize.Medium)
+            .HtmlAttributes(new { onclick = $"window.location.href='{Url.Action("Index", "Product", new { area = "DemoProject" })}'; return false;" }))
+    </div>
+}
+
+@section sectionBaseFooter
+{
+    <div class="k-actions k-actions-horizontal k-actions-end">
+        @(Html.Kendo().Button()
+            .Name("btnSave")
+            .Content("Save")
+            .ApplyStandardSettingsWithType(ButtonType.Save, "save", ComponentSize.Medium)
+            .HtmlAttributes(new
+            {
+                type = "submit",
+                name = "action:Create"
+            }))
+    </div>
+}
+
+@Html.HiddenFor(m => m.Id)
+
+@Html.Partial("_Product", Model)

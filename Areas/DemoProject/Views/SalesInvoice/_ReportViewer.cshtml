@@ -1,0 +1,32 @@
+﻿@model Corno.Web.Areas.DemoProject.Dtos.SalesInvoiceDto
+
+<!-- Placeholder for the partial view -->
+<div id="partialViewContainer" style="height: 100%"></div>
+
+<script type="text/javascript">
+    function LoadPartialView(toPrinter) {
+        $.ajax({
+            url: '/SalesInvoice/LoadPartialView', // Replace with your actual controller and action
+            method: 'GET',
+            data: { 'partialViewName': 'Partials/ReportViewer_New' },
+            success: function (partialHtml) {
+                // Load HTML content into the element
+                $('#partialViewContainer').html(partialHtml, function () {
+                    // This code will execute after the HTML content has been loaded
+                    console.log("HTML content loaded successfully");
+                });
+                // Delay the execution of the next statement by a short duration
+                setTimeout(function () {
+                    // This code will execute after a short delay
+                    console.log("Timeout");
+                    if ('@Model.PrintToPrinter' === 'True') {
+                        printToPrinter();
+                    }
+                }, 1500); // Adjust the delay duration as needed
+            },
+            error: function () {
+                console.error('Failed to load the partial view.');
+            }
+        });
+    }
+</script>

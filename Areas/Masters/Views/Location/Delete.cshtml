@@ -1,0 +1,30 @@
+﻿@using Corno.Web.Globals
+@model Corno.Web.Areas.Masters.Dtos.Location.LocationDto
+
+@{
+    Layout = "~/Views/Shared/_LayoutDelete.cshtml";
+}
+
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+}
+
+@{
+    Page.Title = "Location";
+    ViewBag.MainMenu = "Masters";
+    ViewBag.CurrentSitemap = "Location";
+    ViewBag.Area = "Masters";
+    ViewBag.Controller = "Location";
+    ViewBag.SubmitAction = ViewBag.Delete;
+}
+
+@{
+    ViewBag.BoxTitle = $"Delete Location : {Model?.Name}";
+    ViewBag.SubmitAction = "Delete";
+}
+
+@Html.Partial("_Location", Model)

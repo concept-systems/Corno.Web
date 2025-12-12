@@ -1,0 +1,85 @@
+﻿@using StringExtensions = Corno.Web.Extensions.StringExtensions
+@{
+    Layout = "~/Views/Shared/_LayoutCrud.cshtml";
+}
+
+@{
+    string controllerName = ViewBag.Controller;
+    string actionName = ViewBag.SubmitAction;
+}
+
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+}
+
+@Html.AntiForgeryToken()
+
+@section sectionCrudHeader
+{
+    <div class="row">
+        <div class="col-11">
+            @*<h6 class="col-11">*@
+            <h6>
+                <span class="k-icon k-i-plus k-text-success k-icon-20"></span>
+                @StringExtensions.SplitCamelCaseWithNewLine(ViewBag.BoxTitle?.ToString())
+            </h6>
+        </div>
+        <div class="col-1">
+        
+            <a href="@Url.Action(ViewBag.Index, ViewBag.Controller, new {miscType = ViewBag.MiscType})"
+               rel="tooltip" title="Back to List" class="k-button-md k-button-rectangle k-rounded-lg k-button-outline k-button-outline-secondary k-button k-rounded-md k-button-outline-tertiary">
+                <span class="k-icon k-i-arrow-60-left"></span>&nbsp; Back to List
+            </a>
+        </div>
+        </div>
+    
+}
+@RenderBody()
+<br />
+<div class="row">
+    @*@(Html.Kendo().Button()
+    .Name("saveBottom")
+    .Icon("save")
+    .HtmlAttributes(new {type = "submit", @class = "k-button k-button-md k-button-outline k-button-outline-secondary offset-11 col-1" })
+    .Content("Save"))*@
+    <button class="k-button-md k-button-rectangle k-rounded-lg k-button-outline k-button-outline-secondary k-button k-rounded-md k-button-outline-tertiary offset-11 col-1"
+            name="saveBottom" type="submit" data-role="button" role="button"
+            aria-disabled="false" tabindex="0">
+        <span class="k-icon k-i-save">
+        </span><span class="k-button-text">Save</span>
+    </button>
+</div><br/>
+
+@*@section sectionCrudFooter
+    {
+        <p class="float-right">
+            <a href="@Url.Action(ViewBag.Index, ViewBag.Controller, new {miscType = ViewBag.MiscType})"
+               rel="tooltip" title="Back to List" class="k-button k-bg-primary rounded-lg text-white">
+                <span class="k-icon k-i-arrow-60-left"></span>&nbsp;Back to List
+            </a>
+        </p>
+    }*@
+
+
+<script type="text/javascript">
+    function show(input) {
+        if (input.files && input.files[0]) {
+            var filerdr = new FileReader();
+            filerdr.onload = function (e) {
+                $('#user_img').attr('src', e.target.result);
+            }
+            filerdr.readAsDataURL(input.files[0]);
+        }
+    }
+</script>
+
+
+<style>
+    .k-icon-20 {
+        font-size: 18px; /* Sets icon size to 48px */
+    }
+</style>

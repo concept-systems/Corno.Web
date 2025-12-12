@@ -1,0 +1,92 @@
+﻿@{
+    /**/
+
+    Layout = "~/Views/Shared/_LayoutCrud.cshtml";
+}
+
+@{
+    string controllerName = ViewBag.Controller;
+    string actionName = ViewBag.SubmitAction;
+}
+
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+}
+
+<script type="text/javascript">
+
+    function confirmDelete() {
+        bootbox.confirm({
+            title: 'Confirm',
+            message: 'Are you sure you want to delete?',
+            buttons: {
+                'cancel': {
+                    label: 'Cancel',
+                    className: 'btn-default pull-left'
+                },
+                'confirm': {
+                    label: 'Delete',
+                    className: 'btn-danger pull-right'
+                }
+            },
+            callback: function (result) {
+                if (true === result) {
+                    $('#form').submit();
+                }
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        $(function () {
+            $('#btnDelete').click(function () {
+                confirmDelete();
+            });
+        });
+        $(function () {
+            $('#btnDelete1').click(function () {
+                confirmDelete();
+            });
+        });
+    });
+</script>
+
+@section sectionCrudHeader
+  {
+    <div class="row">
+        <div class="col-11">
+            <h6>
+                <span class="k-icon k-i-delete k-icon-md k-text-error k-icon-20"></span>
+                @System.Text.RegularExpressions.Regex.Replace(ViewBag.BoxTitle, "([A-Z])", " $1", System.Text.RegularExpressions.RegexOptions.Compiled).Trim()
+            </h6>
+        </div>
+        <div class="col-1">
+            <a href="@Url.Action(ViewBag.Index, ViewBag.Controller, new {miscType = ViewBag.MiscType})"
+               rel="tooltip" title="Back to List" class="k-button-md k-button-rectangle k-rounded-lg k-button-outline k-button-outline-secondary k-button k-rounded-md k-button-outline-tertiary">
+                <span class="k-icon k-i-arrow-60-left"></span>&nbsp; Back to List
+            </a>
+        </div>
+    </div>
+}
+@Html.AntiForgeryToken()
+@RenderBody()
+@section sectionCrudFooter
+ {
+    <div class="row">
+        <a id="btnDelete1" href="#" rel="tooltip" title="Save"
+           class="k-button-md k-button-rectangle k-rounded-lg k-button-outline k-button-outline-secondary k-button k-rounded-md k-button-outline-tertiary offset-11 col-1">
+            <i class="fa fa-trash-alt"></i><span> Delete</span>
+        </a>
+    </div>
+}
+
+
+<style>
+    .k-icon-20 {
+        font-size: 18px; /* Sets icon size to 48px */
+    }
+</style>

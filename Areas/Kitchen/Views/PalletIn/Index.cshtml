@@ -1,0 +1,61 @@
+﻿@using Corno.Web.Areas.Kitchen.Dto.Carton
+@using Corno.Web.Globals
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@{
+    Layout = "~/Views/Shared/_AppLayout.cshtml";
+}
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+}
+
+
+@{
+    ViewBag.BoxTitle = "Pallet In";
+}
+
+<div class="grid-container-full-height">
+    @(Html.Kendo().Grid<CartonIndexDto>()
+        .Name("grid")
+        .ApplyIndexSettings() // 👈 Apply index settings (full height, responsive)
+        .AddExportToolBar(enableExcel: true, enablePdf: true, enableSearch: true, customToolbar: toolbar =>
+        {
+            toolbar.Custom()
+                .Text("<span class='k-icon k-i-plus'></span> Add New")
+                .HtmlAttributes(new { @class = "k-grid-add-new k-button-add-new-outlined", style = "float: right;", onclick = $"window.location.href='{Url.Action("Create", "PalletIn")}'; return false;" });
+        })
+        .Events(events => events.ApplyCommonEvents())
+        .Columns(columns =>
+        {
+            columns.Bound(m => m.WarehouseOrderNo).Align(TextAlign.Left).Title("Warehouse Order");
+            columns.Bound(m => m.CartonNo).Align(TextAlign.Left).Title("Carton<br/>No");
+            columns.Bound(m => m.PackingDate).Format("{0:dd/MM/yyyy hh:mm tt}");
+            columns.Bound(m => m.SoNo);
+            columns.Bound(m => m.CartonBarcode).Align(TextAlign.Left);
+            columns.AddStatusColumn();
+            //columns.AddCommandColumns(new List<GridCommandConfig>
+            //{
+            //    //new GridCommandConfig { Name = "Edit", Text = "", IconClass = "fa fa-edit", ClickHandler = "onEditClick" },
+            //    //new GridCommandConfig { Name = "Delete", Text = "", IconClass = "fa fa-trash", ClickHandler = "onDeleteClick" },
+            //    new GridCommandConfig { Name = "View", Text = "", IconClass = "k-icon k-i-preview k-i-eye", ClickHandler = "onViewClick" },
+            //    //new GridCommandConfig { Name = "Print", Text = "", IconClass = "fa fa-print", ClickHandler = "onPrintClick" }
+            //});
+
+        })
+        .DataSource(dataSource => dataSource
+            .ApplyCommonDataSourceSettings("GetIndexViewDto", "PalletIn", "Kitchen")
+            .Group(group => { group.AddDescending(g => g.WarehouseOrderNo); })
+            .Sort(s => s.Add(FieldConstants.Id).Descending())
+            .Model(model => model.Id(FieldConstants.Id))
+        ))
+</div>
+
+<script type="text/javascript">
+
+    function sendData() {
+    }
+</script>

@@ -1,0 +1,46 @@
+﻿@model Corno.Web.Areas.Masters.Dtos.Location.LocationDto
+
+@{
+    var miscMasterService = Bootstrapper.Get<IMiscMasterService>();
+    var itemService = Bootstrapper.Get<IBaseItemService>();
+    var customerService = Bootstrapper.Get<ICustomerService>();
+}
+
+@using Corno.Web.Extensions
+@using Corno.Web.Globals
+@using Corno.Web.Services.Interfaces
+@using Corno.Web.Services.Masters.Interfaces
+@using Corno.Web.Windsor
+@using Kendo.Mvc.UI
+
+<div class="row">
+    <div class="col-4">
+        
+        <div class="form-group row">
+            @Html.LabelFor(m => m.Length, "Length :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @(Html.Kendo().NumericTextBoxFor(m => m.Length)
+                    .HtmlAttributes(new { @class = "w-100" }))
+            </div>
+        </div>
+        <br/>
+        <div class="form-group row">
+            @Html.LabelFor(m => m.Width, " Width :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @(Html.Kendo().NumericTextBoxFor(m => m.Width)
+                    .HtmlAttributes(new { @class = "w-100" }))
+            </div>
+        </div>
+        <br/>
+        @*<div class="form-group row">
+            @Html.LabelFor(m => m.Thickness, "Thickness :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @(Html.Kendo().NumericTextBoxFor(m => m.Thickness)
+                    .HtmlAttributes(new { @class = "w-100" }))
+            </div>
+        </div>*@
+    </div>
+</div>

@@ -1,0 +1,82 @@
+﻿@using Corno.Concept.Portal.Areas.Masters.Models
+@using Kendo.Mvc.UI
+@model IEnumerable<HsnViewModel>
+
+@{
+    Layout = "~/Views/Shared/_AppLayout.cshtml";
+}
+@{
+    ViewBag.BoxTitle = "HSN";
+}
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+}
+
+@{
+    Page.Title = "Hsn";
+
+    ViewBag.MainHeader = "Hsn";
+    ViewBag.MainMenu = "Masters";
+    ViewBag.Controller = "Hsn";
+    ViewBag.AddNewMethod = "Create";
+    ViewBag.CurrentLink = "Hsn";
+}
+
+@using Corno.Concept.Portal.Helper
+
+<div class="grid-container-full-height">
+    @(Html.Kendo().Grid(Model)
+        .Name("grid")
+        .ApplyIndexSettings(customToolbar: toolbar =>
+        {
+            toolbar.Custom()
+                .Text("<span class='k-icon k-i-plus'></span> Add New")
+                .HtmlAttributes(new { @class = "k-grid-add-new k-button-add-new-outlined", style = "float: right;", onclick = $"window.location.href='{Url.Action(ViewBag.Create, ViewBag.Controller, new { area = "Masters" })}'; return false;" });
+        }) // 👈 Apply index settings (full height, responsive)
+        .Events(events => events.ApplyCommonEvents())
+        .Columns(columns =>
+            {
+                columns.Bound(c => c.Id).Width(100);
+                columns.Bound(c => c.Code).Width(100);
+                columns.Bound(c => c.Name).Width(150);
+                columns.Bound(c => c.Cgst).Width(100).Title("CGST (%)");
+                columns.Bound(c => c.Sgst).Width(100).Title("SGST (%)");
+                columns.Bound(c => c.Igst).Width(100).Title("IGST (%)");
+                columns.Command(command =>
+                {
+                    command.Custom("").IconClass("k-icon k-i-edit k-icon k-text-info k-icon-20")
+                        .Text("")
+                        //.Text("<i class='fa fa-edit fa-lg text-info'></i>")
+                        .DataRouteValues(routeValues =>
+                        {
+                            routeValues.Add(routeValue => routeValue.Id);
+                        })
+                        .Action(ViewBag.Edit, ViewBag.Controller);
+
+                    command.Custom("Delete").IconClass("k-icon k-i-delete k-icon k-text-error k-icon-20")
+                        .Text("")
+                        //.Text("<i class='fa fa-trash fa-lg text-danger'></i>")
+                        .DataRouteValues(routeValues =>
+                        {
+                            routeValues.Add(routeValue => routeValue.Id);
+
+                        })
+                        .Action(ViewBag.Delete, ViewBag.Controller);
+                }).Title("Action").Width(170);
+            })
+            .Scrollable()
+            .Filterable(f => f.Mode(GridFilterMode.Row))
+            .Groupable()
+            .Sortable()
+            .Filterable()
+        )
+</div>
+<style>
+    .k-icon-20 {
+        font-size: 20px; /* Sets icon size to 48px */
+    }
+</style>

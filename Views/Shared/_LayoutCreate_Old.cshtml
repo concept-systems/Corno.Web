@@ -1,0 +1,77 @@
+﻿@using StringExtensions = Corno.Patterns.Extensions.StringExtensions
+@{
+    Layout = "~/Views/Shared/_LayoutCrud.cshtml";
+}
+
+@*@{
+        string controllerName = ViewBag.Controller;
+        string actionName = ViewBag.SubmitAction;
+    }*@
+
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+
+    ViewBag.SaveButtonText = ViewBag.SaveButtonText ?? "Save";
+}
+
+@Html.AntiForgeryToken()
+
+@section sectionCrudHeader
+{
+    <div class="row">
+        <h5 class="col-10">
+            <span class="k-icon k-i-plus k-text-success"></span>
+            @StringExtensions.SplitCamelCaseWithNewLine(ViewBag.BoxTitle?.ToString())
+        </h5>
+        <div class="col-2">
+            <button class="w-100 k-button k-button-md k-rounded-lg k-button-outline k-button-outline-secondary"
+                    id="back_to_list" type="submit" data-role="button" role="button"
+                    aria-disabled="false" tabindex="0">
+                <span class="k-icon k-i-arrow-60-left k-button-icon">
+                </span><span class="k-button-text">Back to List</span>
+            </button>
+        </div>
+        @*<a href="@Url.Action(ViewBag.Index, ViewBag.Controller, new {miscType = ViewBag.MiscType})"
+               rel="tooltip" title="Back to List" class="k-button k-bg-primary rounded-lg text-white offset-8 col-4">
+                <span class="k-icon k-i-arrow-60-left"></span>&nbsp; Back to List
+            </a>*@
+    </div>
+}
+
+@RenderBody()
+
+@section sectionCrudFooter
+{
+    <div class="form-group row">
+        @*@(Html.Kendo().Button()
+            .Name("saveBottom")
+            .Icon("save")
+            .FillMode(ButtonFillMode.Outline)
+            .HtmlAttributes(new {type = "submit", @class = "offset-11 col-1"})
+            .Content(ViewBag.SaveButtonText))*@
+        <div class="offset-10 col-2">
+            <button class="w-100 k-button k-button-md k-rounded-lg k-button-outline k-button-outline-secondary"
+                    id="save" type="submit" data-role="button" role="button"
+                    aria-disabled="false" tabindex="0">
+                <span class="k-icon k-i-save k-button-icon">
+                </span><span class="k-button-text">@ViewBag.SaveButtonText</span>
+            </button>
+        </div>
+    </div>
+}
+
+@*<script type="text/javascript">
+        function show(input) {
+            if (input.files && input.files[0]) {
+                var filerdr = new FileReader();
+                filerdr.onload = function (e) {
+                    $('#user_img').attr('src', e.target.result);
+                }
+                filerdr.readAsDataURL(input.files[0]);
+            }
+        }
+    </script>*@

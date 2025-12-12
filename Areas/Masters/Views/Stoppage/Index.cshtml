@@ -1,0 +1,27 @@
+﻿@model IEnumerable<Corno.Models.ViewModels.MasterDto>
+
+@{
+    Layout = "~/Views/Shared/_AppLayout.cshtml";
+}
+@{
+    ViewBag.BoxTitle = "Stoppage";
+}
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+}
+
+@{
+    Page.Title = "Stoppage";
+
+    ViewBag.MainHeader = "Stoppage";
+    ViewBag.MainMenu = "Masters";
+    ViewBag.Controller = "Stoppage";
+    ViewBag.AddNewMethod = "Create";
+    ViewBag.CurrentLink = "Stoppage";
+}
+
+@Html.Partial("Partials/_MasterIndex", Model)

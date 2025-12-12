@@ -1,0 +1,30 @@
+﻿@using Corno.Globals.Constants
+@model Corno.Concept.Modules.Masters.Models.Item
+
+@{
+
+    Layout = "~/Views/Shared/_LayoutDelete.cshtml";
+}
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+}
+
+@{
+    Page.Title = "Bom";
+    ViewBag.MainMenu = "Masters";
+    ViewBag.CurrentSitemap = "Bom";
+    ViewBag.Area = "Masters";
+    ViewBag.Controller = "Bom";
+    ViewBag.SubmitAction = ViewBag.Delete;
+}
+
+@{
+    ViewBag.BoxTitle = $"Delete Bom : {Model.Name}";
+    ViewBag.SubmitAction = "Delete";
+}
+
+@Html.Partial("_Bom", Model)

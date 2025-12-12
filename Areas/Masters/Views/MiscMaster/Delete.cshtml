@@ -1,0 +1,32 @@
+﻿@using Corno.Web.Globals
+@model Corno.Web.Areas.Masters.ViewModels.MiscMaster.MiscMasterDto
+
+@{
+    Layout = "~/Views/Shared/_LayoutDelete.cshtml";
+}
+
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+}
+
+@{
+    Page.Title = "Misc Master";
+    ViewBag.MainMenu = "Masters";
+    ViewBag.CurrentSitemap = "Misc Master";
+    ViewBag.Controller = "MiscMaster";
+    ViewBag.SubmitAction = ViewBag.Delete;
+}
+
+@{
+    ViewBag.BoxTitle = $"Delete MiscMaster : {Model?.Name}";
+    ViewBag.SubmitAction = "Delete";
+    ViewBag.MiscType = Model?.MiscType;
+}
+
+@Html.HiddenFor(m => m.MiscType)
+
+@Html.Partial("_MiscMaster", Model)

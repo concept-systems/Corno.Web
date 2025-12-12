@@ -1,0 +1,23 @@
+@using Corno.Web.Globals
+@model Corno.Web.Areas.Kitchen.Models.SearchViewModel
+
+@{
+    Layout = "~/Views/Shared/_LayoutCreate.cshtml";
+
+    ViewBag.BoxTitle = "Create New Import";
+    ViewBag.SubmitAction = "Create";
+}
+
+@Html.Partial("_Plan", Model)
+
+<div class=" k-content">
+    @Html.AntiForgeryToken()
+    <div class="row-cols-1">
+        <div class="col-12">
+            @using (Html.BeginForm(ViewBag.ImportAction as string))
+            {
+                @Html.Partial("Partials/_Progressbar")
+            }
+        </div>
+    </div>
+</div>

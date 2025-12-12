@@ -1,0 +1,19 @@
+﻿@using Corno.Web.Globals
+@model Corno.Web.Areas.Admin.Dto.RoleDto
+@{
+    Layout = "~/Views/Shared/_LayoutEdit.cshtml";
+
+    //ViewBag.BoxTitle = $"Edit SetSiteMap Role : {Model.Name}";
+    ViewBag.BoxTitle = $"SetSiteMap Role";
+
+    var viewDataDictionary = new ViewDataDictionary
+    {
+        //{ FieldConstants.Title, "Edit SetSiteMap Role : " + Model.Name },
+        { FieldConstants.Action, "Edit"}
+    };
+}
+
+@Html.ValidationSummary(false)
+
+@Html.Partial("~/Areas/Admin/Views/Role/_Role.cshtml", Model, viewDataDictionary)
+

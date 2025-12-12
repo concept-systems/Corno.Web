@@ -1,0 +1,74 @@
+﻿@model CustomerViewModel
+
+@{
+    var productService = Bootstrapper.Get<IProductService>();
+}
+
+@using Corno.Web.Areas.Masters.ViewModels.Customer
+@using Corno.Web.Extensions
+@using Corno.Web.Globals
+@using Corno.Web.Services.Masters.Interfaces
+@using Corno.Web.Windsor
+@using Kendo.Mvc.UI
+
+<div class="row">
+    @(Html.Kendo().Grid(Model.CustomerProductDetails)
+        .Name("grid")
+        .Columns(columns =>
+        {
+            columns.Bound(p => p.Id)
+                .ClientTemplate("<input type='hidden' name='CustomerProductDetails[#= index(data)#].Id' value='#= Id #' />")
+                .Hidden(true);
+            columns.Bound(p => p.ProductId)
+                .ClientTemplate("#= ProductName # " +
+                                "<input type='hidden' name='CustomerProductDetails[#= index(data, 'grid')#].ProductId' value='#= ProductId #' />")
+                /* .ClientTemplate("#= ProductName  # " +
+                                 "<input type='hidden' name='CustomerProductDetails[#= index(data, 'grid')#].ProductId' value='#= ProductId #' />")*/
+                .Width(180);
+            /*columns.Bound(p => p.ProductId)
+                .ClientTemplate("#= ProductName  # " +
+                                "<input type='hidden' name='CustomerProductDetails[#= index(data)#].ProductId' value='#= ProductId #' />")
+                .Width(180);*/
+            columns.Bound(p => p.MachineId)
+                .ClientTemplate("#= MachineName  # " +
+                                "<input type='hidden' name='CustomerProductDetails[#= index(data)#].MachineId' value='#= MachineId #' />")
+                //.EditorViewData(new { DataSource = productService.GetViewModelList() })
+                //.EditorTemplateName(@"/Corno/MultiColumnComboBoxInt")
+                //.EditorTemplateName(@"/Subject/_CategoryComboBox")
+                .Width(180);
+            //columns.Bound(p => p.MachineId).Width(120);
+            columns.Bound(p => p.PrinterName)
+                .ClientTemplate("#= PrinterName  # " +
+                                "<input type='hidden' name='CustomerProductDetails[#= index(data)#].PrinterName' value='#= PrinterName #' />")
+                .Width(120);
+            columns.Command(command =>
+            {
+                command.Edit();
+                command.Destroy();
+            }).Width(200);
+        })
+        .ToolBar(toolbar => toolbar.Create())
+        //.Editable(editable => editable.Mode(GridEditMode.InLine).ConfirmDelete("Continue to delete this record?").DisplayDeleteConfirmation("Continue to delete this record?"))
+        .Editable(editable => editable.Mode(GridEditMode.PopUp)
+            .TemplateName("/Customer/_ProductDetailPopup"))
+        .Pageable()
+        .Filterable(f => f.Mode(GridFilterMode.Row))
+        .Sortable()
+        .Scrollable()
+        .HtmlAttributes(new { style = "height:500px;" })
+        .DataSource(dataSource => dataSource
+            .Ajax()
+            .PageSize(20)
+            .Events(events => events.Error("error_handler"))
+            //.Model(model => model.Id(p => p.Id))
+            .Model(model =>
+            {
+                model.Id(p => p.Id);
+                //model.Field(p => p.Quantity).DefaultValue(0);
+            })
+            .Create(update => update.Action("Inline_Create_Update_Destroy_Product", "Customer"))
+            .Update(update => update.Action("Inline_Create_Update_Destroy_Product", "Customer"))
+            //.Read(read => read.Action("Inline_Read", "Product"))
+            .Destroy(update => update.Action("Inline_Create_Update_Destroy_Product", "Customer"))
+        ))
+</div>

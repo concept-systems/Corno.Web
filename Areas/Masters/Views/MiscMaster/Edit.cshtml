@@ -1,0 +1,17 @@
+﻿@model Corno.Web.Areas.Masters.ViewModels.MiscMaster.MiscMasterDto
+
+@{
+    Layout = "~/Views/Shared/_LayoutEdit.cshtml";
+}
+
+@{
+    ViewBag.BoxTitle = "Edit : " + Model.MiscType;
+    ViewBag.Area = "Masters";
+    ViewBag.Controller = "MiscMaster";
+    ViewBag.SubmitAction = "Edit";
+    ViewBag.MiscType = Model.MiscType;
+}
+
+@Html.HiddenFor(m => m.MiscType)
+
+@Html.Partial("_MiscMaster", Model)

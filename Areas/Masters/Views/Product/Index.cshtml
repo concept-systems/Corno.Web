@@ -1,0 +1,170 @@
+﻿@using Corno.Web.Areas.Masters.Dtos.Product
+@using Corno.Web.Globals
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@model List<Corno.Web.Areas.Masters.Dtos.Product.ProductDto>
+
+@{
+    Layout = "~/Views/Shared/_AppLayout.cshtml";
+}
+@{
+    ViewBag.BoxTitle = "Product";
+}
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+}
+
+@{
+    Page.Title = "Product";
+
+    ViewBag.MainHeader = "Product";
+    ViewBag.MainMenu = "Masters";
+    ViewBag.Controller = "Product";
+    ViewBag.AddNewMethod = "Create";
+    ViewBag.CurrentLink = "Product";
+}
+
+
+<div class="grid-container-full-height">
+    @(Html.Kendo().Grid<ProductIndexDto>()
+        .Name("grid")
+        .ApplyIndexSettings(customToolbar: toolbar =>
+        {
+            toolbar.Custom()
+                .Text("<span class='k-icon k-i-import'></span> Import")
+                .HtmlAttributes(new { @class = "k-grid-import k-button-import-outlined", style = "float: right;", onclick = $"window.location.href='{Url.Action("Import", "Product", new { area = ViewBag.Area })}'; return false;" });
+            toolbar.Custom()
+                .Text("<span class='k-icon k-i-plus'></span> Add New")
+                .HtmlAttributes(new { @class = "k-grid-add-new k-button-add-new-outlined", style = "float: right;", onclick = $"window.location.href='{Url.Action(ViewBag.Create, ViewBag.Controller, new { area = ViewBag.Area })}'; return false;" });
+        }) // 👈 Apply index settings (full height, responsive)
+        .Events(events => events.ApplyCommonEvents())
+    //.HtmlAttributes(new { @class = "w-100" })
+    .Columns(columns =>
+    {
+        //columns.Template(@<text></text>).ClientTemplate("#=resColTemplate(data)#").Title("Items").Media("(max-width: 450px)");
+        //columns.Select()
+        //    .HtmlAttributes(new { style = "text-align: center" })
+        //    .Width(10);
+        columns.Bound(m => m.Id)
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+            .HtmlAttributes(new { style = "text-align: center" })
+            .Title("Id")
+            //.Media("(min-width: 150)")
+            .Width(15);
+        columns.Bound(m => m.Code)
+            //.HtmlAttributes(new { style = "text-align: center" })
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+            .Title("Code")
+            .Width(20);
+        columns.Bound(m => m.Name)
+            //.HtmlAttributes(new { style = "text-align: center" })
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+            .Title("Name")
+            .Width(30);
+        columns.Bound(m => m.Status).Width(20).Title("Status")
+            .HtmlAttributes(new { style = "text-align: center" })
+            .ClientTemplate(
+                "<span class='badge' style='background-color: " +
+                "# if (Status == \"Active\") { #" +
+                "green" +
+                "# } else if (Status == \"Deleted\") { #" +
+                "red" +
+                "# } else { #" +
+                "transparent" +
+                "# } #" +
+                "; color: " +
+                "# if (Status == \"Active\" || Status == \"Deleted\") { #" +
+                "white" +
+                "# } else { #" +
+                "black" +
+                "# } #" +
+                "; text-align: center; display: inline-block;'>" +
+                "#= Status #</span>"
+            )
+            .HtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+            .Width(10);
+        columns.Command(command =>
+        {
+            command.Custom("Edit").Text("")
+                .Text("<i class='k-icon k-i-edit k-text-info k-icon-20'></i>")
+                .HtmlAttributes(new { @class = "k-grid-edit" })
+                .Click("onEditClick")
+                .Visible("function(dataItem) { return dataItem.Status === 'Active'; }");
+            // Show only if Status is "Active";
+            command.Custom("Delete").Text("")
+                .Text("<i class='k-icon k-i-delete k-icon-md k-text-error k-icon-20'></i>")
+                .HtmlAttributes(new { @class = "k-grid-delete" })
+                .Click("onDeleteClick")
+                .Visible("function(dataItem) { return dataItem.Status === 'Active'; }");
+        })
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+            .HtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+            .Title("Actions")
+            .Width(8);
+    })
+    .DataSource(dataSource => dataSource
+        .Ajax()
+        .PageSize(20)
+        .Read(read => read.Action("GetIndexViewModels", "Product"))
+        .Sort(sort => sort.Add(FieldConstants.Id).Descending()) // Initial sort by Id in ascending order
+        .Model(model => model.Id(FieldConstants.Id))
+    ))
+</div>
+
+<script type="text/javascript">
+    function onEditClick(e) {
+        e.preventDefault();
+        var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+        window.location.href = '@Url.Action("Edit", "Product")' + '/' + dataItem.Id;
+    }
+
+    function onDeleteClick(e) {
+        e.preventDefault();
+        var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+        window.location.href = '@Url.Action("Delete", "Product")' + '/' + dataItem.Id;
+    }
+
+</script>
+
+<style>
+    .k-icon-20 {
+        font-size: 15px;
+    }
+</style>
+
+@*Mobile compability*@
+@*<script id="responsive-column-template" type="text/x-kendo-template">
+    <strong>Id</strong>
+    <p class="col-template-val">#=data.Id#</p>
+
+    <strong>Code</strong>
+    <p class="col-template-val">#=data.Code#</p>
+
+    <strong>Name</strong>
+    <p class="col-template-val">#=data.Name#</p>
+
+    <strong>Status</strong>
+    <p class="col-template-val">#=data.Status#</p>
+
+    <strong>Actions</strong>
+    <p class="col-template-val">#=data.Action#</p>
+</script>
+
+<script>
+    var resColTemplate;
+
+    $(document).ready(function () {
+        resColTemplate = kendo.template($("#responsive-column-template").html());
+    });
+</script>
+
+<style>
+    .col-template-val {
+        margin: 0 0 1em .5em;
+    }
+</style>*@

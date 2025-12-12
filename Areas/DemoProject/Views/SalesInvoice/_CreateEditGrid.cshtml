@@ -1,0 +1,153 @@
+﻿@model Corno.Web.Areas.DemoProject.Dtos.SalesInvoiceDto
+@using Kendo.Mvc.UI
+
+<div class="form-group required row">
+    @Html.Label("Barcode :", new { @class = "col-4 col-form-label" })
+    <div class="col-8">
+        @(Html.Kendo().TextBox()
+        .Name("Barcode")
+        .HtmlAttributes(new
+        {
+        //required = "required",
+            @class = "w-100",
+            placeholder = "Scan barcode here..."
+        }))
+    </div>
+</div>
+<hr />
+<div class="form-group row">
+    <div class="col-12">
+        @(Html.Kendo().Grid(Model.Details)
+                 .Name("grid")
+                 .Columns(columns =>
+                 {
+                     columns.Bound(m => m.ProductName)
+                        .ClientTemplate("#= ProductName #" + "<input type='hidden' name='Details[#= index(data)#].ProductName' value='#= ProductName #' />")
+                        .HtmlAttributes(new { style = "text-align: left" })
+                        .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" });
+                     columns.Bound(m => m.Barcode)
+                         .ClientTemplate("#= Barcode #" + "<input type='hidden' name='Details[#= index(data)#].Barcode' value='#= Barcode #' />")
+                         .HtmlAttributes(new { style = "text-align: left" })
+                         .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" });
+                     columns.Bound(m => m.Quantity)
+                         .ClientTemplate("#= Quantity #" + "<input type='hidden' name='Details[#= index(data)#].Quantity' value='#= Quantity #' />")
+                         .HtmlAttributes(new { style = "text-align: right" })
+                         .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                         .FooterHtmlAttributes(new { style = "text-align: right" })
+                         .ClientFooterTemplate("Total : #=sum#"); // Display sum in footer
+                 })
+                 .Sortable()
+                 //.Pageable()
+                 .Scrollable()
+                 .DataSource(dataSource => dataSource
+                     .Ajax()
+                     .ServerOperation(false)
+                     .Aggregates(aggregates =>
+                     {
+                         aggregates.Add(m => m.Quantity).Sum(); // Define aggregate for Quantity column
+                     })
+                     .Events(e => e.Error("onError")))
+                 .Resizable(resize => resize.Columns(true))
+                 .Reorderable(reorder => reorder.Columns(true)))
+    </div>
+</div>
+
+<script type="text/javascript">
+    $("#Barcode").on("keypress", function (e) {
+        if (e.which === 13) { // Enter key pressed
+            e.preventDefault();
+
+            var barcode = $(this).val();
+
+            // Validate barcodes
+            if (true === ValidateBarcodes(barcode)) {
+                // Validate in Server
+                $.ajax({
+                    url: '/DemoProject/SalesInvoice/ValidateBarcode',
+                    type: 'GET',
+                    dataType: 'json',
+                    data: {
+                        barcode: barcode
+                    },
+                    success: function (response) {
+                        console.log("Data received:", response);
+                        if (response.Success) {
+                            // Add new Row in grid
+                            AddNewRowInGrid(barcode, response.ProductId, response.ProductName, response.Quantity);
+
+                            // Clear the TextBoxes
+                            $(this).val("");
+                            $('#Barcode').val('');
+                            // Focus on KB Barcode text box
+                            $('#Barcode').focus();
+                        } else {
+                            ShowError(response.Message);
+                            @*bootbox.alert({
+                                title: "Error",
+                                message: response.Message,
+                                centerVertical: true, // Center vertically (requires Bootstrap 4 or higher)
+                            });*@
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.log("xhr : " + xhr + ", status : " + status + ", error : " + error);
+                        console.log("Error fetching data: " + xhr.status + " - " + xhr.statusText);
+                        alert("Error fetching data : " + xhr.status + ", text : " + xhr.responseText);
+                    }
+                });
+            }
+        }
+    });
+
+    function ShowError(message) {
+        bootbox.alert({
+            title: "Error",
+            message: message,
+            centerVertical: true, // Center vertically (requires Bootstrap 4 or higher)
+        });
+    };
+
+    function ValidateBarcodes(barcode) {
+        if (!barcode) {
+            //alert("Please, Scan customer barcode");
+            ShowError("Please, Scan customer barcode");
+            return false;
+        }
+        return true;
+    }
+
+    function IsBarcodeAvailableInGrid(grid, barcode) {
+        var existingRecords = grid.dataSource.data();
+        var barcodeExists = existingRecords.some(function (record) {
+            return record.Barcode === barcode
+        });
+
+        return barcodeExists;
+    }
+
+    function AddNewRowInGrid(barcode, productId, productName, quantity) {
+        var grid = $("#grid").data("kendoGrid");
+        var alreadyResult = IsBarcodeAvailableInGrid(grid, barcode);
+        //alert(alreadyResult);
+        if (alreadyResult === true) {
+            //alert("Barcode already scanned");
+            ShowError("Barcode already scanned");
+            return;
+        }
+
+        grid.dataSource.add({ Barcode: barcode, ProductId: productId, ProductName: productName, Quantity: quantity});
+        grid.dataSource.sync();
+    }
+
+    function onError(e) {
+        if (e.errors) {
+            var message = "Errors:\n";
+            $.each(e.errors, function (key, value) {
+                if (value.errors) {
+                    message += value.errors.join("\n");
+                }
+            });
+            alert(message);
+        }
+    }
+</script>

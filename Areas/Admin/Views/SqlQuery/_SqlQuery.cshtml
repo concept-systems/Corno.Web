@@ -1,0 +1,70 @@
+﻿@using System.Data
+@using Kendo.Mvc.UI
+@model Corno.Web.Areas.Admin.Dto.SqlQuery.SqlQueryDto
+
+@{
+    var dataTable = ViewBag.DataTable as DataTable;
+}
+
+@if (ViewBag.Message != null)
+{
+    <h4>@ViewBag.Message</h4>
+}
+
+    <div class="form-group row">
+        @(Html.Kendo().TextAreaFor(m => m.Query)
+        .Rows(5)
+        .Label(l => l.Content("Query")
+            .Floating(true))
+        .HtmlAttributes(new
+        {
+            style = "w-100"
+
+        }))
+    </div>
+<br/>
+
+@if (dataTable != null)
+{
+    Html.Kendo().Grid(dataTable.AsEnumerable())
+    .Name("DataTableGrid")
+        .Scrollable(scrolling => scrolling.Virtual(false).Endless(true).Height("400px")) // Enable horizontal and vertical scroll
+        .Columns(columns =>
+        {
+            foreach (DataColumn column in dataTable.Columns)
+            {
+                columns.Bound(row => row[column.ColumnName])
+                    .Title(column.ColumnName)
+                    .Width(150);
+            }
+        })
+        //.HtmlAttributes(new { style = "width: 100%; overflow-x: auto;" }) // Keep width constant and enable scrolling
+        .HtmlAttributes(new { style = "height: 500px; width: 1610px; overflow: auto;" })
+        .Resizable(resize => resize.Columns(true)) // Optional: allow users to resize columns
+        .Reorderable(reorder => reorder.Columns(true)) // Optional: allow column reordering
+        .Render();
+
+    @*<table class="table table-bordered table-hover" style="width: 100%;">
+        <thead>
+            <tr>
+                @foreach (DataColumn column in ((DataTable)ViewBag.DataTable).Columns)
+                {
+                    <th>@column.ColumnName</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (DataRow row in ((DataTable)ViewBag.DataTable).Rows)
+            {
+                <tr>
+                    @foreach (var item in row.ItemArray)
+                    {
+                        <td>@item</td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>*@
+}
+
+

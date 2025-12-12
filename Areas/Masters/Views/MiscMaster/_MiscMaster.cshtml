@@ -1,0 +1,31 @@
+﻿@using System.Web.Mvc.Html
+@using Kendo.Mvc.UI
+@model Corno.Web.Areas.Masters.ViewModels.MiscMaster.MiscMasterDto
+
+@Html.HiddenFor(m => m.Id)
+
+<!-- Toggle button visible on mobile to open the responsive panel -->
+<button id="miscMasterPanelToggle" class="k-button k-button-md k-rounded-md k-button-solid k-button-solid-primary rp-toggle" type="button">
+    <span class="k-icon k-i-menu"></span>
+    Show Details
+</button>
+
+@(Html.Kendo().ResponsivePanel()
+    .Name("miscMasterPanel")
+    .Orientation(ResponsivePanelOrientation.Top)
+    .Breakpoint(100)
+    .ToggleButton("#miscMasterPanelToggle")
+    .HtmlAttributes(new { style = "margin-bottom: 20px;" })
+    .Content(@<text>
+        <div class="responsive-panel-container">
+            <!-- Basic Information Section -->
+            <div class="k-widget k-panel mb-4">
+                <h3 class="k-panel-title">Basic Information</h3>
+                <div class="k-panel-content">
+                    @Html.Partial("Partials/_MasterEdit", Model)
+                </div>
+            </div>
+        </div>
+    </text>
+    )
+)

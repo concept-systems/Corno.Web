@@ -1,0 +1,21 @@
+﻿@model Corno.Web.Areas.Masters.Dtos.Item.ItemDto
+@using Kendo.Mvc.UI
+<div class="row">
+    <div class="col-sm-6">
+        <div class="form-group row mb-2">
+            @Html.LabelFor(m => m.Rate, "Rate :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @(Html.Kendo().NumericTextBoxFor(m => m.Rate)
+                    .HtmlAttributes(new
+                    {
+                        @class = "w-100"
+                    }))
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6">
+        
+    </div>
+</div>

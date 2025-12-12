@@ -1,0 +1,102 @@
+﻿@using Corno.Web.Globals
+@using Kendo.Mvc.UI
+@model Corno.Web.Areas.Kitchen.Dto.Put_To_Light.TrolleyConfigIndexDto
+
+@{
+    ViewBag.BoxTitle = "Trolley Config";
+    ViewBag.Title = "Trolley Config";
+}
+
+@Html.ValidationSummary(false, "", new { @class = "text-danger" })
+@Html.AntiForgeryToken()
+@*@Html.HiddenFor(model => model.Family, new { id = "Family" })*@
+<div class="row">
+    <div class="col-sm-12">
+        <div class="form-group required row">
+            @Html.LabelFor(m => m.DueDate, "Due Date :",
+                new { @class = "col-2 col-form-label" })
+            <div class="col-6">
+                @(Html.Kendo().DatePickerFor(m => m.DueDate)
+                        .HtmlAttributes(new { @class = "w-100" }))
+            </div>
+        </div>
+        <div class="form-group required row">
+            @Html.LabelFor(m => m.LotNo, "Lot No :", new { @class = "col-2 col-form-label" })
+            <div class="col-6">
+                @(Html.Kendo().MultiColumnComboBoxFor(m => m.LotNo)
+                    .Value(Model.LotNo) // Set the initial value for editing
+                    .DataTextField(FieldConstants.LotNo)
+                    .DataValueField(FieldConstants.LotNo)
+                    .HtmlAttributes(new { @class = "w-100" })
+                    .Filter("contains")
+                    .Placeholder("Select Lot No ...")
+                    .Suggest(true)
+                    .Columns(columns => { columns.Add().Field(FieldConstants.LotNo).Title(FieldConstants.LotNo); })
+                    .DataSource(dataSource => dataSource
+                        .Read(read => { read.Action("GetLotNos", "TrolleyConfig").Data("getLotParameters"); })
+                        .ServerFiltering(true)
+                    )
+                    .AutoBind(false)
+                    .CascadeFrom(FieldConstants.DueDate))
+                    
+            </div>
+            <script>
+                function getLotParameters() {
+                    return {
+                        dueDate: $('#DueDate').val()
+                    }
+                }
+            </script>
+        </div>
+
+        @*<div class="form-group required row">
+                @Html.LabelFor(m => m.Family, "Family :", new { @class = "col-2 col-form-label" })
+                <div class="col-6">
+                    @(Html.Kendo().MultiColumnComboBoxFor(m => m.Family)
+                            .DataTextField(FieldConstants.Group)
+                            .DataValueField(FieldConstants.Group)
+                            .HtmlAttributes(new { @class = "w-100" })
+                            .Filter("contains")
+                            .Placeholder("Select Family...")
+                            .Columns(columns =>
+                            {
+                                columns.Add().Field(FieldConstants.Group)
+                                    .Title(FieldConstants.Group.ToCamelCase())
+                                    .Width("480px");
+                            })
+                            .DataSource(dataSource => dataSource
+                                .Read(read => { read.Action("GetFamilies", "TrolleyConfig").Data("getGroupParameters"); })
+                                //.Events(e => e.Error("error_handler"))
+                                .ServerFiltering(true)
+                            )
+                            .AutoBind(false)
+                            .CascadeFrom(FieldConstants.LotNo)
+                            )
+                </div>
+                <script>
+                    function getGroupParameters() {
+                        return {
+                            lotNo: $('#LotNo').val()
+                        }
+                    }
+                </script>
+            </div>*@
+    </div>
+</div>
+
+<script>
+    function filterColor() {
+        //alert($('#Family').val());
+        return {
+            lotNo: $('#LotNo').val(),
+            //family: $('#Family').val(),
+        }
+    }
+    function onDueDateChange(e) {
+        alert("hello");
+        var cmblotNo = $("#LotNo").data("kendoMultiColumnComboBox");
+        cmblotNo.dataSource.read();
+    }
+
+
+</script>

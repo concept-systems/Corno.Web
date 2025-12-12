@@ -1,0 +1,17 @@
+﻿@using Corno.Globals.Constants
+@model Corno.Concept.Modules.Masters.Models.Item
+
+@{
+    Layout = "~/Views/Shared/_LayoutCreate.cshtml";
+}
+
+@{
+    ViewBag.BoxTitle = "Create New Bom";
+    ViewBag.Area = "Masters";
+    ViewBag.Controller = "Bom";
+    ViewBag.SubmitAction = "Create";
+}
+
+@Html.HiddenFor(m => m.Id)
+
+@Html.Partial("_Bom", Model)

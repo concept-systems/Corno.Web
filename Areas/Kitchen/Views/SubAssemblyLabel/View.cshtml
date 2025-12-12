@@ -1,0 +1,139 @@
+﻿@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@model Corno.Web.Areas.Kitchen.Dto.Label.LabelViewDto
+
+@{
+    Layout = "~/Views/Shared/_AppLayout.cshtml";
+
+    ViewBag.BoxTitle = "SubAssembly Label";
+    ViewBag.BoxTitle = "View Label";
+    ViewBag.SubmitButtonText = "Print";
+}
+
+<div class="k-actions k-actions-horizontal k-actions-end">
+        @(Html.Kendo().Button()
+            .Name("print")
+            .Content("Print")
+            .ApplyStandardSettingsWithType(ButtonType.Primary, "print", ComponentSize.Medium)
+            .Events(e => e.Click("onPrintLabel")))
+        @(Html.Kendo().Button()
+            .Name("btnList")
+            .Content("Back")
+            .ApplyStandardSettingsWithType(ButtonType.Info, "arrow-left", ComponentSize.Medium)
+            .Events(e => e.Click("onBack")))
+        @(Html.Kendo().Button()
+            .Name("BackToList")
+            .Content("List")
+            .ApplyStandardSettingsWithType(ButtonType.Info, "list", ComponentSize.Medium)
+            .Events(e => e.Click("onBackToList")))
+</div>
+
+<div class="form-group row">
+    <div class="row">
+        <div class="col-6">
+            <!-- Placeholder for the partial view -->
+            
+            <div id="partialViewContainer" style="height: 100%"></div>
+        </div>
+        <div class="col-6">
+            @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+            <div class="row">
+                <table class="table k-table k-table-alt-row w-100">
+                    <tbody>
+                    <tr>
+                        <td> Warehouse Order :</td>
+                        <td>
+                            <strong>@Model.WarehouseOrderNo</strong>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Position :</td>
+                        <td>
+                            <strong>@Model.Position</strong>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Carcass Code :</td>
+                        <td>
+                            <strong> @Model.CarcassCode</strong>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+                
+                <div style="overflow-x: auto">
+                    <div class="col-12">
+                        @(Html.Kendo().Grid(Model?.LabelViewDetailDto)
+                            .Name("grid")
+                            .ApplyCommonSettings() // 👈 Apply shared settings
+                            .Events(events => events.ApplyCommonEvents())
+                            .Columns(columns =>
+                            {
+                                columns.Bound(m => m.ScanDate)
+                                    .Format("{0:dd/MM/yyyy hh:mm tt}");
+                                columns.Bound(m => m.UserName).Align(TextAlign.Left);
+                                columns.AddStatusColumn();
+                            })
+                            .DataSource(dataSource => dataSource.Ajax()
+                            ))
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        LoadPartialView()
+    });
+
+    function LoadPartialView(toPrinter) {
+        $.ajax({
+            url: '/SubAssemblyLabel/LoadPartialView', // Replace with your actual controller and action
+            method: 'GET',
+            data: { 'partialViewName': 'Partials/ReportViewer_New' },
+            success: function (partialHtml) {
+                // Load HTML content into the element
+                $('#partialViewContainer').html(partialHtml, function () {
+                    // This code will execute after the HTML content has been loaded
+                    console.log("HTML content loaded successfully");
+
+                });
+                // Delay the execution of the next statement by a short duration
+                setTimeout(function () {
+                    // This code will execute after a short delay
+                    console.log("Timeout HTML content loaded successfully");
+                    if ('@Model?.PrintToPrinter' === 'True' || toPrinter === true) {
+                        printToPrinter();
+                    }
+                }, 1500); // Adjust the delay duration as needed
+            },
+
+            error: function () {
+                console.error('Failed to load the partial view.');
+            }
+
+        });
+    }
+
+    function onBackToList() {
+        window.location.href = '@Url.Action("Index", "SubAssemblyLabel", new { area = "Kitchen" })';
+    }
+    function onBack() {
+        // Try to use referrer if available and from same origin
+        var referrer = document.referrer;
+        if (referrer && referrer.indexOf(window.location.origin) === 0) {
+            var referrerPath = new URL(referrer).pathname;
+            if (referrerPath && referrerPath !== window.location.pathname) {
+                window.location.href = referrer;
+                return;
+            }
+        }
+        // Fallback to Plan/Index
+        window.location.href = '@Url.Action("Index", "Plan", new { area = "Kitchen" })';
+    }
+    function onPrintLabel() {
+        printToPrinter();
+    }
+</script>

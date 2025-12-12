@@ -1,0 +1,19 @@
+@using Corno.Web.Globals
+@model double?
+
+@{
+    var description = Model.ToString().SplitCamelCase();
+}
+
+<div class="input-group pb-1">
+    @(Html.Kendo().NumericTextBoxFor(m => m)
+          .Label(label => label
+              .Content(description)
+              .Floating(true))
+          .HtmlAttributes(new
+          {
+              placeholder = $"Enter {description}",
+              @class = "w-100"
+          }))
+</div>
+

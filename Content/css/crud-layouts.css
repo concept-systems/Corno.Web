@@ -1,0 +1,46 @@
+/* ============================================
+   Common Responsive Styles for CRUD Layouts
+   ============================================
+   Shared styles for _LayoutCreate, _LayoutEdit, 
+   _LayoutDelete, _LayoutView, and _LayoutBase
+   ============================================ */
+
+/* Responsive form/content styles */
+.crud-content {
+    width: 100%;
+    padding: 15px;
+}
+
+/* Responsive buttons */
+.k-actions {
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+    .k-actions .k-button {
+        /*flex: 1 1 auto;*/
+        min-width: 100px;
+    }
+
+/* Responsive breakpoints */
+@media (max-width: 768px) {
+    .crud-content {
+        padding: 10px;
+    }
+
+    .k-actions {
+        flex-direction: column;
+    }
+
+        .k-actions .k-button {
+            width: 100%;
+            min-width: unset;
+        }
+}
+
+@media (max-width: 576px) {
+    .crud-content {
+        padding: 8px;
+    }
+}
+

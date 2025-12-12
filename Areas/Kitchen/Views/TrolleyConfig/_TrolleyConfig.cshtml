@@ -1,0 +1,60 @@
+﻿@using Corno.Web.Globals
+@model Corno.Web.Areas.Kitchen.Dto.Put_To_Light.TrolleyConfigIndexDto
+
+@{
+    ViewBag.Title = "Trolley Config";
+    ViewBag.BoxTitle = "Create Trolley Config";
+    ViewBag.SubmitAction = "Create";
+}
+
+@Html.Partial("_Header", Model)
+@Html.Partial("_Detail", Model)
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#form").kendoValidator({
+            rules: {
+                requiredMultiColumnComboBox: function (input) {
+                    if (input.is("[data-role=multicolumncombobox]")) {
+                        return input.val() !== "";
+                    }
+                    return true;
+                },
+                requiredDatePicker: function (input) {
+                    if (input.is("[data-role=datepicker]")) {
+                        var value = input.val();
+                        // Check if the value is a valid date
+                        return kendo.parseDate(value) !== null;
+                    }
+                    return true;
+                }
+            },
+            messages: {
+                requiredMultiColumnComboBox: function (input) {
+                    var comboBoxName = input.attr("name");
+                    switch (comboBoxName) {
+                        case "LotNo":
+                            return "Please select Lot No.";
+                        case "Group":
+                            return "Please select Group.";
+                        // Add cases for other comboboxes as needed
+                        default:
+                            return "Please select a value for the ComboBox.";
+                    }
+                },
+                requiredDatePicker: "Please select due date."
+            }
+        });
+    });
+
+    function onButtonSave() {
+        $("form").submit();
+    }
+
+    function onDueDateChange(e) {
+        alert("hello");
+        var cmblotNo = $("#LotNo").data("kendoMultiColumnComboBox");
+        cmblotNo.dataSource.read();
+    }
+
+    </script>

@@ -1,0 +1,77 @@
+﻿@using Corno.Web.Areas.DemoProject.Dtos
+@using Corno.Web.Globals
+@using Kendo.Mvc.UI
+@using Corno.Web.Helper
+
+@{
+    Layout = "~/Views/Shared/_AppLayout.cshtml";
+
+    ViewBag.BoxTitle = "Product Label";
+}
+
+<div class="grid-container-full-height">
+    @(Html.Kendo().Grid<LabelDto>()
+        .Name("grid")
+        .ApplyIndexSettings(customToolbar: toolbar =>
+        {
+            toolbar.Custom()
+                .Text("<span class='k-icon k-i-plus'></span> Add New")
+                .HtmlAttributes(new { @class = "k-grid-add-new k-button-add-new-outlined", style = "float: right;", onclick = "onAddNewClick(event); return false;" });
+        })
+        .Events(events => events.ApplyCommonEvents())
+        .Columns(columns =>
+        {
+            columns.Bound(m => m.Id).Hidden(true);
+            columns.Bound(m => m.LabelDate).Title("Date")
+                .Format("{0:dd/MM/yyyy}")
+                .Align(TextAlign.Center);
+            columns.Bound(m => m.ProductName).Title("Product")
+                .Align(TextAlign.Left);
+            columns.Bound(m => m.Weight)
+                .Align(TextAlign.Right);
+            columns.Bound(m => m.Rate).Title("MRP")
+                .Align(TextAlign.Right);
+            columns.Bound(m => m.ExpiryDate).Title("Exp. Date")
+                .Format("{0:dd/MM/yyyy}")
+                .Align(TextAlign.Center);
+            columns.Bound(m => m.ManufacturingDate).Title("Mfg. Date")
+                .Format("{0:dd/MM/yyyy}")
+                .Align(TextAlign.Center);
+            // Use GridHelper status column
+            columns.AddStatusColumn();
+            columns.AddCommandColumns(new List<GridCommandConfig>
+            {
+                new GridCommandConfig { Name = "View", Text = " ", IconClass = "k-icon k-i-preview k-i-eye", ClickHandler = "onViewClick" }
+            });
+        })
+        .Excel(excel => excel
+            .FileName("Inward.xlsx")
+            .ProxyURL(Url.Action("Excel_Export_Save", "Corno"))
+        )
+        .Pdf(pdf => pdf
+            .FileName("Inward.pdf")
+            .ProxyURL(Url.Action("Excel_Export_Save", "Corno"))
+        )
+        .DataSource(dataSource => dataSource
+            .ApplyCommonDataSourceSettings("GetIndexViewModels", "ProductLabel", "DemoProject")
+            .Sort(s => s.Add(FieldConstants.LabelDate).Descending())
+        ))
+</div>
+
+<script type="text/javascript">
+    function onViewClick(e) {
+        e.preventDefault();
+        var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+        var id = dataItem.Id; // Assuming 'Id' is the field name
+        window.location.href = '@Url.Action("View", "ProductLabel", new { area = "DemoProject" })' + '?id=' + id;
+    }
+
+    function onAddNewClick(e) {
+        e.preventDefault();
+        window.location.href = '@Url.Action("Create", "ProductLabel", new { area = "DemoProject" })';
+    }
+
+    function sendData() {
+        // Additional parameters can be added here when needed
+    }
+</script>

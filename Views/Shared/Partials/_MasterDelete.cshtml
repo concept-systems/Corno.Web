@@ -1,0 +1,43 @@
+﻿@model Corno.Web.Models.MasterModel
+
+<div class="row">
+    <div class="col-sm-6">
+        <div class="form-group required">
+            @Html.LabelFor(m => m.Code, "Code",
+                new { @class = "col-form-label" })
+            @(Html.Kendo().TextBoxFor(m => m.Code)
+                                  .HtmlAttributes(new
+                                  {
+                                      @readonly = "readonly",
+                                      //@class = "form-control form-control-sm"
+                                      @class = "required w-100"
+                                  }))
+        </div>
+        <div class="form-group required">
+            @Html.LabelFor(m => m.Name, "Name",
+                new { @class = "col-form-label" })
+            @(Html.Kendo().TextBoxFor(m => m.Name)
+                                  .HtmlAttributes(new
+                                  {
+                                      @readonly = "readonly",
+                                      //@class = "form-control form-control-sm
+                                      @class = "required w-100"
+                                  }))
+        </div>
+    </div>
+    <div class="col-sm-6">
+        <div class="form-group">
+            @Html.LabelFor(m => m.Description, "Description",
+                new { @class = "col-form-label" })
+            @Html.TextAreaFor(m => m.Description,
+                new
+                {
+                    @readonly = "readonly",
+                    placeholder = "description here",
+                    rows = 6,
+                    @class = "k-textbox w-100 h-100"
+                })
+
+        </div>
+    </div>
+</div>

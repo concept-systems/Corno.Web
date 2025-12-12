@@ -1,0 +1,81 @@
+﻿@{
+    Layout = "~/Views/Shared/_LayoutBase.cshtml";
+}
+
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+
+    ViewBag.ImportAction = "ImportMaster";
+}
+
+@{
+    string controllerName = ViewBag.Controller;
+    //string importAction = ViewBag.ImportAction as string;
+    //string actionName = "ImportMaster";
+}
+
+@section sectionBaseHeader
+{
+    <div class="row">
+        <h6 class="col-11">
+            <span class="k-icon k-i-plus-outline k-icon-md k-text-success k-icon-20"></span>
+            <i class="fa fa-file-pdf"></i> @ViewBag.Title
+        </h6>
+        <a href="javascript:void(0)" onclick="onBackReport()" rel="tooltip" title="Back" 
+           class="k-button-md k-button-rectangle k-rounded-lg k-button-outline k-button-outline-secondary k-button k-rounded-md k-button-outline-tertiary col-1">
+            <span class="k-icon k-i-arrow-60-left"></span>&nbsp; Back To List
+        </a>
+    </div>
+}
+
+@RenderBody()
+
+
+<style>
+    .k-icon-20 {
+        font-size: 18px; /* Sets icon size to 48px */
+    }
+</style>
+
+<script type="text/javascript">
+    function onBackReport() {
+        @{
+            // Get values from ViewBag or fall back to route data
+            var area = ViewBag.Area as string ?? ViewContext.RouteData.DataTokens["area"] as string ?? "";
+            var controller = ViewBag.Controller as string ?? ViewContext.RouteData.Values["controller"] as string ?? "";
+            var action = ViewBag.Index as string ?? "Index";
+            
+            // Build URL using Url.Action to ensure proper routing
+            string backUrl;
+            if (!string.IsNullOrEmpty(area))
+            {
+                backUrl = Url.Action(action, controller, new { area = area });
+            }
+            else if (!string.IsNullOrEmpty(controller))
+            {
+                backUrl = Url.Action(action, controller);
+            }
+            else
+            {
+                backUrl = Url.Action("Index", "Home");
+            }
+        }
+        
+        // Try to use referrer if available and from same origin
+        var referrer = document.referrer;
+        if (referrer && referrer.indexOf(window.location.origin) === 0) {
+            var referrerPath = new URL(referrer).pathname;
+            if (referrerPath && referrerPath !== window.location.pathname) {
+                window.location.href = referrer;
+                return;
+            }
+        }
+        // Fallback to generated URL
+        var url = '@Html.Raw(backUrl)';
+        window.location.href = url;
+    }
+</script>

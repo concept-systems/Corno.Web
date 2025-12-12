@@ -1,0 +1,109 @@
+﻿@using Corno.Concept.Portal.Helper
+@{
+    Layout = "~/Views/Shared/_LayoutBase.cshtml";
+}
+
+@{
+    String controllerName = ViewBag.Controller;
+    String actionName = ViewBag.SubmitAction;
+}
+
+<script type="text/javascript">
+
+    function confirmActivate() {
+        bootbox.confirm({
+            title: 'Confirm',
+            message: 'Are you sure you want to Deactivate?',
+            buttons: {
+                'cancel': {
+                    label: 'Cancel',
+                    className: 'btn-default pull-left'
+                },
+                'confirm': {
+                    label: 'Deactivate',
+                    className: 'btn-danger pull-right'
+                }
+            },
+            callback: function (result) {
+                if (true == result) {
+                    $('#form').submit();
+                }
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        $(function () {
+            $('#btnDeactivate').click(function () {
+                confirmActivate();
+            });
+        });
+
+        $(function () {
+            $('#btnDeactivate1').click(function () {
+                confirmActivate();
+            });
+        });
+    });
+</script>
+
+
+@using (Html.BeginForm(actionName, controllerName, null, FormMethod.Post, new { id = "form", @class = "form-horizontal form-validate" }))
+{
+    <div id="modal-confirm" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+            <h3 id="myModalLabel">Cofirm</h3>
+        </div>
+        <div class="modal-body">
+            <p>Do you really want to Deactivate?</p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn" data-dismiss="modal" aria-hidden="true">No</button>
+            <button name="btnYes" class="btn btn-primary" data-dismiss="modal" onclick="$(this).closest('form').submit()">Yes</button>
+        </div>
+    </div>
+
+    <div class="box-title">
+        <div class="span8">
+            <h3><i class="icon-table"></i> @ViewBag.BoxTitle</h3>
+        </div>
+        <div class="span2">
+            <div class="k-actions k-actions-horizontal k-actions-end">
+                @(Html.Kendo().Button()
+                    .Name("btnBackToList")
+                    .Content("Back to List")
+                    .ApplyStandardSettingsWithType(ButtonType.Info, "arrow-60-left", ComponentSize.Medium)
+                    .HtmlAttributes(new { onclick = $"window.location.href='{Url.Action(ViewBag.Index, ViewBag.Controller)}'; return false;" }))
+            </div>
+        </div>
+        <div class="span2">
+            <div class="k-actions k-actions-horizontal k-actions-end">
+                @(Html.Kendo().Button()
+                    .Name("btnDeactivate")
+                    .Content("Deactivate")
+                    .ApplyStandardSettingsWithType(ButtonType.Danger, "close", ComponentSize.Medium)
+                    .HtmlAttributes(new { onclick = "confirmActivate(); return false;" }))
+            </div>
+        </div>
+    </div>
+    <div class="box-content">
+        @Html.AntiForgeryToken()
+        @RenderBody()
+        <hr />
+        <div class="control-group">
+            <div class="k-actions k-actions-horizontal">
+                @(Html.Kendo().Button()
+                    .Name("btnBackToList1")
+                    .Content("Back to List")
+                    .ApplyStandardSettingsWithType(ButtonType.Info, "arrow-60-left", ComponentSize.Medium)
+                    .HtmlAttributes(new { onclick = $"window.location.href='{Url.Action(ViewBag.Index, ViewBag.Controller)}'; return false;" }))
+                @(Html.Kendo().Button()
+                    .Name("btnDeactivate1")
+                    .Content("Deactivate")
+                    .ApplyStandardSettingsWithType(ButtonType.Danger, "close", ComponentSize.Medium)
+                    .HtmlAttributes(new { onclick = "confirmActivate(); return false;" }))
+            </div>
+        </div>
+    </div>
+}

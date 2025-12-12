@@ -1,0 +1,15 @@
+﻿@using Corno.Web.Globals
+@model Corno.Web.Areas.Admin.Dto.RoleDto
+@{
+    Layout = "~/Views/Shared/_LayoutCreate.cshtml";
+
+    ViewBag.BoxTitle = "Create New Role";
+
+    var viewDataDictionary = new ViewDataDictionary
+    {
+        { FieldConstants.Title, "Create New Role" },
+        { FieldConstants.Action, "Create"}
+    };
+}
+
+@Html.Partial("~/Areas/Admin/Views/Role/_Role.cshtml", Model, viewDataDictionary)

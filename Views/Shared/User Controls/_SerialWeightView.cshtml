@@ -1,0 +1,233 @@
+﻿<div class="border border-info p-2">
+    <div class="form-row">
+        <div class="col-sm-8">
+            <div class="form-group row">
+                <label class="col-sm-3 col-form-label">Url :</label>
+                <div class="col-sm-9">
+                    @(Html.Kendo().MaskedTextBox()
+                          .Name("server_ip")
+                          //.Mask("000.000.000.000")
+                          .Value("http://localhost:8062/signalr")
+                          .HtmlAttributes(new {@class = "w-100"}))
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-4">
+            @(Html.Kendo().Button()
+                  .Name("btnConnect")
+                  //.Icon("link-vertical")
+                  .HtmlAttributes(new {type = "button", @class = "rounded-lg bg-danger text-white w-100"})
+                  .Content("Connect")
+                  .Events(e => e.Click("btnConnectClick")))
+        </div>
+    </div>
+    <div id="h1Weight" class="display-4 font-weight-bold bg-success text-center text-white rounded-lg">
+        000.000
+        @*<h1   class="w-100">000.000</h1>*@
+    </div>
+</div>
+
+<script type="text/javascript">
+    var weighing;
+    //var url = "http://localhost:8062/signalr";
+    var connected = false;
+
+    //Connect to the SignalR server and get the proxy for simpleHub
+    function connect() {
+        var url = $('#server_ip').data("kendoMaskedTextBox").value().toString();
+
+        //Load auto generated hub script dynamically and perform connection operation when loading completed
+        //SignalR server location is specified by 'Url' input element, hub script must be loaded from the same location
+        //For production, remove this call and uncomment the script block in the header part
+        $.getScript(url + "/hubs", function () {
+            // Reference the auto-generated proxy for the hub.
+            $.connection.hub.url = url;
+            weighing = $.connection.simpleHub;
+
+            // Create a function that the hub can call back to display messages.
+            weighing.client.receiveWeight = function (weight) {
+                //alert(weight);
+                // Add the message to the page.
+                $('#h1Weight').text(weight.toString());
+            };
+
+            $.connection.hub.start()
+                .done(function () {
+                    //// Call the Send method on the hub.
+                    //weighing.server.sendWeight();
+
+                    //// Clear text box and reset focus for next comment.
+                    //$('#h1Weight').text('0.000');
+
+                    $('#btnConnect').removeClass('bg-danger').addClass('bg-success');
+                    $('#btnConnect').text("Disconnect");
+
+                    //connected = true;
+                    //console.log("Connected");
+                })
+                .fail(function() {
+                    console.log("Server is not reachable.");
+                });
+
+            $.connection.hub.stateChanged(function (change) {
+                if (change.newState === $.signalR.connectionState.disconnected) {
+                    console.log('The server is offline');
+                    connected = false;
+                    //$.connection.hub.start().pipe(function () {
+                    //    return proxy.server.publishAllNews().done(function (newsList) {
+                    //        $.each(newsList, function () {
+                    //            //$('<li>', { text: formatItem(this) }).appendTo($('#results'));
+                    //            console.log(this);
+                    //        });
+                    //    });
+                    //}).fail(function () { console.log('failed'); });
+                } else if (change.newState === $.signalR.connectionState.connected) {
+                    connected = true;
+                    console.log('The server is online.');
+                } else if (change.newState === $.signalR.connectionState.reconnecting) {
+                    console.log('disconnecting');
+                }
+            });
+        });
+    }
+
+    //Disconnect from the server
+    function disconnect() {
+        if (weighing === null)
+            return;
+
+        $.connection.hub.stop();
+
+        weighing = null;
+        //connected = false;
+
+        $('#btnConnect').removeClass('bg-success').addClass('bg-danger');
+        $('#btnConnect').text("Connect");
+
+        //console.log("Disconnected");
+    }
+
+    setInterval(function () {
+        if (weighing !== null && weighing !== 'undefined' && connected === true) {
+            //console.log(weighing);
+            //console.log(weighing.server);
+            // Call the Send method on the hub.
+            weighing.server.sendWeight();
+        }
+    }, 100);
+
+
+    function btnConnectClick(e) {
+        var buttonText = $('#btnConnect').text();
+        if (buttonText === "Connect")
+            connect();
+        if (buttonText === "Disconnect")
+            disconnect();
+    }
+</script>
+
+@*<script>
+        // Reference the auto-generated proxy for the hub.
+        var chat = $.connection.weighingScaleHub;
+
+        $.connection.hub.start()
+            .done(function () {
+                    alert("connected.");
+                    // Call the Send method on the hub.
+                    chat.server.sendWeight();
+                    // Clear text box and reset focus for next comment.
+                    $('#h1Weight').text('0.000');
+                }
+                //.error(function () {
+                //    bootbox.Alert("Error");
+                //})
+        );
+
+        setInterval(function () {
+            // Call the Send method on the hub.
+            chat.server.sendWeight();
+        }, 100);
+
+        // Create a function that the hub can call back to display messages.
+        chat.client.receiveWeight = function (weight) {
+            //alert(weight);
+            // Add the message to the page.
+            $('#h1Weight').text(weight.toString());
+        };
+    </script>*@
+
+@*<script type="text/javascript">
+        // Create message senders and provide callback to
+        // process response messages.
+        var messageSender = new DuplexTypedMessageSender();
+        messageSender.onResponseReceived = onResultReceived;
+
+        // Request message structure.
+        // Note: This structure will be serialized and
+        //       sent as the message.
+        function SerialPortMessage(weight, tareWeight) {
+            this.Weight = weight;
+            this.TareWeight = tareWeight;
+        }
+
+        function openConnection(ipAddress) {
+            // Attach output channels and be able to send messages
+            // and receive response messages.
+            var port = 8061;
+            //var webAddress = "ws://" + ipAddress + ":" + port + "/SerialPortData/";
+            var webAddress = "wss://192.168.43.17:8061/SerialPortData/";
+            //alert("WebAddress : " + webAddress + ',' + messageSender);
+            var anOutputChannel = new WebSocketDuplexOutputChannel(webAddress, null);
+            //alert('output channel : ' + anOutputChannel);
+            messageSender.attachDuplexOutputChannel(anOutputChannel);
+            alert('Connected');
+        };
+
+        function closeConnection() {
+            // Detach output channels and close connections.
+            messageSender.detachDuplexOutputChannel();
+        };
+
+        setInterval(function () {
+            //alert('sender :' + messageSender);
+            if (null !== messageSender && messageSender.isDuplexOutputChannelAttached) {
+                messageSender.onConnectionOpened = () => messageSender.sendRequestMessage(new SerialPortMessage(0, 0));
+            }
+        }, 100);
+
+        // Callback method called when a response message is received.
+        // Note: one request method will cause multiple responses.
+        function onResultReceived(typedResponseReceivedEventArgs) {
+            //alert(typedResponseReceivedEventArgs.ResponseMessage.Weight);
+            var weight = typedResponseReceivedEventArgs.ResponseMessage.Weight;
+
+            // Display the result.
+            var anElement = document.getElementById("Result");
+            anElement.value = weight;
+        };
+
+        $(document).ready(function () {
+            // Usage
+            //getUserIP(function (ip) {
+            //    alert("Got IP! :" + ip);
+            //});
+
+            // get session ip
+            var localIp = sessionStorage.getItem("localIp");
+            //alert(localIp);
+            if ('undefined' !== localIp) {
+                $('#server_ip').data("kendoMaskedTextBox").value(localIp);
+            }
+
+        });
+
+        function connectClick(e) {
+            // get ip address
+            var ip = $('#server_ip').data("kendoMaskedTextBox").value().toString();
+            //alert('connect :' + ip);
+            // Set ip to session
+            sessionStorage.setItem("localIp", ip);
+
+            openConnection(ip);
+        }
+    </script>*@

@@ -1,0 +1,120 @@
+﻿@using Kendo.Mvc.UI
+@model Corno.Web.Areas.Kitchen.Dto.Pallet.PalletInViewDto
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+}
+
+@{
+    ViewBag.BoxTitle = "Pallet In";
+    ViewBag.Title = "Pallet In";
+}
+@*@(Html.Kendo().TextBoxFor(m => m.RackNo)
+    .Value("User Text")
+
+    .HtmlAttributes(new
+    {
+        //required = "required",
+        @class = "w-100",
+        @placeholder = "Pallet no here..."
+    }))*@
+<div class="form-group required row">
+    <div class="col-12">
+        @(Html.Kendo().TextBoxFor(m => m.PalletNo)
+            .Label(l => l.Content("Pallet No").Floating(true))
+            .HtmlAttributes(new
+            {
+                style = "width: 100% !important; max-width: 1400px !important;"
+            }))
+    </div>
+</div>
+<div class="form-group required row">
+    <div class="col-12">
+        
+        @(Html.Kendo().TextAreaFor(m => m.CartonBarcode)
+            .Rows(2)
+
+            .Label(l => l.Content("Carton QR Code").Floating(true))
+            .HtmlAttributes(new
+            {
+
+                style = "width: 100% !important; max-width: 1400px !important;col-form-label"
+
+            }))
+    </div>
+</div>
+<hr />
+<div class="row">
+    <div class="col-12">
+        @(Html.Kendo().Grid(Model.PalletDetails)
+            .Name("grid")
+            .Pageable()
+            .Scrollable()
+            .Sortable()
+            .PersistSelection()
+            .Resizable(resize => resize.Columns(false)) // Allow column resizing
+            .PersistSelection()
+            .Columns(columns =>
+            {
+                columns.Bound(m => m.PalletNo)
+                    .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                    .ClientTemplate("#= PalletNo #" + "<input type='hidden' name='PalletDetails[#= index(data)#].PalletNo' value='#= PalletNo #' />   ")
+                    .HtmlAttributes(new { style = "text-align: center" }).Width(30).Title("Pallet<br/>No");
+                columns.Bound(m => m.Barcode)
+                    .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" }).Width(100)
+                    .ClientTemplate("#= Barcode #" + "<input type='hidden' name='PalletDetails[#= index(data)#].Barcode' value='#= Barcode #' />")
+                    .HtmlAttributes(new { style = "text-align: center text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"});
+            })
+            .Sortable()
+            .Pageable()
+            .Scrollable()
+            .DataSource(dataSource => dataSource
+                .Ajax()
+                .PageSize(20)
+                .ServerOperation(true)
+            )
+            .Resizable(resize => resize.Columns(true))
+            .Reorderable(reorder => reorder.Columns(true)))
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+        /* alert("hii")*/
+        $("#PalletNo").on("keypress", function (e) {
+            if (e.which === 13) { // Enter key pressed
+                e.preventDefault();
+                var txtBarcode = $("#CartonBarcode").data("kendoTextArea");
+                txtBarcode.focus();
+            }
+        });
+    });
+
+    $("#CartonBarcode").on("keydown", function (e) {
+        if (e.which === 13) { // Enter key pressed
+            e.preventDefault();
+            submitForm("Scan");
+            
+        }
+    });
+    setTimeout(function () {
+        document.getElementById("CartonBarcode").focus();
+        $('#CartonBarcode').val(''); //txtID is textbox ID
+    }, 100); // Delay to ensure focus is set correctly
+
+    function submitForm(action) {
+        var form = document.getElementById("form");
+        // Action Name
+        var input = document.createElement("input");
+        input.type = "hidden";
+        input.name = "action:" + action;
+
+        console.log(action);
+
+        form.appendChild(input);
+        form.submit();
+    }
+
+
+</script>

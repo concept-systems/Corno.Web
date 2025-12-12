@@ -1,0 +1,119 @@
+﻿@using System.Web.Mvc.Html
+@using Corno.Concept.Modules.Masters.Services.Interfaces
+@using Corno.Services.Windsor
+@using Kendo.Mvc.UI
+@model Corno.Concept.Modules.Planning.Models.Plan
+
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    //ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+}
+
+@{
+    Page.Title = "StandardBom";
+    ViewBag.MainMenu = "Masters";
+    ViewBag.CurrentSitemap = "StandardBom";
+    ViewBag.Controller = "StandardBom";
+    ViewBag.Details = Model.PlanItemDetails;
+    ViewBag.DetailName = nameof(Model.PlanItemDetails);
+    ViewBag.GridCommonAction = nameof(PlanController.Inline_Create_Update_Destroy);
+}
+
+@{
+    var productService = Bootstrapper.Get<IProductService>();
+    var itemService = Bootstrapper.Get<IBaseItemService>();
+
+    //var items = itemService.GetList(i => Model.PlanItemDetails.Any(d => d.ItemId == i.Id)).ToList();
+}
+
+@Html.HiddenFor(m => m.Id)
+
+<div class="row">
+    <div class="col-sm-6">
+
+        <div class="form-group row">
+            @Html.LabelFor(m => m.Id, "Code :",
+                new {@class = "col-sm-4"})
+            <div class="col-8">
+                @(Html.Kendo().TextBoxFor(m => m.Id)
+                    //.Enable(formEnabled)
+                    .HtmlAttributes(new
+                    {
+                        //required = "required",
+                        @class = "w-100"
+                    }))
+            </div>
+        </div>
+        <div class="form-group row">
+            @Html.LabelFor(m => m.ProductId, "Description :",
+                new {@class = "col-sm-4"})
+            <div class="col-8">
+                @(Html.Kendo().TextBoxFor(m => m.ProductId)
+                    //.Enable(formEnabled)
+                    .HtmlAttributes(new {@class = "w-100"}))
+            </div>
+        </div>
+        
+    </div>
+    <div class="col-sm-6">
+        <div class="form-group row">
+            @Html.LabelFor(m => m.Code, "Product Type :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @(Html.Kendo().TextBoxFor(m => m.Code)
+                    //.Enable(formEnabled)
+                    .HtmlAttributes(new
+                    {
+                        //required = "required",
+                        @class = "w-100"
+                    }))
+            </div>
+        </div>
+    </div>
+
+</div>
+@*@(Html.Kendo().Grid(Model.PlanItemDetails)
+        .Name("grid")
+        .Columns(columns =>
+        {
+            columns.Bound(d => d.ItemId).Width(130).HeaderHtmlAttributes(
+                new { style = "white-space: normal" }).Title("Item Name").EditorViewData(@"/Corno/MultiColumnComboBoxMasterViewModel");
+            columns.Bound(d => d.OrderQuantity).Width(130).HeaderHtmlAttributes(
+                new { style = "white-space: normal" });
+            columns.Bound(d => d.PrintQuantity).Width(130).HeaderHtmlAttributes(
+                new { style = "white-space: normal" });
+            columns.Bound(d => d.CutQuantity).Width(130)
+                .HeaderHtmlAttributes(new { style = "white-space: normal" });
+            columns.Bound(d => d.EdgeBandQuantity).Width(130)
+                .HeaderHtmlAttributes(new { style = "white-space: normal" });
+            columns.Bound(d => d.Q1Quantity).Width(130)
+                .HeaderHtmlAttributes(new { style = "white-space: normal" });
+            columns.Bound(d => d.DrillQuantity).Width(130)
+                .HeaderHtmlAttributes(new { style = "white-space: normal" });
+            columns.Bound(d => d.RoutingQuantity).Width(130)
+                .HeaderHtmlAttributes(new { style = "white-space: normal" });
+            columns.Bound(d => d.ManualEdgeBandQuantity).Width(130)
+                .HeaderHtmlAttributes(new { style = "white-space: normal" });
+            columns.Bound(d => d.Q2Quantity).Width(130)
+                .HeaderHtmlAttributes(new { style = "white-space: normal" });
+            columns.Bound(d => d.SubAssemblyQuantity).Width(130)
+                .HeaderHtmlAttributes(new { style = "white-space: normal" });
+            columns.Bound(d => d.CleanQuantity).Width(130)
+                .HeaderHtmlAttributes(new { style = "white-space: normal" });
+            columns.Bound(d => d.PackQuantity).Width(130)
+                .HeaderHtmlAttributes(new { style = "white-space: normal" });
+            columns.Bound(d => d.Q3Quantity).Width(130)
+                .HeaderHtmlAttributes(new { style = "white-space: normal" });
+
+        })
+        .Scrollable(s => s.Enabled(true).Height("420px")) //auto
+        .Sortable()
+        .Pageable()
+
+        .Resizable(resize => resize.Columns(true))
+        .Reorderable(reorder => reorder.Columns(true)))*@
+
+

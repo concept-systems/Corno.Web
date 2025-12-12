@@ -1,0 +1,59 @@
+﻿@model Corno.Web.Areas.Masters.Dtos.Product.ProductDto
+@using Kendo.Mvc.UI
+
+<div class="row">
+    <div class="col-12 col-sm-12">
+        @(Html.Kendo().Grid(Model.ProductItemDtos)
+        .Name("gridItem")
+        .Columns(columns =>
+        {
+            columns.Bound(p => p.Id)
+                .ClientTemplate("<input type='hidden' name='ProductItemDtos[#= index(data, 'gridItem')#].Id' value='#= Id #' />")
+                .Hidden();
+            columns.Bound(p => p.ItemId)
+                .ClientTemplate("#= ItemName  #" +
+                                "<input type='hidden' name='ProductItemDtos[#= index(data, 'gridItem')#].ItemId' value='#= ItemId #' />")
+                .Width(180);
+            columns.Bound(p => p.Quantity).Title("Quantity")
+                .ClientTemplate("#= Quantity #" +
+                                "<input type='hidden' name='ProductItemDtos[#= index(data, 'gridItem')#].Quantity' value='#= Quantity #'   />")
+                .EditorTemplateName("Number")
+                .Width(50);
+            columns.Command(command =>
+            {
+                command.Edit();
+                command.Destroy();
+            }).Width(100);
+        })
+        .ToolBar(toolbar => toolbar.Create())
+        //.Editable(editable => editable.Mode(GridEditMode.InLine))
+        .Editable(editable => editable.Mode(GridEditMode.PopUp)
+            .TemplateName("/Product/_ItemPopup"))
+        .Sortable()
+            .Filterable(f => f.Mode(GridFilterMode.Row))
+        .Pageable()
+        .Scrollable()
+        //.Events(events => events.Edit("onEdit"))
+        .DataSource(dataSource => dataSource
+            .Ajax()
+            .PageSize(20)
+            .Events(events => events.Error("error_handler")
+            /*.Change("onChange")*/)
+            //.GroupPaging(true)
+            //.Group(x => x.Add(y => y.PackingType.Name))
+            .Model(model =>
+            {
+                model.Id(p => p.Id);
+                /*model.Field(p => p.ItemId);
+                model.Field(p => p.Quantity).DefaultValue(0);*/
+            })
+            .ServerOperation(false)
+            .Create(update => update.Action("Inline_Create_Update_Destroy_Item", "Product", new {area = "Masters" }))
+            .Update(update => update.Action("Inline_Create_Update_Destroy_Item", "Product", new { area = "Masters" }))
+            .Destroy(update => update.Action("Inline_Create_Update_Destroy_Item", "Product", new { area = "Masters" }))
+        )
+        .Resizable(resize => resize.Columns(true))
+        .Reorderable(reorder => reorder.Columns(true))
+        )
+    </div>
+</div>

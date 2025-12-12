@@ -1,0 +1,282 @@
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@model Corno.Web.Areas.Kitchen.Dto.Carton.CartonCrudDto
+
+@{
+    Layout = "~/Views/Shared/_LayoutCrud.cshtml";
+}
+
+@{
+    ViewBag.BoxTitle = "Create New Weighing";
+
+    ViewBag.ControllerName = "Weighing";
+    ViewBag.SubmitAction = "Weighing";
+}
+
+@*@Html.Partial("_Carton", Model, new ViewDataDictionary
+    {
+        { "ControllerName", "Carton" },
+        { "SubmitAction", "Create" }
+    })*@
+
+@section sectionCrudHeader
+{
+    <div class="k-card-actions k-card-actions-horizontal k-card-actions-end">
+        @(Html.Kendo().Button()
+            .Name("btnList")
+            .Content("List")
+            .ApplyStandardSettingsWithType(ButtonType.Info, "arrow-left", ComponentSize.Medium)
+            .Events(e => e.Click("onBack")))
+    </div>
+}
+
+@Html.HiddenFor(m => m.PackingDate)
+
+@(Html.Kendo().TileLayout()
+        .Name("tileLayout")
+        .Columns(2)
+        .RowsHeight("60px")
+        .ColumnsWidth("100%")
+        .Containers(c => {
+             c.Add()
+                 .BodyTemplateId("template-partial-view")
+                 //.Header(h => h.Text("Header Info"))
+                 .ColSpan(1)
+                 .RowSpan(4);
+            c.Add()
+                .BodyTemplateId("template-barcode")
+                //.Header(h => h.Text("Barcode"))
+                .ColSpan(1)
+                .RowSpan(4);
+        })
+        .Reorderable(true)
+        .Resizable(true))
+
+@section sectionCrudFooter{
+    <div class="k-card-actions k-card-actions-horizontal k-card-actions-end w-100">
+        @(Html.Kendo().Button()
+            .Name("cancel")
+            .Content("Cancel Carton")
+            .ApplyStandardSettingsWithType(ButtonType.Danger, "cancel", ComponentSize.Medium)
+            .HtmlAttributes(new
+            {
+                @class = "",
+                type = "submit",
+                name = "action:Cancel",
+            }))
+        @(Html.Kendo().Button()
+            .Name("mail")
+            .Content("Send Mail")
+            .ApplyStandardSettingsWithType(ButtonType.Info, "mail", ComponentSize.Medium)
+            .HtmlAttributes(new
+            {
+                @class = "",
+                type = "submit",
+                name = "action:Send Mail",
+            }))
+        @(Html.Kendo().Button()
+            .Name("print")
+            .Content("Print")
+            .ApplyStandardSettingsWithType(ButtonType.Primary, "print", ComponentSize.Medium)
+            .HtmlAttributes(new
+            {
+                type = "submit",
+                name = "action:Print",
+                @class = "",
+            }))
+    </div>
+}
+
+
+<script id="template-partial-view" type="text/x-kendo-template">
+    <!-- Placeholder for the partial view -->
+            <div id="partialViewContainer" style="height: 100%"></div>
+</script>
+
+<script id="template-barcode" type="text/x-kendo-template">
+ @*@Html.ValidationSummary(false, "", new { @class = "text-danger" })*@
+    <table class="table">
+            <tr>
+                <td colspan="4">
+                    @(Html.Kendo().TextBoxFor(m => m.Barcode)
+                        //.Events(e => e.Change("onChange"))
+                        .HtmlAttributes(new { @class = "w-100", onkeypress = "onKeyPress(event)" })
+                        .Placeholder("Scan Barcode here")
+                        .ToClientTemplate())
+                </td>
+            </tr>
+                    <td>
+                        <div class="col-12 specialFontSize">
+                            WH. Order
+                        </div>
+                    </td>
+                    <td class="w-35">
+                                @(Html.Kendo().TextBoxFor(m => m.WarehouseOrderNo)
+                                    .Value(Model.WarehouseOrderNo)
+                                    .HtmlAttributes(new
+                                    {
+                                        @class = "specialFontSize"
+                                    }).ToClientTemplate())
+                                @*@Html.DisplayFor(m => m.WarehouseOrderNo)*@
+                    </td>
+             <tr>
+                    <td>
+                        <div class="col-12 specialFontSize">
+                            Packing Date
+                        </div>
+                    </td>
+                    <td>
+                        <div class="col-12 specialFontSize">
+                            @(Model.PackingDate.HasValue ? Model.PackingDate.Value.ToString("MM/dd/yyyy") : "")
+                            @*@Html.DisplayFor(m => m.PackingDate, new { @class = "specialFontSize", Model.PackingDate })*@
+                        </div>
+                    </td>
+              </tr>
+    </table>
+
+</script>
+
+<div class="form-group">
+    @(Html.Kendo().Grid(Model?.CartonDetailsDtos)
+        .Name("grid")
+        .ToolBar(toolbar =>
+        { toolbar.Search(); })
+        .Pageable()
+        .Scrollable()
+        .Sortable()
+        .Filterable()
+        .PersistSelection()
+        .Resizable(resize => resize.Columns(true)) // Allow column resizing
+        .PersistSelection()
+        .HtmlAttributes(new { @class = "w-100" })
+
+        .Columns(columns =>
+        {
+            columns.Bound(m => m.Position)
+                .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                .ClientTemplate("#= Position #" + "<input type='hidden' name='DetailViewModels[#= index(data)#].Position' value='#= Position #' />   ")
+                .HtmlAttributes(new { style = "text-align: center" });
+            columns.Bound(m => m.ItemCode)
+                .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                .ClientTemplate("#= ItemCode #" + "<input type='hidden' name='DetailViewModels[#= index(data)#].ItemCode' value='#= ItemCode #' />")
+                .HtmlAttributes(new { style = "text-align: center" });
+            columns.Bound(m => m.Description)
+                .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                .ClientTemplate("#= Description #" + "<input type='hidden' name='DetailViewModels[#= index(data)#].Description' value='#= Description #' />")
+                .HtmlAttributes(new { style = "text-align: center" });
+            columns.Bound(m => m.Barcode)
+                .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                .ClientTemplate("#= Barcode #" + "<input type='hidden' name='DetailViewModels[#= index(data)#].Barcode' value='#= Barcode #' />")
+                .HtmlAttributes(new { style = "text-align: center" })
+                .Title("Barcode");
+            columns.Bound(m => m.CarcassCode)
+                .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                .ClientTemplate("#= CarcassCode #" + "<input type='hidden' name='DetailViewModels[#= index(data)#].CarcassCode' value='#= CarcassCode #' />")
+                .HtmlAttributes(new { style = "text-align: center" })
+                .Title("Carcass<br/>Code");
+            columns.Bound(m => m.AssemblyCode)
+                .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                .ClientTemplate("#= AssemblyCode #" + "<input type='hidden' name='DetailViewModels[#= index(data)#].AssemblyCode' value='#= AssemblyCode #' />")
+                .HtmlAttributes(new { style = "text-align: center" })
+                .Title("Assembly Code");
+            columns.Bound(m => m.Quantity)
+                .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                .ClientTemplate("#= Quantity #" + "<input type='hidden' name='DetailViewModels[#= index(data)#].Quantity' value='#= Quantity #' />")
+                .HtmlAttributes(new { style = "text-align: center" });
+        })
+        .DataSource(dataSource => dataSource
+                    .Ajax()
+                    .Create(update => update.Action("Inline_Create_Update_Destroy", "Weighing"))
+                    .Update(update => update.Action("Inline_Create_Update_Destroy", "Weighing"))
+            .Destroy(update => update.Action("Inline_Create_Update_Destroy", "Weighing"))
+            .PageSize(10)))
+</div>
+
+<script>
+    $(document).ready(function () {
+        // Load the partial view
+        LoadPartialView();
+
+        // Set focus to barcode text box
+        @*$('#Barcode').focus();
+        $("#Barcode").data("kendoTextBox").value("");*@
+        console.log("setting focus");
+        $("#ItemCode").data("kendoTextBox").focus();
+        @*document.getElementById("Barcode").focus();
+        $('#Barcode').val(''); //txtID is textbox ID*@
+    });
+    
+    function onKeyPress(e) {
+        if (e.keyCode != 13) {
+            //e.preventResult();
+            return;
+        }
+        submitForm("Scan")
+    }
+
+    function onBack() {
+        window.location.href = '@Url.Action("Index", "Weighing", new { area = "Kitchen" })';
+       /* history.back();*/
+    }
+
+    function submitForm(action) {
+        var form = document.getElementById("form");
+
+        @*// Send report type
+        document.getElementById("type").value = type;*@
+
+        // Action Name
+        var input = document.createElement("input");
+        input.type = "hidden";
+        input.name = "action:" + action;
+
+        console.log(action);
+
+        form.appendChild(input);
+        form.submit();
+
+    }
+
+    function LoadPartialView(toPrinter) {
+         $.ajax({
+             url: '/Weighing/LoadPartialView', // Replace with your actual controller and action
+             method: 'GET',
+             data: { 'partialViewName': 'Partials/ReportViewer_New' },
+             success: function (partialHtml) {
+                 // Load HTML content into the element
+                 $('#partialViewContainer').html(partialHtml, function () {
+                     // This code will execute after the HTML content has been loaded
+                     console.log("HTML content loaded successfully");
+                 });
+             },
+             error: function () {
+                 console.error('Failed to load the partial view.');
+             }
+         });
+    }
+
+    // Delay the execution of the next statement by a short duration
+    setTimeout(function () {
+        // This code will execute after a short delay
+        //console.log("Timeout HTML content loaded successfully");
+        $("#Barcode").data("kendoTextBox").focus();
+        if ('@Model.PrintToPrinter' === 'True') {
+            printToPrinter();
+        }
+    }, 1500); // Adjust the delay duration as needed
+
+
+</script>
+
+<style>
+    .specialFontSize {
+        font-size: 25px;
+    }
+</style>
+
+
+
+
+
+
+

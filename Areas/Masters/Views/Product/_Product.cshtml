@@ -1,0 +1,76 @@
+﻿@using System.Web.Mvc.Html
+@using Kendo.Mvc.UI
+@model Corno.Web.Areas.Masters.Dtos.Product.ProductDto
+
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+}
+
+@{
+    Page.Title = "Product";
+    ViewBag.MainMenu = "Masters";
+    ViewBag.CurrentSitemap = "Product";
+    ViewBag.Controller = "Product";
+}
+
+@Html.HiddenFor(m => m.Id)
+
+<!-- Toggle button visible on mobile to open the responsive panel -->
+<button id="productEditPanelToggle" class="k-button k-button-md k-rounded-md k-button-solid k-button-solid-primary rp-toggle" type="button">
+    <span class="k-icon k-i-menu"></span>
+    Show Details
+</button>
+
+@(Html.Kendo().ResponsivePanel()
+    .Name("productEditPanel")
+    .Orientation(ResponsivePanelOrientation.Top)
+    .Breakpoint(100)
+    .ToggleButton("#productEditPanelToggle")
+    .HtmlAttributes(new { style = "margin-bottom: 20px;" })
+    .Content(@<text>
+        <div class="responsive-panel-container">
+            <!-- Master Edit Section -->
+            <div class="k-widget k-panel mb-4">
+                <h3 class="k-panel-title">Basic Information</h3>
+                <div class="k-panel-content">
+                    @Html.Partial("Partials/_MasterEdit", Model)
+                </div>
+            </div>
+
+            <!-- TabStrip Section -->
+            <div class="k-widget k-panel mb-4">
+                <h3 class="k-panel-title">Details</h3>
+                <div class="k-panel-content">
+                    <div class="row">
+                        <div class="col-12">
+                            @(Html.Kendo().TabStrip()
+                                .Name("tabStrip")
+                                .Items(tabStrip =>
+                                {
+                                    tabStrip.Add().Text("General")
+                                        .Content(@Html.Partial("~/Areas/Masters/Views/Product/_GeneralTab.cshtml", Model).ToString());
+                                    tabStrip.Add().Text("Cost")
+                                        .Content(@Html.Partial("~/Areas/Masters/Views/Product/_CostTab.cshtml", Model).ToString());
+                                    tabStrip.Add().Text("Dimensions")
+                                        .Content(@Html.Partial("~/Areas/Masters/Views/Product/_DimensionTab.cshtml", Model).ToString());
+                                    tabStrip.Add().Text("Item Details")
+                                        .Content(@Html.Partial("~/Areas/Masters/Views/Product/_ItemDetailsTab.cshtml", Model).ToString());
+                                    tabStrip.Add().Text("Packet Details")
+                                        .Content(@Html.Partial("~/Areas/Masters/Views/Product/_PacketDetailsTab.cshtml", Model).ToString());
+                                    tabStrip.Add().Text("Stock Details")
+                                        .Content(@Html.Partial("~/Areas/Masters/Views/Product/_StockDetailsTab.cshtml", Model).ToString());
+                                })
+                                .SelectedIndex(0)
+                            )
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </text>
+    )
+)

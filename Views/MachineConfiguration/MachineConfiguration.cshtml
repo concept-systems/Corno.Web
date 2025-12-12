@@ -1,0 +1,224 @@
+﻿@using Corno.Web.Globals
+@model Corno.Web.Models.MachineConfiguration
+
+@{
+    string controllerName = ViewBag.Controller;
+    string actionName = ViewBag.SubmitAction;
+
+    ViewBag.BoxTitle = "MachineConfiguration";
+}
+
+@{
+    Layout = "~/Views/Shared/_LayoutBase.cshtml";
+}
+
+@if (TempData["Success"] != null)
+{
+    @*<div class="green">
+        <p>Success: @TempData["Success"].ToString()</p>
+    </div>*@
+    <script type="text/javascript">
+        showSuccessMessage("@TempData["Success"]");
+    </script>
+}
+<div class="container-fluid">
+    @using (Html.BeginForm(actionName, controllerName, null, FormMethod.Post, new { id = "form", @class = "form" }))
+    {
+        <h3><i class="fa fa-cog"></i> @System.Text.RegularExpressions.Regex.Replace(ViewBag.BoxTitle, "([A-Z])", " $1", System.Text.RegularExpressions.RegexOptions.Compiled).Trim()</h3>
+        <hr />
+        @Html.AntiForgeryToken()
+
+        <div class="row">
+            <div class="col-sm-6">
+                <div class="input-group pb-1">
+                    @Html.LabelFor(m => m.MachineId, "Machine :", new { @class = "col-sm-4" })
+                    @(Html.Kendo().ComboBoxFor(m => m.MachineId)
+                                  .DataTextField(FieldConstants.Name)
+                                  .DataValueField(FieldConstants.Id)
+                                  .HtmlAttributes(new { @class = "form-control" })
+                                  .Filter("contains")
+                                  .Placeholder("Select ...")
+                                  .Suggest(true)
+                                  .DataSource(source =>
+                                  {
+                                      source.Read(read =>
+                                      {
+                                          read.Action("GetMiscMasters", "Data", new { miscType = MiscMasterConstants.Machine });
+                                      })
+                                          .ServerFiltering(false);
+                                  }))
+                </div>
+                <div class="input-group pb-1">
+                    @Html.LabelFor(m => m.ShiftTarget, "Shift Target :", new { @class = "col-sm-4" })
+                    @(Html.Kendo().NumericTextBoxFor(m => m.ShiftTarget)
+                                  .HtmlAttributes(new
+                                  {
+                                      required = "required",
+                                      @class = "form-control form-control-sm"
+                                  })
+                    )
+                </div>
+                <div class="input-group pb-1">
+                    @Html.LabelFor(m => m.MonthlyTarget, "Monthly Target :", new { @class = "col-sm-4" })
+                    @(Html.Kendo().NumericTextBoxFor(m => m.MonthlyTarget)
+                                  .HtmlAttributes(new
+                                  {
+                                      required = "required",
+                                      @class = "form-control form-control-sm"
+                                  })
+                    )
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="input-group pb-1">
+                    @Html.LabelFor(m => m.Parameter1Id, "Parameter 1 :", new { @class = "col-sm-4" })
+                    @(Html.Kendo().ComboBoxFor(m => m.Parameter1Id)
+                                  .DataTextField(FieldConstants.Name)
+                                  .DataValueField(FieldConstants.Id)
+                                  .HtmlAttributes(new { @class = "form-control" })
+                                  .Filter("contains")
+                                  .Placeholder("Select ...")
+                                  .Suggest(true)
+                                  .DataSource(source =>
+                                  {
+                                      source.Read(read =>
+                                      {
+                                          read.Action("GetMiscMasters", "Data", new { miscType = MiscMasterConstants.Parameter });
+                                      })
+                                          .ServerFiltering(false);
+                                  }))
+                </div>
+                <div class="input-group pb-1">
+                    @Html.LabelFor(m => m.Parameter2Id, "Parameter 2 :", new { @class = "col-sm-4" })
+                    @(Html.Kendo().ComboBoxFor(m => m.Parameter2Id)
+                                  .DataTextField(FieldConstants.Name)
+                                  .DataValueField(FieldConstants.Id)
+                                  .HtmlAttributes(new { @class = "form-control" })
+                                  .Filter("contains")
+                                  .Placeholder("Select ...")
+                                  .Suggest(true)
+                                  .DataSource(source =>
+                                  {
+                                      source.Read(read =>
+                                      {
+                                          read.Action("GetMiscMasters", "Data", new { miscType = MiscMasterConstants.Parameter });
+                                      })
+                                          .ServerFiltering(false);
+                                  }))
+                </div>
+                <div class="input-group pb-1">
+                    @Html.LabelFor(m => m.Parameter3Id, "Parameter 3 :", new { @class = "col-sm-4" })
+                    @(Html.Kendo().ComboBoxFor(m => m.Parameter3Id)
+                                  .DataTextField(FieldConstants.Name)
+                                  .DataValueField(FieldConstants.Id)
+                                  .HtmlAttributes(new { @class = "form-control" })
+                                  .Filter("contains")
+                                  .Placeholder("Select ...")
+                                  .Suggest(true)
+                                  .DataSource(source =>
+                                  {
+                                      source.Read(read =>
+                                      {
+                                          read.Action("GetMiscMasters", "Data", new { miscType = MiscMasterConstants.Parameter });
+                                      })
+                                          .ServerFiltering(false);
+                                  }))
+                </div>
+            </div>
+        </div>
+        <hr />
+        <div class="row">
+            <div class="col-sm-3">
+                @(Html.Kendo().CheckBoxFor(m => m.AutoQualityEstimate)
+                                              .Label("Auto Quality Estimate"))
+            </div>
+            <div class="col-sm-3">
+                @(Html.Kendo().CheckBoxFor(m => m.QualityModule)
+                                              .Label("Quality Module"))
+            </div>
+            <div class="col-sm-3">
+                @(Html.Kendo().CheckBoxFor(m => m.ManualMode)
+                                              .Label("Manual Mode"))
+            </div>
+            <div class="col-sm-3">
+                @(Html.Kendo().CheckBoxFor(m => m.UserDetailsModule)
+                                              .Label("User Details Mode"))
+            </div>
+        </div>
+        <hr />
+        <div class="row">
+            <div class="col-sm-3">
+                <strong>Unplanned Breakdown</strong>
+                <hr />
+                @(Html.Kendo().CheckBoxFor(m => m.MachineBreakdown)
+                                              .Label("Machine Breakdown"))
+                @(Html.Kendo().CheckBoxFor(m => m.ComponentFailure)
+                                              .Label("Component Failure)"))
+                @(Html.Kendo().CheckBoxFor(m => m.OtherUnplanned)
+                                              .Label("Other (Specify)"))
+                @*<div class="card">
+                        <div class="card-header">Unplanned Downtime</div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                @(Html.Kendo().CheckBoxFor(m => m.MachineBreakdown)
+                                      .Label("Machine Breakdown"))
+                                @(Html.Kendo().CheckBoxFor(m => m.ComponentFailure)
+                                      .Label("Component Failure)"))
+                                @(Html.Kendo().CheckBoxFor(m => m.OtherUnplanned)
+                                      .Label("Other (Specify)"))
+                            </div>
+                        </div>
+                    </div>*@
+            </div>
+            <div class="col-sm-3">
+                <strong>Planned Breakdown</strong>
+                <hr />
+                @(Html.Kendo().CheckBoxFor(m => m.Maintenance)
+                                              .Label("Maintenance"))
+                @(Html.Kendo().CheckBoxFor(m => m.Lunch_Tea_Dinner)
+                                              .Label("Lunch / Tea / Dinner)"))
+                @(Html.Kendo().CheckBoxFor(m => m.Holiday)
+                                              .Label("Holiday"))
+                @(Html.Kendo().CheckBoxFor(m => m.OtherPlanned)
+                                              .Label("Other (Specify)"))
+            </div>
+            <div class="col-sm-3">
+                <strong>Ideal Downtime</strong>
+                <hr />
+                @(Html.Kendo().CheckBoxFor(m => m.NoOperator)
+                                              .Label("No Operator"))
+                @(Html.Kendo().CheckBoxFor(m => m.NoMaterial)
+                                              .Label("No Material)"))
+            </div>
+            <div class="col-sm-3">
+                <strong>Setup Downtime</strong>
+                <hr />
+                @(Html.Kendo().CheckBoxFor(m => m.Calibration)
+                                              .Label("Calibration"))
+                @(Html.Kendo().CheckBoxFor(m => m.OtherSetup)
+                                              .Label("Other (Specify)"))
+            </div>
+        </div>
+        <hr />
+        <div class="row">
+            <div class="col-sm-6">
+                <div class="input-group">
+                    @Html.LabelFor(m => m.IdealCycleTime, "Ideal cycle time (secs.) :", new { @class = "col-sm-5" })
+                    @(Html.Kendo().NumericTextBoxFor(m => m.IdealCycleTime)
+                                  .HtmlAttributes(new
+                                  {
+                                      required = "required",
+                                      @class = "form-control form-control-sm"
+                                  })
+                    )
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <a href="#" onclick="$(this).closest('form').submit()" rel="tooltip" title="Save"
+                   class="btn btn-info btn-lg float-right">
+                    <i class="fa fa-save"></i><span> Save</span>
+                </a>
+            </div>
+        </div>
+    }
+</div>

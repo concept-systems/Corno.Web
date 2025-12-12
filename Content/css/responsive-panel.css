@@ -1,0 +1,46 @@
+/* Shared responsive panel styles for Masters and DemoProject areas */
+
+.responsive-panel-container {
+    padding: 10px;
+}
+
+
+.k-panel {
+    border: 1px solid #e7e7e7;
+    border-radius: 4px;
+    background-color: #ffffff;
+    padding: 0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.k-panel-title {
+    font-size: 14px;
+    font-weight: bold;
+    padding: 10px;
+    border-bottom: 1px solid #e7e7e7;
+    background-color: #f5f5f5;
+}
+
+.k-panel-content {
+    padding: 5px;
+}
+
+/* Show toggle button only on small screens */
+@media (max-width: 768px) {
+    .responsive-panel-container {
+        padding: 10px;
+    }
+
+    .rp-toggle {
+        display: inline-flex;
+        margin-bottom: 10px;
+    }
+}
+
+@media (min-width: 769px) {
+    .rp-toggle {
+        display: none;
+    }
+}
+
+

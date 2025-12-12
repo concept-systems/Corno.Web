@@ -1,0 +1,52 @@
+﻿@using Corno.Web.Globals
+@model Corno.Web.Dtos.MasterDto
+<style>
+    .k-floating-label-container {
+        width: 100%;
+    }
+</style>
+
+<div class="row">
+    <div class="col-sm-6">
+        <div class="form-group required mb-1">
+            @(Html.Kendo().TextBoxFor(m => m.Code)
+                .Label(label => label
+                    .Content(FieldConstants.Code)
+                    .Floating(true))
+                .HtmlAttributes(new
+                {
+                    placeholder = "Enter code",
+                    //@class = "form-control form-control-sm"
+                    @class = "required w-100"
+                }))
+        </div>
+        <div class="form-group required mb-1">
+            @(Html.Kendo().TextBoxFor(m => m.Name)
+                .Label(label => label
+                    .Content(FieldConstants.Name)
+                    .Floating(true))
+                .HtmlAttributes(new
+                {
+                    placeholder = "Enter name",
+                    required = "required",
+                    //@class = "form-control form-control-sm"
+                    @class = "required w-100"
+                }))
+        </div>
+        <br />
+    </div>
+    <div class="col-sm-6">
+        <div class="form-group mb-1">
+            @(Html.Kendo().TextAreaFor(m => m.Description)
+                .Rows(4)
+                .Label(label => label
+                    .Content(FieldConstants.Description)
+                    .Floating(true))
+                .HtmlAttributes(new
+                {
+                    placeholder = "Enter description",
+                    @class = "required w-100"
+                }))
+        </div>
+    </div>
+</div>

@@ -1,0 +1,46 @@
+﻿@using Kendo.Mvc.UI
+@model Corno.Web.Areas.DemoProject.Dtos.SalesInvoiceDto
+
+<div class="form-group required row">
+    @Html.LabelFor(m => m.MobileNo, "Mobile :", new { @class = "col-12 col-sm-4 col-md-4 col-form-label" })
+    <div class="col-12 col-sm-8 col-md-8">
+        @(Html.Kendo().MaskedTextBoxFor(m => m.MobileNo)
+            .HtmlAttributes(new { required = "required", @class = "w-100" })
+            .Mask("0000000000") // Mask for exactly 10 digits
+            .PromptChar(" ")   // Use space as the prompt character
+            )
+    </div>
+</div>
+<div class="form-group required row">
+    @Html.LabelFor(m => m.CustomerName, "Customer :", new { @class = "col-12 col-sm-4 col-md-4 col-form-label" })
+    <div class="col-12 col-sm-8 col-md-8">
+        @(Html.Kendo().TextBoxFor(m => m.CustomerName)
+             .HtmlAttributes(new { required = "required", @class = "w-100" })
+             .Placeholder("Enter customer name"))
+    </div>
+</div>
+<div class="form-group required row">
+    @Html.LabelFor(m => m.InvoiceDate, "Date :", new { @class = "col-12 col-sm-4 col-md-4 col-form-label" })
+    <div class="col-12 col-sm-8 col-md-8">
+        @(Html.Kendo().DatePickerFor(m => m.InvoiceDate)
+            .HtmlAttributes(new { required = "required", @class = "w-100" }))
+    </div>
+</div>
+<div class="form-group row">
+    @Html.LabelFor(m => m.PaymentMode, "Payment Mode :", new { @class = "col-12 col-sm-4 col-md-4 col-form-label" })
+    <div class="col-12 col-sm-8 col-md-8">
+        @(Html.Kendo().TextBoxFor(m => m.PaymentMode)
+             .HtmlAttributes(new { @class = "w-100" })
+             .Placeholder("Enter payment mode"))
+    </div>
+</div>
+<div class="form-group row">
+    @Html.LabelFor(m => m.PaidAmount, "Paid Amount :", new { @class = "col-12 col-sm-4 col-md-4 col-form-label" })
+    <div class="col-12 col-sm-8 col-md-8">
+        @(Html.Kendo().NumericTextBoxFor(m => m.PaidAmount)
+            .HtmlAttributes(new { @class = "w-100" })
+            .Format("N2")
+            .Min(0)
+            .Decimals(2))
+    </div>
+</div>

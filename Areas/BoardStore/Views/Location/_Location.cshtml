@@ -1,0 +1,92 @@
+﻿@using Corno.Web.Globals
+@using Kendo.Mvc.UI
+@model Corno.Web.Areas.BoardStore.Models.Location
+
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+}
+
+@{
+    Page.Title = "Location";
+    ViewBag.MainMenu = "BoardStore";
+    ViewBag.CurrentSitemap = "Location";
+    ViewBag.Controller = "Location";
+}
+
+@Html.HiddenFor(m => m.Id)
+
+<div class="row">
+    @Html.Partial("Partials/_MasterEdit", Model)
+</div>
+<div class="row">
+    <div class="col-sm-6">
+        <div class="form-group row">
+            @Html.LabelFor(m => m.StockQuantity, "Stock Quantity :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @(Html.Kendo().NumericTextBoxFor(m => m.StockQuantity)
+                    .HtmlAttributes(new
+                    {
+                        @class = "w-100"
+                    }))
+            </div>
+        </div>
+        <br/>
+        <div class="form-group row">
+            @Html.LabelFor(m => m.CurrentHeight, "Current Height :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @(Html.Kendo().NumericTextBoxFor(m => m.CurrentHeight)
+                    .HtmlAttributes(new
+                    {
+                        @class = "w-100"
+                    }))
+            </div>
+        </div>
+        <br/>
+        <div class="form-group row">
+            @Html.LabelFor(m => m.MaxHeight, "Max Height :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @(Html.Kendo().NumericTextBoxFor(m => m.MaxHeight)
+                    .HtmlAttributes(new
+                    {
+                        @class = "w-100"
+                    }))
+            </div>
+        </div>
+    </div>
+    <br/>
+    <div class="col-sm-6">
+        <div class="form-group row">
+            @Html.LabelFor(m => m.MovePriority, "Move Priority :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @(Html.Kendo().NumericTextBoxFor(m => m.MovePriority)
+                    .HtmlAttributes(new { @class = "w-100" }))
+            </div>
+        </div>
+        <br/>
+        <div class="form-group row">
+            @Html.LabelFor(m => m.Length, "Length :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @(Html.Kendo().NumericTextBoxFor(m => m.Length)
+                    .HtmlAttributes(new { @class = "w-100" }))
+            </div>
+        </div>
+        <br/>
+        <div class="form-group row">
+            @Html.LabelFor(m => m.Width, "Width :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @(Html.Kendo().NumericTextBoxFor(m => m.Width)
+                    .HtmlAttributes(new { @class = "w-100" }))
+            </div>
+        </div>
+    </div>
+</div>

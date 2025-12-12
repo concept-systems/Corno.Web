@@ -1,0 +1,262 @@
+﻿<!--@using Kendo.Mvc.UI
+@model Corno.Web.Areas.Kitchen.Dto.Carton.CartonCrudDto
+
+@{
+    ViewBag.BoxTitle = "Create New Weighing";
+    string controllerName = ViewBag.ControllerName;
+    string actionName = ViewBag.SubmitAction;
+}
+
+<!-- container templates -->
+<!--<div class="k-card-header">
+    <div class="row">
+        <div class="col-6">
+            <h5>
+                <span class="k-icon k-i-plus k-icon k-text-success"></span>
+                @ViewBag.BoxTitle
+            </h5>
+        </div>
+        <div class="col-6 k-card-actions k-card-actions-horizontal k-card-actions-end">
+            @(Html.Kendo().Button()
+                .Name("cancel")
+                .Content("Cancel Carton")
+                .ApplyStandardSettingsWithType(ButtonType.Cancel, "cancel", ComponentSize.Medium)
+                .HtmlAttributes(new
+                {
+                    @class = "k-card-action",
+                    type = "submit",
+                    name = "action:Cancel",
+                }))
+            @(Html.Kendo().Button()
+                .Name("delete")
+                .Content("Delete")
+                .ApplyStandardSettingsWithType(ButtonType.Delete, "trash", ComponentSize.Medium)
+                .HtmlAttributes(new
+                {
+                    @class = "k-card-action",
+                    type = "submit",
+                    name = "action:Delete",
+                }))
+            @(Html.Kendo().Button()
+                .Name("mail")
+                .Content("Send Mail")
+                .ApplyStandardSettingsWithType(ButtonType.Info, "mail", ComponentSize.Medium)
+                .HtmlAttributes(new
+                {
+                    @class = "k-card-action",
+                    type = "submit",
+                    name = "action:Send Mail",
+                }))
+            @(Html.Kendo().Button()
+                .Name("print")
+                .Content("Print")
+                .ApplyStandardSettingsWithType(ButtonType.Primary, "print", ComponentSize.Medium)
+                .HtmlAttributes(new
+                {
+                    type = "submit",
+                    name = "action:Print",
+                    @class = "k-card-action",
+                }))
+            @(Html.Kendo().Button()
+                .Name("preview")
+                .Content("Preview")
+                .ApplyStandardSettingsWithType(ButtonType.Info, "preview", ComponentSize.Medium)
+                .HtmlAttributes(new
+                {
+                    type = "submit", name = "action:Preview", @class = "k-card-action",
+                }))
+            @(Html.Kendo().Button()
+                .Name("btnList")
+                .Content("List")
+                .ApplyStandardSettingsWithType(ButtonType.Info, "arrow-left", ComponentSize.Medium)
+                .Events(e => e.Click("onBack"))
+                .HtmlAttributes(new { @class = "k-card-action" }))
+        </div>
+    </div>
+</div>
+
+<script id="template-barcode" type="text/x-kendo-template">
+    <table class="table">
+            <tr>
+                <td colspan="4">
+                    @(Html.Kendo().TextBoxFor(m => m.Barcode)
+                        //.Events(e => e.Change("onChange"))
+                        .HtmlAttributes(new { @class = "w-100", onkeypress = "onKeyPress(event)" })
+                        .Placeholder("Scan Barcode here").ToClientTemplate())
+                </td>
+            </tr>
+            <tr>
+                <td class="w-25">
+                    Packing Date :
+                </td>
+                <td class="w-25">
+                    @Model.PackingDate
+                </td>
+                <td class="w-25">
+                    Warehouse Order :
+                </td>
+                <td class="w-35">
+                    @(Html.Kendo().TextBoxFor(m => m.WarehouseOrderNo)
+                        .HtmlAttributes(new
+                        {
+                            @class = ""
+                        }).ToClientTemplate())
+                </td>
+            </tr>
+    </table>
+</script>
+<script id="template-header" type="text/x-kendo-template">
+
+        <table class="table table-bordered">-->
+            @*<tr>
+                <td>Warehouse Order</td>
+                <td><strong>@Model.WarehouseOrderNo</strong></td>
+            </tr>*@
+            <!--<tr>
+                <td>Packing Date :</td>
+                <td>@Model.PackingDate</td>
+            </tr>
+            <tr>
+                <td>Code :</td>
+                <td>@Model.Code</td>
+            </tr>
+            <tr>
+                <td>Item Name :</td>
+                <td>@Model.ItemName</td>
+            </tr>
+             <tr>
+                <td>System Weight :</td>
+                <td>@Model.SystemWeight</td>
+            </tr>
+        </table>
+</script>
+<script id="template-carton-detail" type="text/x-kendo-template">
+
+       @(Html.Kendo().Grid(Model?.CartonDetailsDtos)
+           .Name("grid")
+           .ToolBar(toolbar =>
+           { toolbar.Search(); })
+           .Pageable()
+           .Scrollable()
+           .Sortable()
+           .Filterable()
+           .PersistSelection()
+           .Resizable(resize => resize.Columns(true)) // Allow column resizing
+           .PersistSelection()
+           .HtmlAttributes(new { @class = "w-100" })
+           .Columns(columns =>
+           {
+               columns.Bound(m => m.Position)
+                   .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                   .HtmlAttributes(new { style = "text-align: center" });
+               columns.Bound(m => m.Description)
+                   .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                   .HtmlAttributes(new { style = "text-align: center" });
+               columns.Bound(m => m.Quantity)
+                   .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                   .HtmlAttributes(new { style = "text-align: center" });
+               /*columns.Bound(m => m.SystemWeight)
+                   .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                   .HtmlAttributes(new { style = "text-align: center" })
+                   .Title("System Weight");
+               columns.Bound(m => m.NetWeight)
+                   .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                   .HtmlAttributes(new { style = "text-align: center" })
+                   .Title("Net Weight");*/
+               columns.Bound(m => m.Barcode)
+                   .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                   .HtmlAttributes(new { style = "text-align: center" })
+                   .Title("Barcode");
+               columns.Bound(m => m.CarcassCode)
+                   .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                   .HtmlAttributes(new { style = "text-align: center" })
+                   .Title("Carcass Code");
+               columns.Bound(m => m.AssemblyCode)
+                   .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                   .HtmlAttributes(new { style = "text-align: center" })
+                   .Title("Assembly Code");
+
+           })
+           .ToClientTemplate()
+           )
+
+</script>
+
+@using (Html.BeginForm(actionName, controllerName, null, FormMethod.Post, new { id = "form", enctype = "multipart/form-data" }))
+{
+    @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+    @Html.AntiForgeryToken()
+
+    @(Html.Kendo().TextBoxFor(m => m.Barcode)
+        //.Events(e => e.Change("onChange"))
+        .HtmlAttributes(new { @class = "w-100", onkeypress = "onKeyPress(event)" })
+        .Placeholder("Scan Barcode here"))
+
+    @(Html.Kendo().TileLayout()
+        .Name("tileLayout")
+        .Columns(3)
+        .RowsHeight("120px")
+        .ColumnsWidth("25%")
+        .Containers(c => {
+            c.Add()
+                .BodyTemplateId("template-barcode")
+                //.Header(h => h.Text("Barcode"))
+                .ColSpan(4)
+                .RowSpan(1);
+            c.Add()
+                .BodyTemplateId("template-carton-detail")
+                //.Header(h => h.Text("Item Info"))
+                .ColSpan(4)
+                .RowSpan(4);
+            /*c.Add()
+                .BodyTemplateId("template-header")
+                //.Header(h => h.Text("Header Info"))
+                .ColSpan(2)
+                .RowSpan(3);*/
+        })
+        .Reorderable(true)
+        .Resizable(true))
+}
+
+
+<script>
+    function onKeyPress(e) {
+        if (e.keyCode != 13) {
+            //e.preventResult();
+            return;
+        }
+        submitForm("Scan")
+
+     }
+    $(document).ready(function () {
+        $('#Barcode').focus();
+    });
+    function onBack() {
+        window.location.href = '@Url.Action("Index", "Weighing", new { area = "Kitchen" })';
+       /* history.back();*/
+    }
+    function LoadGrid() {
+        //alert('Loading Grid');
+        var grid = $("#grid").data("kendoGrid");
+        grid.dataSource.read();
+    }
+
+    function submitForm(action) {
+        var form = document.getElementById("form");-->
+
+        @*// Send report type
+        document.getElementById("type").value = type;*@
+
+        // Action Name
+        var input = document.createElement("input");
+        input.type = "hidden";
+        input.name = "action:" + action;
+
+        console.log(action);
+
+        form.appendChild(input);
+        form.submit();
+    }
+
+</script>-->
+

@@ -1,0 +1,44 @@
+﻿@using Microsoft.AspNet.Identity
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@if (Request.IsAuthenticated)
+{
+    using (Html.BeginForm("LogOff", "Account", FormMethod.Post, new { id = "logoutForm", @class = "navbar-right" }))
+    {
+    @Html.AntiForgeryToken()
+
+    <ul class="nav navbar-nav navbar-right">
+        <li>
+            @Html.ActionLink("Hello " + User.Identity.GetUserName() + "!", "Index", "Manage", routeValues: null, htmlAttributes: new { title = "Manage" })
+        </li>
+        <li>
+            @(Html.Kendo().Button()
+                .Name("btnLogoff")
+                .Content("Log off")
+                .ApplyStandardSettingsWithType(ButtonType.Danger, "logout", ComponentSize.Medium)
+                .HtmlAttributes(new { onclick = "document.getElementById('logoutForm').submit(); return false;" }))
+        </li>
+    </ul>
+    }
+}
+else
+{
+    var registerUrl = Url.Action("Register", "Account");
+    var loginUrl = Url.Action("Login", "Account");
+    <ul class="nav navbar-nav navbar-right">
+        <li>
+            @(Html.Kendo().Button()
+                .Name("btnRegister")
+                .Content("Register")
+                .ApplyStandardSettingsWithType(ButtonType.Primary, "user-plus", ComponentSize.Medium)
+                .HtmlAttributes(new { onclick = "window.location.href='" + registerUrl + "'; return false;" }))
+        </li>
+        <li>
+            @(Html.Kendo().Button()
+                .Name("btnLogin")
+                .Content("Log in")
+                .ApplyStandardSettingsWithType(ButtonType.Info, "login", ComponentSize.Medium)
+                .HtmlAttributes(new { onclick = "window.location.href='" + loginUrl + "'; return false;" }))
+        </li>
+    </ul>
+}

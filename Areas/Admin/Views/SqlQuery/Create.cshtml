@@ -1,0 +1,8 @@
+﻿@model Corno.Web.Areas.Admin.Dto.SqlQuery.SqlQueryDto
+@{
+    Layout = "~/Views/Shared/_LayoutCreate.cshtml";
+
+    ViewBag.BoxTitle = "Query Editor";
+}
+
+@Html.Partial("~/Areas/Admin/Views/SqlQuery/_SqlQuery.cshtml", Model)

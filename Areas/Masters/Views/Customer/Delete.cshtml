@@ -1,0 +1,30 @@
+﻿@using Corno.Web.Globals
+@model Corno.Web.Areas.Masters.ViewModels.Customer.CustomerViewModel
+
+@{
+    Layout = "~/Views/Shared/_LayoutDelete.cshtml";
+}
+
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+}
+
+@{
+    Page.Title = "Customer";
+    ViewBag.MainMenu = "Masters";
+    ViewBag.CurrentSitemap = "Customer";
+    ViewBag.Area = "Masters";
+    ViewBag.Controller = "Customer";
+    ViewBag.SubmitAction = ViewBag.Delete;
+}
+
+@{
+    ViewBag.BoxTitle = $"Delete Customer : {Model?.Name}";
+    ViewBag.SubmitAction = "Delete";
+}
+
+@Html.Partial("_Customer", Model)

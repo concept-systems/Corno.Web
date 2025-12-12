@@ -1,0 +1,156 @@
+﻿@{
+    string controllerName = ViewBag.Controller;
+    string importAction = ViewBag.ImportAction;
+    RouteValueDictionary routeValues = ViewBag.RouteValues;
+}
+
+@*Custom CSS to style the percentage text*@
+<style>
+    .k-progress-status {
+        font-size: 40px; /* Change to desired font size */
+        text-align: center; /* Center the text */
+        width: 100%; /* Ensure it takes full width for centering */
+        position: absolute; /* Positioning for centering */
+        left: 0; /* Align to the left */
+        color: black;
+        top: 50%; /* Vertically center */
+        transform: translateY(-50%); /* Adjust vertical centering */
+    }
+
+    .k-progress-bar.progress-success .k-progress-status {
+        color: white; /* Color for high values */
+    }
+
+    .k-progress-bar.progress-warning .k-progress-status {
+        color: orange; /* Color for medium values */
+    }
+
+    .k-progress-bar.progress-error .k-progress-status {
+        color: red; /* Color for low values */
+    }
+
+    .k-progress-bar {
+        position: relative; /* Make parent relative for absolute positioning */
+    }
+</style>
+
+@Html.ValidationSummary(false)
+@*@using (Html.BeginForm())
+    {*@
+@Html.ValidationSummary(false, "", new { @class = "text-danger" })
+
+<div class="form-group row">
+    <div class="col-12">
+        @(Html.Kendo().Upload()
+                .Name("files")
+                .HtmlAttributes(new { aria_label = "file" })
+                .Validation(v => v.AllowedExtensions(new[] { ".xls", ".xlsx" }))
+                .Messages(m => m.UploadSuccess("Inside : File imported successfully.")
+                    .UploadSelectedFiles("Import"))
+                .Async(a => a
+                    .Save(importAction, controllerName)
+                    .Remove("CancelImport", controllerName)
+                    .AutoUpload(false)
+
+                )
+                .Events(e =>
+                {
+                    e.Success("onUploadSuccess");
+                    e.Error("onUploadError");
+                }))
+    </div>
+</div>
+<br />
+<div class="form-group row">
+    <div class="col-12 k-progress-bar.progress-success ">
+        @(Html.Kendo().ProgressBar()
+                .Name("progressBar")
+                .Type(ProgressBarType.Percent)
+                .HtmlAttributes(new { style = "height: 80px;"})
+                .Animation(a => a.Duration(10))
+                )
+    </div>
+
+</div>
+<br />
+<div class="col-12 text-center text-black">
+    <div id="dynamicMessage" class="message-container"></div>
+</div>
+@*}*@
+
+<script type="text/javascript">
+    $(function () {
+        console.log("In Connection Process");
+
+        // Reference the auto-generated proxy for the hub
+        var progressHub = $.connection.progressHub;
+
+        // Create a function that the hub can call to broadcast messages
+        progressHub.client.receiveProgress = function (progressModel) {
+            //console.log(JSON.stringify(progressModel));
+            var progress = progressModel.Percent;
+            var progressBar = $("#progressBar").data("kendoProgressBar");
+            progressBar.value(progress);
+            //progressBar.wrapper.find(".k-progress-status").text(progressModel.Message);
+            @*progressBar.setOptions({
+                text: { progressStatus: progressModel.Message } // Set the text displayed
+            });*@
+            $("#dynamicMessage").text(progressModel.Message);
+
+            /*if (progressBar) {
+                progressBar.value(progressModel.Percent);
+                $("#dynamicMessage").text(progressModel.Message);
+            } else {
+                console.warn("Progress bar is not initialized.");
+            }*/
+        };
+
+
+        // Start the connection
+        $.connection.hub.start().done(function () {
+            console.log("SignalR connected");
+        }).fail(function (error) {
+            console.log("SignalR connection failed: " + error);
+        });
+    });
+
+    function onUploadSuccess(e) {
+        console.log("In upload success : ")
+        if (e.response.success === true) {
+            var grid = $("#importGrid").data("kendoGrid");
+            grid.dataSource.data(e.response.result);
+
+            showSuccessMessage("File imported successfully!", "Success", "fa-check-circle");
+            // Clear the file input
+            var upload = $("#files").data("kendoUpload");
+            upload.clearAllFiles();
+
+            // Reset the progress bar
+            var progressBar = $("#progressBar").data("kendoProgressBar");
+            progressBar.value(0);
+            $("#dynamicMessage").text('');
+        }
+        else {
+            showSuccessMessage(e.response.message || "Operation completed successfully.");
+        }
+    }
+
+    function onUploadError(e) {
+        //console.log(e);
+        //JSON.stringify(e)
+        // Extract the error message from the response
+        console.log("In onUploadError");
+        if (e != undefined && e.XMLHttpRequest != undefined && e.XMLHttpRequest.response != undefined)
+        {
+            var errorMessage = e.XMLHttpRequest.response ? e.XMLHttpRequest.response.message : "An error occurred while importing the file. Please try again.";
+            // Show error message using standard error dialog
+            showErrorMessage(errorMessage);
+        }
+    }
+
+    function onCancel(e) {
+        // Fires when the upload is canceled while in progress. The Cancel event fires only when the Upload is in async mode.
+        console.log("Cancel :: " + getFileInfo(e));
+    }
+
+</script>

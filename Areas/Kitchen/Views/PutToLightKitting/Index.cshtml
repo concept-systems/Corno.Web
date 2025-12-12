@@ -1,0 +1,150 @@
+﻿@using Corno.Web.Areas.Kitchen.Dto.Label
+@using Corno.Web.Globals
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@{
+    Layout = "~/Views/Shared/_AppLayout.cshtml";
+}
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+}
+@{
+    ViewBag.BoxTitle = "Put To Light kitting";
+}
+
+<div class="grid-container-full-height">
+    @(Html.Kendo().Grid<LabelIndexDto>()
+        .Name("grid")
+        .ApplyIndexSettings() // 👈 Apply index settings (full height, responsive)
+        .AddExportToolBar(enableExcel: true, enablePdf: true, enableSearch: true, customToolbar: toolbar =>
+        {
+            toolbar.Custom()
+                .Text("<span class='k-icon k-i-plus'></span> Add New")
+                .HtmlAttributes(new { @class = "k-grid-add-new k-button-add-new-outlined", style = "float: right;", onclick = $"window.location.href='{Url.Action(ViewBag.Create, ViewBag.Controller, new {miscType = ViewBag.MiscType})}'; return false;" });
+        })
+        .Events(events => events.ApplyCommonEvents())
+        .Columns(columns =>
+        {
+            columns.Bound(m => m.LabelDate)
+                .Format("{0:dd/MM/yyyy hh:mm tt}");
+            columns.Bound(m => m.WarehouseOrderNo).Align(TextAlign.Left);
+            columns.Bound(m => m.Barcode).Align(TextAlign.Left);
+            columns.Bound(m => m.Position);
+            columns.Bound(m => m.OrderQuantity).Hidden();
+            columns.Bound(m => m.Quantity);
+            columns.AddStatusColumn();
+            columns.AddCommandColumns(new List<GridCommandConfig>
+            {
+                //new GridCommandConfig { Name = "Edit", Text = "", IconClass = "fa fa-edit", ClickHandler = "onEditClick" },
+                //new GridCommandConfig { Name = "Delete", Text = "", IconClass = "fa fa-trash", ClickHandler = "onDeleteClick" },
+                new GridCommandConfig { Name = "View", Text = "", IconClass = "k-icon k-i-preview k-i-eye", ClickHandler = "onViewClick" },
+                //new GridCommandConfig { Name = "Print", Text = "", IconClass = "fa fa-print", ClickHandler = "onPrintClick" }
+            });
+        })
+        .DataSource(dataSource => dataSource
+            .ApplyCommonDataSourceSettings("GetIndexViewDto", "PutToLightKitting", "Kitchen")
+            .Sort(s => s.Add(FieldConstants.Id).Descending())
+        ))
+</div>
+
+
+
+
+
+@*@(Html.Kendo().Grid<LabelIndexDto>()
+    .Name("grid")
+    .ToolBar(toolbar =>
+    {
+        toolbar.Excel();
+        toolbar.Pdf();
+        toolbar.Search();
+    })
+    .ToolBar(t => t.Search())
+    .Pageable()
+    .Sortable()
+    .Filterable(f => f.Mode(GridFilterMode.Row))
+    .Resizable(resize => resize.Columns(true)) // Allow column resizing
+    .PersistSelection()
+    .HtmlAttributes(new { @class = "w-100" })
+    .Columns(columns =>
+    {
+        columns.Bound(m => m.LabelDate).Title("Date")
+            .HtmlAttributes(new { style = "text-align: center" })
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+            .Format("{0:dd/MM/yyyy}")
+            .Width(10);
+        columns.Bound(m => m.WarehouseOrderNo)
+            .ClientTemplate("<a href='" + Url.Action("View", "PartLabel") + "?id=#=Id#' class='text-primary text-decoration-underline'>#=WarehouseOrderNo#</a>")
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+            .HtmlAttributes(new { style = "text-align: center" })
+            .Title("Warehouse Order")
+            .Width(15);
+        columns.Bound(m => m.LotNo)
+            .Width(15)
+            .HtmlAttributes(new { style = "text-align: center" })
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" });
+        columns.Bound(m => m.Position).Title("Position")
+            .Width(15)
+            .HtmlAttributes(new { style = "text-align: center" })
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" });
+        columns.Bound(m => m.Barcode).Title("Barcode")
+            .Width(15)
+            .HtmlAttributes(new { style = "text-align: center" })
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" });
+        columns.Bound(m => m.OrderQuantity)
+            .Width(15)
+            .HtmlAttributes(new { style = "text-align: center" })
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+            .Title("Order<br/>Quantity");
+
+        columns.Bound(m => m.Quantity)
+            .Width(15)
+            .HtmlAttributes(new { style = "text-align: center" })
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" });
+        columns.Bound(m => m.Status)
+            .HtmlAttributes(new { style = "text-align: center" })
+            .ClientTemplate(
+                "<span class='badge' style='#= getStatusBadgeStyle(Status) #'>" +
+                "#= Status #</span>").Width(30)
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" });
+        //columns.Command(command =>
+        //{
+        //    // Show only if Status is "Active";
+        //    command.Custom("View").Text(" ").IconClass("k-icon k-i-preview k-i-eye")
+        //        .HtmlAttributes(new { @class = "k-grid-view k-text-center !k-justify-content-center" })
+        //        .Click("onViewClick");
+        //})
+        //    .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+        //    .HtmlAttributes(new { style = "text-align: center" })
+        //    .Width(10)
+        //    .Title("Actions"); // Add a class to identify the command column;
+    })
+    .Excel(excel => excel
+        .FileName("Kitting.xlsx")
+        .ProxyURL(Url.Action("Excel_Export_Save", "Corno"))
+    )
+    .Pdf(pdf => pdf
+        .FileName("Kitting.pdf")
+        .ProxyURL(Url.Action("Excel_Export_Save", "Corno")))
+    .DataSource(dataSource => dataSource
+         .Ajax()
+         .Read(read => read.Action("GetIndexViewModels", "Kitting"))
+         .Sort(s => s.Add(FieldConstants.LabelDate).Descending())
+        .Model(model => model.Id(FieldConstants.Id))
+    ))*@
+
+<script type="text/javascript">
+      function onViewClick(e) {
+         e.preventDefault();
+         var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+         var id = dataItem.Id; // Assuming 'Id' is the field name
+         window.location.href = '@Url.Action("View", "PartLabel")' + '?id=' + id;
+    }
+
+    function sendData() {
+    }
+</script>

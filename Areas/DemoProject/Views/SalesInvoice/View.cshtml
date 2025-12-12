@@ -1,0 +1,146 @@
+@using Corno.Web.Globals
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@model Corno.Web.Areas.DemoProject.Dtos.SalesInvoiceDto
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@{
+    ViewBag.Title = "View Invoice";
+    ViewBag.BoxTitle = "Invoice";
+    ViewBag.SubmitAction = "View";
+
+    ViewBag.SubmitButtonText = "Print";
+}
+
+<div class="k-card">
+    <div class="k-card-header">
+        <div class="row col-md-12 col-sm-12">
+            <div class="col-12 col-md-11">
+                <h5>
+                    <span class="k-icon k-i-plus k-icon k-text-success"></span>
+                    @ViewBag.Title
+                </h5>
+            </div>
+            <div class="col-12 col-md-1">
+                @(Html.Kendo().Button()
+                        .Name("BackToList")
+                        .Content("List")
+                        .ApplyStandardSettingsWithType(ButtonType.Info, "arrow-left", ComponentSize.Medium)
+                        .Events(e => e.Click("onBackToList"))
+                        .HtmlAttributes(new{@class = "w-100"}))
+            </div>
+        </div>
+    </div>
+    <div class="k-card-separator"></div>
+    <div class="k-card-body">
+        <div class="row">
+            <div class="col-12 col-md-6 mb-3 mb-md-0">
+                @Html.Partial("_ReportViewer", Model)
+            </div>
+            <div class="col-12 col-md-6">
+                @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+                <div class="row">
+                    @Html.Partial("_EditViewHeader", Model)
+                    <hr />
+                    <div class="form-group row">
+                        <div class="col-12">
+                            @(Html.Kendo().Grid(Model?.Details)
+                                .Name("grid")
+                                .ToolBar(t => t.Search())
+                                .Pageable()
+                                .Sortable()
+                                .Filterable()
+                                .Resizable(resize => resize.Columns(true)) // Allow column resizing
+                                .PersistSelection()
+                                .HtmlAttributes(new { @class = "w-100" })
+                                .Columns(columns =>
+                                {
+                                    columns.Bound(m => m.ProductName)
+                                        .HtmlAttributes(new { style = "text-align: center" })
+                                        .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                                        .Width(500);
+                                    columns.Bound(m => m.Quantity)
+                                        .HtmlAttributes(new { style = "text-align: center" })
+                                        .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                                        .ClientFooterTemplate("Count: #=count#")
+                                        .Width(500);
+                                    columns.Bound(m => m.Barcode)
+                                        .HtmlAttributes(new { style = "text-align: center" })
+                                        .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                                        .Width(500);
+                                })
+                                .DataSource(dataSource => dataSource
+                                    .Ajax()
+                                    .Aggregates(aggregates =>
+                                    {
+                                        aggregates.Add(p => p.Barcode).Count();
+                                    })
+                                    .PageSize(10)
+                                    .Model(model => model.Id(p => p.Barcode))
+                                ))
+                        </div>
+                    </div>
+                    <hr />
+                    @if (Model?.Status == StatusConstants.Packed)
+                    {
+                        <div class="form-group row">
+                            <div class="offset-9 col-3">
+                                @(Html.Kendo().Button()
+                                    .Name("print")
+                                    .Content("Re-Print Label")
+                                    .ApplyStandardSettingsWithType(ButtonType.Primary, "print", ComponentSize.Medium)
+                                    .Events(e => e.Click("onPrintLabel"))
+                                    .HtmlAttributes(new { @class = "w-100" }))
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    $(document).ready(function () {
+        LoadPartialView()
+    });
+
+    function LoadPartialView(toPrinter) {
+        $.ajax({
+            url: '/DemoProject/LoadPartialView', // Replace with your actual controller and action
+            method: 'GET',
+            data: { 'partialViewName': 'Partials/ReportViewer_New' },
+            success: function (partialHtml) {
+                // Load HTML content into the element
+                $('#partialViewContainer').html(partialHtml, function () {
+                    // This code will execute after the HTML content has been loaded
+                    console.log("HTML content loaded successfully");
+
+                });
+                // Delay the execution of the next statement by a short duration
+                setTimeout(function () {
+                    // This code will execute after a short delay
+                    console.log("Timeout HTML content loaded successfully");
+                    //if ('@Model?.PrintToPrinter' === 'True' || toPrinter === true) {
+                        //printToPrinter();
+                    //}
+                }, 1500); // Adjust the delay duration as needed
+            },
+            error: function () {
+                console.error('Failed to load the partial view.');
+            }
+	    });
+    }
+
+    function onBackToList() {
+        window.location.href = '/Knorr_Bremse/DemoProject/Index';
+    }
+
+    function onPrintLabel() {
+        printToPrinter();
+    }
+</script>

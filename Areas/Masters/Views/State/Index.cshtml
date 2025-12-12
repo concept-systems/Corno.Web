@@ -1,0 +1,27 @@
+﻿@model IEnumerable<Corno.Models.ViewModels.MasterDto>
+
+@{
+    Layout = "~/Views/Shared/_AppLayout.cshtml";
+}
+@{
+    ViewBag.BoxTitle = "State";
+}
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+}
+
+@{
+    Page.Title = "State";
+
+    ViewBag.MainHeader = "State";
+    ViewBag.MainMenu = "Masters";
+    ViewBag.Controller = "State";
+    ViewBag.AddNewMethod = "Create";
+    ViewBag.CurrentLink = "State";
+}
+
+@Html.Partial("Partials/_MasterIndex", Model)

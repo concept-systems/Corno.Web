@@ -1,0 +1,216 @@
+﻿@using Corno.Concept.Portal.Models
+@using Corno.Globals.Constants
+@using Corno.Services.Common.Interfaces
+@using Corno.Services.Windsor
+
+@model LoginViewModel
+
+@{
+    Layout = null;
+}
+
+@{
+    var companyService = Bootstrapper.Get<ICompanyService>();
+    var financialYearService = Bootstrapper.Get<IFinancialYearService>();
+}
+
+<link rel="icon" href="~/favicon.png">
+
+<link href="@Url.Content("~/Content/bootstrap.min.css")" rel="stylesheet" type="text/css" />
+<link href="@Url.Content("~/Content/kendo/2021.1.119/kendo.material-v2.min.css")" rel="stylesheet" type="text/css" />
+
+<script src="@Url.Content("~/Scripts/bootstrap.min.js")"></script>
+<script src="@Url.Content("~/Scripts/kendo/2021.1.119/jquery.min.js")"></script>
+<script src="@Url.Content("~/Scripts/kendo/2021.1.119/jszip.min.js")"></script>
+<script src="@Url.Content("~/Scripts/kendo/2021.1.119/kendo.all.min.js")"></script>
+<script src="@Url.Content("~/Scripts/kendo/2021.1.119/kendo.aspnetmvc.min.js")"></script>
+
+<style>
+    .text-danger,
+    .validation-summary-errors,
+    .validation-summary-errors ul,
+    .validation-summary-errors li {
+        color: #d32f2f !important;
+        font-weight: 500;
+    }
+
+    .validation-summary-errors {
+        background-color: #ffebee;
+        border: 1px solid #d32f2f;
+        border-radius: 4px;
+        padding: 12px;
+        margin-bottom: 1rem;
+    }
+
+    .validation-summary-errors ul {
+        margin: 0;
+        padding-left: 20px;
+    }
+</style>
+
+<div class="container">
+    <div class="row justify-content-center m-5">
+        <div class="col-12 col-md-8 col-lg-6">
+            <!--Form with header-->
+            @using (Html.BeginForm("CompanyLogin", "Account", FormMethod.Post, new { @class = "form-signin" }))
+            {
+                @Html.AntiForgeryToken()
+
+                <div class="text-center mb-4">
+                    <img class="p-1 border border-info" src="~/favicon.png" alt="" width="64" height="64">
+                </div>
+
+                <div class="card border-info rounded-lg">
+                    <div class="card-header p-0">
+                        <div class="bg-info text-white text-center py-2">
+                            <h3> User Sign In</h3>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+                        </div>
+                        <!--Body-->
+                        <div class="form-group">
+                            <div class="input-group mb-2">
+                                <span class="k-edit-container w-100">
+                                    @(Html.Kendo().MultiColumnComboBoxFor(m => m.CompanyId)
+                                        .DataTextField(FieldConstants.Name)
+                                        .DataValueField(FieldConstants.Id)
+                                        .HtmlAttributes(new {required = "required", @class="w-100"})
+                                        .Filter("contains")
+                                        .Placeholder("Select Company")
+                                        .Suggest(true)
+                                        .Columns(columns =>
+                                        {
+                                            columns.Add().Field(FieldConstants.Id).Title(FieldConstants.Id).Width("100px");
+                                            columns.Add().Field(FieldConstants.Name).Title(FieldConstants.Name).Width("350px");
+                                        })
+                                        .BindTo(companyService.GetViewModelList())
+                                        )
+                                </span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="input-group mb-2">
+                                <span class="k-edit-container w-100">
+                                    @(Html.Kendo().MultiColumnComboBoxFor(m => m.FinancialYearId)
+                                        .DataTextField(FieldConstants.Name)
+                                        .DataValueField(FieldConstants.Id)
+                                        .HtmlAttributes(new { required = "required", @class = "w-100" })
+                                        .Filter("contains")
+                                        .Placeholder("Select Financial Year")
+                                        .Suggest(true)
+                                        .Columns(columns =>
+                                        {
+                                            columns.Add().Field(FieldConstants.Id).Title(FieldConstants.Id).Width("250px");
+                                            columns.Add().Field(FieldConstants.Name).Title(FieldConstants.Name).Width("300px");
+                                        })
+                                        .DataSource(dataSource => dataSource
+                                            .Read(read =>
+                                            {
+                                                read.Action("GetViewModelList", "Account")
+                                                    .Data("filterFinancialYears");
+                                            })
+                                            .Events(e => e.Error("error_handler"))
+                                            .ServerFiltering(true)
+                                        )
+                                        .AutoBind(false)
+                                        .CascadeFrom(FieldConstants.CompanyId)
+                                        )
+                                    <script>
+                                        function filterFinancialYears() {
+                                            //alert($("#CompanyId").val());
+                                            return {
+                                                companyId: $("#CompanyId").val()
+                                            };
+                                        }
+                                    </script>
+                                    
+                                </span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="input-group mb-2">
+                                <span class="k-edit-container w-100">
+                                    @*<div class="input-group-prepend">*@
+                                    @*<span class="k-icon k-i-user"></span>*@
+                                    @*<div class="input-group-text"><i class='fa fa-user text-info'></i></div>*@
+                                    @*</div>*@
+                                    @(Html.Kendo().TextBoxFor(m => m.Email)
+                                          .HtmlAttributes(new
+                                          {
+                                              placeholder = "Email",
+                                              required = "required",
+                                              @class = "w-100"
+                                          })
+                                          )
+                                </span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            @*<div class="input-group">*@
+                            <span class="w-100">
+                                @*<span class="k-icon k-i-unlock"></span>*@
+                                @(Html.Kendo().TextBoxFor(m => m.Password)
+                                      .HtmlAttributes(new
+                                      {
+                                          type = "password",
+                                          placeholder = "Password",
+                                          required = "required",
+                                          @class = "w-100"
+                                          //style = "width:100%;"
+                                      }))
+                            </span>
+                            @*</div>*@
+                        </div>
+
+                        <div class="form-group">
+                            @(Html.Kendo().Button()
+                                  .Name("submit")
+                                  .Content("Log in")
+                                  .ApplyStandardSettingsWithType(ButtonType.Primary, "login", ComponentSize.Large)
+                                  .HtmlAttributes(new
+                                  {
+                                      type = "submit",
+                                      @class = "w-100",
+                                      style = "height:60px"
+                                  }))
+                            @*<button type="submit" class="btn btn-info btn-block rounded-lg">
+                                    <i class="fa fa-sign-in-alt fa-align-center mr-2"></i>   <strong>  Log in</strong>
+                                </button>*@
+                            @*<input type="submit" value="Log in" class="btn btn-info btn-block rounded-0 py-2">*@
+                        </div>
+                    </div>
+                </div>
+            }
+            <!--Form with header-->
+        </div>
+    </div>
+</div>
+
+@*<div class="col-md-4">
+        <section id="socialLoginForm">
+            @Html.Partial("_ExternalLoginsListPartial", new ExternalLoginListViewModel { ReturnUrl = ViewBag.ReturnUrl })
+        </section>
+    </div>*@
+
+
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}
+
+<script type="text/javascript">
+    function error_handler(e) {
+        if (e.errors) {
+            $.each(e.errors, function (key, value) {
+                if (key === "message") {
+                    showErrorMessage(value);
+                }
+            });
+        } else {
+            showErrorMessage("An error occurred. Please try again.");
+        }
+    }
+</script>

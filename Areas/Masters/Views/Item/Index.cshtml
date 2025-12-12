@@ -1,0 +1,79 @@
+﻿@using Corno.Web.Areas.Masters.Dtos.Item
+@using Corno.Web.Globals
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+
+@{
+    Layout = "~/Views/Shared/_AppLayout.cshtml";
+}
+
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+}
+
+@{
+    Page.Title = "Item";
+    ViewBag.BoxTitle = "Item";
+
+    ViewBag.MainHeader = "Item";
+    ViewBag.MainMenu = "Masters";
+    ViewBag.Controller = "Item";
+    ViewBag.AddNewMethod = "Create";
+    ViewBag.CurrentLink = "Item";
+}
+
+<div class="grid-container-full-height">
+    @(Html.Kendo().Grid<ItemIndexDto>()
+        .Name("grid")
+        .ApplyIndexSettings(customToolbar: toolbar =>
+        {
+            toolbar.Custom()
+                .Text("<span class='k-icon k-i-plus'></span> Add New")
+                .HtmlAttributes(new { @class = "k-grid-add-new k-button-add-new-outlined", style = "float: right;", onclick = $"window.location.href='{Url.Action("Create", "Item", new { area = "Masters" })}'; return false;" });
+        }) // 👈 Apply index settings (full height, responsive)
+        .Events(events => events.ApplyCommonEvents())
+        .Columns(columns =>
+        {
+            columns.Bound(m => m.Id);
+            columns.Bound(m => m.Code).Align(TextAlign.Left);
+            columns.Bound(m => m.Name).Align(TextAlign.Left);
+            columns.Bound(m => m.Description).Align(TextAlign.Left);
+            /*columns.Bound(m => m.CurrentStock)
+                .Title("Current Stock");
+            columns.Bound(m => m.Cost);
+            columns.Bound(m => m.Location).Align(TextAlign.Left);
+            columns.Bound(m => m.Category).Align(TextAlign.Left);*/
+            columns.Bound(m => m.Weight);
+            columns.AddStatusColumn();
+            columns.AddCommandColumns(new List<GridCommandConfig>
+            {
+                new GridCommandConfig { Name = "Edit", Text = " ", IconClass = "k-icon k-i-edit k-text-info", ClickHandler = "onEditClick" },
+                new GridCommandConfig { Name = "Delete", Text = " ", IconClass = "k-icon k-i-delete k-text-error", ClickHandler = "onDeleteClick" },
+            });
+        })
+        .DataSource(dataSource => dataSource
+            .ApplyCommonDataSourceSettings("GetIndexViewModels", "Item", "Masters")
+            .Sort(s => s.Add(FieldConstants.Id).Descending())
+        ))
+</div>
+
+<script type="text/javascript">
+    function sendData() {
+    }
+
+    function onEditClick(e) {
+        e.preventDefault();
+        var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+        window.location.href = '@Url.Action("Edit", "Item")' + '/' + dataItem.Id;
+    }
+
+    function onDeleteClick(e) {
+        e.preventDefault();
+        var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+        window.location.href = '@Url.Action("Delete", "Item")' + '/' + dataItem.Id;
+    }
+</script>

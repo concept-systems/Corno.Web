@@ -1,0 +1,164 @@
+﻿@model Corno.Web.Areas.Masters.Dtos.Item.ItemDto
+
+@{
+    var miscMasterService = Bootstrapper.Get<IMiscMasterService>();
+    var itemService = Bootstrapper.Get<IBaseItemService>();
+    var customerService = Bootstrapper.Get<ICustomerService>();
+}
+
+@using System.Web.Mvc.Html
+@using Corno.Web.Globals
+@using Corno.Web.Services.Interfaces
+@using Corno.Web.Services.Masters.Interfaces
+@using Corno.Web.Windsor
+@using Kendo.Mvc.UI
+
+<div class="row">
+    <div class="col-sm-6">
+        <div class="form-group row mb-2">
+            @Html.LabelFor(m => m.UnitId, "Unit :",
+                new { @class = "col-4" })
+            <div class="col-8">
+                @(Html.Kendo().MultiColumnComboBoxFor(m => m.UnitId)
+            .DataTextField(FieldConstants.Name)
+            .DataValueField(FieldConstants.Id)
+            .HtmlAttributes(new { @class = "w-100" })
+            .Filter("contains")
+            .Placeholder("Select ...")
+            .Suggest(true)
+            .Columns(columns =>
+            {
+                columns.Add().Field(FieldConstants.Code).Title(FieldConstants.Code).Width("250px");
+                columns.Add().Field(FieldConstants.Name).Title(FieldConstants.Name).Width("300px");
+            })
+            .DataSource(source =>
+            {
+                source.Read(read => { read.Action("GetMiscMasters", "Data", new { area = "", miscType = MiscMasterConstants.Unit }); })
+                    .ServerFiltering(false);
+            })
+            )
+            </div>
+        </div>
+        <div class="form-group row mb-2">
+            @Html.LabelFor(m => m.ReorderLevel, "Recorder Level :",
+                new { @class = "col-4" })
+            <div class="col-8">
+                @(Html.Kendo().NumericTextBoxFor(m => m.ReorderLevel)
+            .HtmlAttributes(new
+            {
+                @class = "w-100"
+            }))
+            </div>
+        </div>
+        <div class="form-group row mb-2">
+            @Html.LabelFor(m => m.BoxQuantity, "Bag Quantity :",
+                new { @class = "col-4" })
+            <div class="col-8">
+                @(Html.Kendo().NumericTextBoxFor(m => m.BoxQuantity)
+            .HtmlAttributes(new
+            {
+                @class = "w-100"
+            }))
+            </div>
+        </div>
+        <div class="form-group row mb-2">
+            @Html.LabelFor(m => m.Color, "Color :",
+                new { @class = "col-4" })
+            <div class="col-8">
+                @(Html.Kendo().TextBoxFor(m => m.Color)
+            .HtmlAttributes(new
+            {
+                @class = "w-100"
+            }))
+            </div>
+        </div>
+        <div class="form-group row mb-2">
+            @Html.LabelFor(m => m.DrawingNo, "Drawing No :",
+                new { @class = "col-4" })
+            <div class="col-8">
+                @(Html.Kendo().TextBoxFor(m => m.DrawingNo)
+            .HtmlAttributes(new
+            {
+                @class = "w-100"
+            }))
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6">
+        <div class="form-group row mb-2">
+            @Html.LabelFor(m => m.StockQuantity, "Stock Quantity :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @(Html.Kendo().NumericTextBoxFor(m => m.StockQuantity)
+             .HtmlAttributes(new
+             {
+                 @class = "w-100"
+             }))
+            </div>
+        </div>
+        <div class="form-group row mb-2">
+            @Html.LabelFor(m => m.ItemCategory, "Item Category :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @(Html.Kendo().MultiColumnComboBoxFor(m => m.ItemCategory)
+                    .HtmlAttributes(new
+                    {
+                        @class = "w-100"
+                    }))
+            </div>
+        </div>
+        <div class="form-group row mb-2">
+            @Html.LabelFor(m => m.ItemType, "Item Type :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @(Html.Kendo().MultiColumnComboBoxFor(m => m.ItemType)
+             .HtmlAttributes(new
+             {
+                 @class = "w-100"
+             }))
+            </div>
+        </div>
+        <div class="form-group row mb-2">
+            <div class="col-8">
+                @(Html.Kendo().CheckBoxFor(m => m.Weighing)
+             .Label("Weighing")
+             .HtmlAttributes(new
+             {
+                 @class = "offset-sm-6"
+             }))
+            </div>
+        </div>
+        <div class="form-group row mb-2">
+            <div class="col-8">
+                @(Html.Kendo().CheckBoxFor(m => m.QcCheck)
+             .Label("Qc Check")
+             .HtmlAttributes(new
+             {
+                 @class = "offset-sm-6"
+             }))
+            </div>
+        </div>
+        <div class="form-group row mb-2">
+            <div class="col-8">
+                @(Html.Kendo().CheckBoxFor(m => m.PartialQc)
+             .Label("Allow Partial Qc")
+             .HtmlAttributes(new
+             {
+                 @class = "offset-sm-6"
+             }))
+            </div>
+        </div>
+        <div class="form-group row mb-2">
+            @Html.LabelFor(m => m.RackNo, "Rack No :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @(Html.Kendo().TextBoxFor(m => m.RackNo)
+             .HtmlAttributes(new
+             {
+                 @class = "w-100"
+             }))
+            </div>
+        </div>
+    </div>
+</div>

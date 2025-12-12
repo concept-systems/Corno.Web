@@ -1,0 +1,100 @@
+﻿@using Kendo.Mvc.UI
+@model Corno.Web.Areas.Kitchen.Dto.Rack_In.RackInViewDto
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Delete = "Delete";
+    ViewBag.View = "View";
+}
+
+@*@{
+    var controllerName = "RackIn";
+    var action = "Create";
+}*@
+
+@{
+    ViewBag.BoxTitle = "Rack In";
+    ViewBag.MainMenu = "WMS";
+    ViewBag.MainHeader = "Rack In";
+    ViewBag.CurrentSitemap = "Rack In";
+    ViewBag.Title = "Rack In";
+}
+        
+                @(Html.Kendo().TextBoxFor(m => m.PalletNo)
+                    .Label(l => l.Content("Pallet No").Floating(true))
+                    .HtmlAttributes(new
+                    {
+                        style = "width: 100% !important; max-width: 1400px !important;"
+                    }))
+           
+                @(Html.Kendo().TextAreaFor(m => m.RackNo)
+                    .Rows(1)
+                    .Label(l => l.Content("Rack No").Floating(true))
+                    .HtmlAttributes(new
+                    {
+                        style = "width: 100% !important; max-width: 1400px !important;col-form-label"
+                    }))
+            
+            <hr/>
+                    @(Html.Kendo().Grid(Model.RackInDetails)
+                        .Name("grid")
+                        .Columns(columns =>
+                        {
+                            columns.Bound(m => m.PalletNo)
+                                .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                                .ClientTemplate("#= PalletNo #" + "<input type='hidden' name='RackInDetails[#= index(data)#].PalletNo' value='#= PalletNo #' />   ")
+                                .HtmlAttributes(new { style = "text-align: center" });
+                            columns.Bound(m => m.RackNo)
+                                .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                                .ClientTemplate("#= RackNo #" + "<input type='hidden' name='RackInDetails[#= index(data)#].RackNo' value='#= RackNo #' />")
+                                .HtmlAttributes(new { style = "text-align: center" });
+                        })
+                        .Sortable()
+                        .Pageable()
+                        .Scrollable()
+                        .DataSource(dataSource => dataSource
+                            .Ajax()
+                            .PageSize(20)
+                            .ServerOperation(true)
+                        )
+                        .Resizable(resize => resize.Columns(true))
+                        .Reorderable(reorder => reorder.Columns(true)))
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#PalletNo").on("keypress", function (e) {
+            if (e.which === 13) { // Enter key pressed
+                e.preventDefault();
+                var txtBarcode = $("#RackNo").data("kendoTextArea");
+                txtBarcode.focus();
+            }
+        });
+    });
+
+            $("#RackNo").on("keydown", function (e) {
+            if (e.which === 13) { // Enter key pressed
+                e.preventDefault();
+                submitForm("Scan");
+            }
+            });
+
+    setTimeout(function () {
+        document.getElementById("PalletNo").focus();
+        $('#PalletNo').val(''); //txtID is textbox ID
+    }, 100); // Delay to ensure focus is set correctly
+
+    function submitForm(action) {
+        var form = document.getElementById("form");
+        // Action Name
+        var input = document.createElement("input");
+        input.type = "hidden";
+        input.name = "action:" + action;
+
+        console.log(action);
+
+        form.appendChild(input);
+        form.submit();
+
+    }
+
+ </script>

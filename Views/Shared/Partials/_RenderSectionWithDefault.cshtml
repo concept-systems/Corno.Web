@@ -1,0 +1,17 @@
+@* Helper partial to render a section with a default fallback *@
+@* Usage: @Html.Partial("Partials/_RenderSectionWithDefault", new { SectionName = "sectionCrudHeader", DefaultPartial = "Partials/_BackButton" }) *@
+
+@{
+    string sectionName = Model.SectionName;
+    string defaultPartial = Model.DefaultPartial;
+}
+
+@if (IsSectionDefined(sectionName))
+{
+    @RenderSection(sectionName, required: false)
+}
+else
+{
+    @Html.Partial(defaultPartial)
+}
+

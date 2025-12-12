@@ -1,0 +1,37 @@
+﻿@using Corno.Web.Extensions
+@using Corno.Web.Globals
+@model Corno.Web.Areas.Masters.ViewModels.Supplier.SupplierViewModel
+
+
+<div class="row">
+
+    <div class="col-sm-6">
+        <div class="form-group row">
+            @Html.LabelFor(m => m.GSTIN, "GSTIN :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @Html.EditorFor(m => m.GSTIN, new { Name = nameof(Model.GSTIN) })
+            </div>
+        </div>
+    </div>
+    <br />
+    <div class="col-sm-6">
+        <div class="form-group row">
+            @Html.LabelFor(m => m.CreditLimit, "Credit Limit :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @Html.EditorFor(m => m.CreditLimit, new { Name = nameof(Model.CreditLimit) })
+            </div>
+        </div>
+        <br />
+        <div class="form-group row">
+            @Html.LabelFor(m => m.CreditDays, "Credit Days :",
+                new { @class = "col-sm-4" })
+            <div class="col-8">
+                @Html.EditorFor(m => m.CreditDays, new { Name = nameof(Model.CreditDays) })
+            </div>
+        </div>
+        <br />
+    </div>
+
+</div>

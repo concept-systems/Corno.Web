@@ -1,0 +1,28 @@
+﻿@*@model Corno.Models.Base.BaseModel
+    <a href="@Url.Action(ViewBag.Edit, ViewBag.Controller, new { id = Model.Id})"
+       class="btn btn-outline-info btn-sm">
+        <i class="fas fa-edit"></i>
+    </a>
+    <a href="@Url.Action(ViewBag.Delete, ViewBag.Controller, new {id = Model.Id})"
+       class="btn btn-outline-danger btn-sm">
+        <i class="fas fa-trash-alt"></i>
+    </a>*@
+
+
+@model Kendo.Mvc.UI.Fluent.GridActionCommandFactory<Corno.Concept.Models.Purchase.PurchaseOrder>
+    @{
+        Model.Custom("Edit").Text("<i class='fa fa-edit fa-lg text-info'></i>")
+            .DataRouteValues(routeValues =>
+            {
+                routeValues.Add(routeValue => routeValue.Id);
+            })
+            .Action(ViewBag.Edit, ViewBag.Controller);
+
+        Model.Custom("Delete").Text("<i class='fa fa-trash fa-lg text-danger'></i>")
+            .DataRouteValues(routeValues =>
+            {
+                routeValues.Add(routeValue => routeValue.Id);
+            })
+            .Action(ViewBag.Delete, ViewBag.Controller);
+    }
+s

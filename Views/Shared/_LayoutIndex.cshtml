@@ -1,0 +1,26 @@
+﻿@using Corno.Web.Helper
+@{
+    Layout = "~/Views/Shared/_LayoutBase.cshtml";
+}
+
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+}
+
+@section sectionBaseHeader
+{
+    <div class="k-actions k-actions-horizontal k-actions-end">
+        @(Html.Kendo().Button()
+            .Name("btnAddNew")
+            .Content("Add New")
+            .ApplyStandardSettingsWithType(ButtonType.Primary, "plus", ComponentSize.Medium)
+            .HtmlAttributes(new { onclick = $"window.location.href='{Url.Action(ViewBag.Create, ViewBag.Controller, new {miscType = ViewBag.MiscType})}'; return false;" }))
+    </div>
+}
+
+@RenderBody()
+

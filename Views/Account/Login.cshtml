@@ -1,0 +1,236 @@
+﻿@model Corno.Web.Models.LoginViewModel
+@using Kendo.Mvc.UI
+@{
+    ViewBag.Title = "Login";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewBag.Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <link href="@Url.Content("~/Content/kendo/2023.1.117/kendo.default-turquoise.min.css")" rel="stylesheet" type="text/css" />
+
+    <script src="@Url.Content("~/Scripts/kendo/2023.1.117/jquery.min.js")"></script>
+    <script src="@Url.Content("~/Scripts/kendo/2023.1.117/jszip.min.js")"></script>
+    <script src="@Url.Content("~/Scripts/kendo/2023.1.117/kendo.all.min.js")"></script>
+    <script src="@Url.Content("~/Scripts/kendo/2023.1.117/kendo.aspnetmvc.min.js")"></script>
+    <script src="@Url.Content("~/Scripts/kendo.modernizr.custom.js")"></script>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: #f5f7fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .login-wrapper {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            box-sizing: border-box;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .login-header img {
+            max-width: 100px;
+            margin-bottom: 1rem;
+        }
+
+        .login-header h2 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.5rem;
+        }
+
+        .k-form .k-button {
+            width: 100%;
+        }
+
+        .text-danger,
+        .validation-summary-errors,
+        .validation-summary-errors ul,
+        .validation-summary-errors li {
+            color: #d32f2f !important;
+            font-weight: 500;
+        }
+
+        .validation-summary-errors {
+            background-color: #ffebee;
+            border: 1px solid #d32f2f;
+            border-radius: 4px;
+            padding: 12px;
+            margin-bottom: 1rem;
+        }
+
+        .validation-summary-errors ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        @*@media (max-width: 480px) {
+            .login-wrapper {
+                padding: 1rem;
+            }
+
+            .login-header h2 {
+                font-size: 1.2rem;
+            }
+        }*@
+    </style>
+</head>
+<body>
+    <div class="login-wrapper">
+        <div class="login-header">
+            <img src="@Url.Content("~/Content/assets/logo_512.png")" alt="Logo" />
+            <h2>Sign In</h2>
+        </div>
+
+        @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+
+        @(Html.Kendo().Form<Corno.Web.Models.LoginViewModel>()
+            .Name("LoginForm")
+            .HtmlAttributes(new { method = "POST" })
+            .Validatable(v => v.ValidateOnBlur(true))
+            .Items(items =>
+            {
+                items.Add()
+                    .Field(f => f.UserName)
+                    .Label(l => l.Text("Username:"));
+                items.Add()
+                    .Field(f => f.Password)
+                    .Label(l => l.Text("Password:"))
+                    .InputHtmlAttributes(new { type = "password", autocomplete = "off" });
+            })
+            .ButtonsTemplate("<button type='submit' class='k-button k-button-md k-button-outline k-button-outline-primary k-rounded-full' style='width: 100%;'><span class='k-icon k-i-login'></span><span class='k-button-text'>Login</span></button>")
+        )
+    </div>
+</body>
+</html>
+
+
+
+@*
+    @using Corno.Web.Models
+    @model Corno.Web.Models.LoginViewModel
+    @{
+        ViewBag.Title = "Log in";
+        Layout = "/Views/Account/_SignInLayout.cshtml";
+    }
+
+    <div class="form-container k-d-flex-col k-align-items-center k-justify-content-center">
+        <div class="logo-container k-d-flex-col k-align-items-center k-justify-content-center">
+            <img src="@Url.Content("~/Content/assets/signin/signin.svg")" />
+            <div class="signin k-justify-content-center">Sign In</div>
+            $1$<div class="register k-d-flex-row k-justify-content-evenly"><span>Don't have an account?</span> <a href="~/Account/Register" returnUrl="@Model.ReturnUrl">Sign Up</a></div>#1#
+        </div>
+        @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+        @(Html.Kendo().Form<LoginViewModel>()
+            .Name("Login")
+            .Validatable(v =>
+            {
+                v.ValidationSummary(vs => vs.Enable(true));
+                v.ValidateOnBlur(false);
+            })
+            .Layout("grid")
+            .Grid(g => g.Cols(1).Gutter(5))
+            .HtmlAttributes(new { method = "POST", style = "width: 100%;" })
+            .Items(items =>
+            {
+                items.Add()
+                    .Field(f => f.UserName)
+                    .Label(l => l.Text("User Name:"));
+                items.Add()
+                    .Field(f => f.Password)
+                    .Label(l => l.Text("Password:"))
+                    .InputHtmlAttributes(new { @type = "password", autocomplete = "off" });
+                /*items.Add()
+                    .Field(f => f.RememberMe)
+                    .Label("Remember me");*/
+            })
+            .ButtonsTemplate("<button class='k-button k-button-md k-button-rectangle k-button-solid-primary' style='width:100%'>Sign In</button>")
+        )
+        $1$<div style="padding:10px;" class="k-d-flex-row k-align-items-center k-justify-content-center">
+            <span style="flex: none; order: 0; flex-grow: 1; margin: 0px 9px;"></span>
+            <span style="border: none; width: 104px; font-size:14px">Or continue with</span>
+            <span style="flex: none; order: 2; flex-grow: 1; margin: 0px 9px;"></span>
+        </div>
+        <div class="button-container k-d-flex-row k-justify-content-evenly">
+            @(Html.Kendo().Button()
+                .Name("facebook")
+                .Icon("facebook")
+            )
+            @(Html.Kendo().Button()
+                .Name("twitter")
+                .Icon("twitter")
+            )
+            @(Html.Kendo().Button()
+                .Name("reddit")
+                .Icon("reddit")
+            )
+        </div>#1#
+    </div>
+    <style>
+        .form-container {
+            width: 270px;
+        }
+
+            .form-container > div > span {
+                display: inherit;
+                position: static;
+                width: 75px;
+                left: calc(50% - 75px/2 + 97.5px);
+                border: 1px solid #8F8F8F;
+            }
+
+        .logo-container {
+            gap: 20px;
+        }
+
+        .signin {
+            display: flex;
+            font-weight: 300;
+            font-size: 56px;
+            line-height: 67px;
+        }
+
+        .register {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .button-container {
+            width: 100%;
+        }
+
+        #Login > div.k-form-layout.k-d-grid.k-grid-cols-1 > div:nth-child(3) {
+            display: flex;
+        }
+
+        #RememberMe-form-label {
+            order: 1;
+            padding-left: 0.5em;
+        }
+    </style>
+    <script>
+    </script>
+
+    @section Scripts {
+        @Scripts.Render("~/bundles/jqueryval")
+    }
+*@

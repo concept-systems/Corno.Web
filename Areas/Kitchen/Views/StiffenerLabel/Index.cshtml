@@ -1,0 +1,56 @@
+﻿@using Corno.Web.Areas.Kitchen.Dto.Label
+@using Corno.Web.Globals
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@{
+    Layout = "~/Views/Shared/_AppLayout.cshtml";
+    ViewBag.BoxTitle = "Stiffener Label";
+}
+
+<div class="grid-container-full-height">
+    @(Html.Kendo().Grid<LabelIndexDto>()
+        .Name("grid")
+        .ApplyIndexSettings() // 👈 Apply index settings (full height, responsive)
+        .AddExportToolBar(enableExcel: true, enablePdf: true, enableSearch: true, customToolbar: toolbar =>
+        {
+            toolbar.Custom()
+                .Text("<span class='k-icon k-i-plus'></span> Add New")
+                .HtmlAttributes(new { @class = "k-grid-add-new k-button-add-new-outlined", style = "float: right;", onclick = $"window.location.href='{Url.Action("Create", "StiffenerLabel", new { area = "Kitchen" })}'; return false;" });
+        })
+        .Events(events => events.ApplyCommonEvents())
+            .Columns(columns =>
+            {
+                //columns.AddCommandColumns(new List<GridCommandConfig>
+                //{
+                //    new() { Name = "View", Text = "", IconClass = "k-icon k-i-preview k-i-eye", ClickHandler = "onViewClick" },
+                //});
+                columns.Bound(m => m.LabelDate)
+                    .Format("{0:dd/MM/yyyy hh:mm tt}");
+                columns.Bound(m => m.WarehouseOrderNo).Align(TextAlign.Left)
+                    .ClientTemplate("<a href='" + Url.Action("View", "PartLabel", new {area = "Kitchen"}) + "?id=#=Id#' class='text-primary text-decoration-underline'>#=WarehouseOrderNo#</a>");
+                columns.Bound(m => m.LotNo).Align(TextAlign.Left);
+                columns.Bound(m => m.Position);
+                columns.Bound(m => m.OrderQuantity);
+                columns.Bound(m => m.Quantity);
+                columns.AddStatusColumn();
+            })
+            .DataSource(dataSource => dataSource
+                .ApplyCommonDataSourceSettings("GetIndexViewDto", "StiffenerLabel", "Kitchen")
+                .Sort(s => s.Add(FieldConstants.Id).Descending())
+                .Group(group => { group.Add(g => g.WarehouseOrderNo); })
+                .Model(model => model.Id(FieldConstants.Id))
+            ))
+</div>
+<script type="text/javascript">
+
+      function onViewClick(e) {
+         e.preventDefault();
+         var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+         var id = dataItem.Id; // Assuming 'Id' is the field name
+         window.location.href = '@Url.Action("View", "PartLabel", new { area = "Kitchen" })' + '?id=' + id;
+      }
+
+    function sendData() {
+    }
+
+</script>

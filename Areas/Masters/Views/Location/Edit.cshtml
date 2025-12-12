@@ -1,0 +1,15 @@
+﻿@model Corno.Web.Areas.Masters.Dtos.Location.LocationDto
+
+@{
+    Layout = "~/Views/Shared/_LayoutEdit.cshtml";
+}
+
+@{
+    ViewBag.BoxTitle = $"Edit Location : {Model?.Name}";
+    ViewBag.Area = "Masters";
+    ViewBag.Controller = "Location";
+    ViewBag.SubmitAction = "Edit";
+}
+
+@Html.Partial("_Location", Model)
+

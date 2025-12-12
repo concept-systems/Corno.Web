@@ -1,0 +1,154 @@
+﻿@using Corno.Web.Extensions
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@model Corno.Web.Areas.DemoProject.Dtos.LabelDto
+
+@{
+    Layout = "~/Views/Shared/_AppLayout.cshtml";
+
+    ViewBag.BoxTitle = "View Product Label";
+}
+
+<div class="k-card">
+    <div class="k-card-header">
+        <div class="k-actions k-actions-horizontal k-actions-end">
+            @(Html.Kendo().Button()
+                    .Name("btnList")
+                    .Content("Back")
+                    .ApplyStandardSettingsWithType(ButtonType.Info, "arrow-left", ComponentSize.Medium)
+                    .Events(e => e.Click("onBack")))
+
+        </div>
+    </div>
+    <div class="k-card-separator"></div>
+    <div class="k-card-body">
+        <div class="row">
+            <div class="col-12 col-md-6 mb-3 mb-md-0">
+                <!-- Placeholder for the partial view -->
+                <div id="partialViewContainer" style="height: 100%"></div>
+            </div>
+            <div class="col-12 col-md-6">
+                <div class="table-responsive">
+                <table class="table table-bordered">
+                    <tr>
+                        <td>Date :</td>
+                        <td><strong>@Model.LabelDate.ToDateTime().ToString("dd/MM/yyyy")</strong></td>
+                        <td>Product :</td>
+                        <td><strong>@Model.ProductName</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Weight :</td>
+                        <td><strong>@Model.Weight</strong></td>
+                        <td>MRP :</td>
+                        <td>@Model.Rate</td>
+                    </tr>
+                    <tr>
+                        <td>Date :</td>
+                        <td><strong>@Model.ExpiryDate.ToDateTime().ToString("dd/MM/yyyy")</strong></td>
+                        <td>Product :</td>
+                        <td><strong>@Model.ManufacturingDate.ToDateTime().ToString("dd/MM/yyyy")</strong></td>
+                    </tr>
+                </table>
+                </div>
+                <div class="form-group row">
+                    <div class="col-12">
+                        @(Html.Kendo().Grid(Model?.Details)
+                            .Name("grid")
+                            .ToolBar(t => t.Search())
+                            .Pageable()
+                            .Sortable()
+                            //.Filterable(f => f.Mode(GridFilterMode.Row))
+                            .Resizable(resize => resize.Columns(true)) // Allow column resizing
+                            .HtmlAttributes(new { @class = "w-100" })
+                            .Columns(columns =>
+                            {
+                                columns.Bound(m => m.Status)
+                                    .HtmlAttributes(new { style = "text-align: center" })
+                                    .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                                    //.HtmlAttributes(new { style = "text-align: center" })
+                                    ;
+                                columns.Bound(m => m.ScanDate)
+                                    .HtmlAttributes(new { style = "text-align: center" })
+                                    .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                                    .Format("{0:dd/MM/yyyy}")
+                                    .Title("Date");
+                                columns.Bound(m => m.ModifiedBy)
+                                    .HtmlAttributes(new { style = "text-align: center" })
+                                    .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                                    .Title("User");
+                            }))
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="k-actions k-actions-horizontal k-actions-end">
+                        @(Html.Kendo().Button()
+                            .Name("print")
+                            .Content("Re-Print")
+                            .ApplyStandardSettingsWithType(ButtonType.Primary, "print", ComponentSize.Medium)
+                            .Events(e => e.Click("onPrintLabel")))
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+    $(document).ready(function () {
+        LoadPartialView()
+    });
+
+    function LoadPartialView(toPrinter) {
+        $.ajax({
+            url: '/PartLabel/LoadPartialView', // Replace with your actual controller and action
+            method: 'GET',
+            data: { 'partialViewName': 'Partials/ReportViewer_New' },
+            success: function (partialHtml) {
+                // Load HTML content into the element
+                $('#partialViewContainer').html(partialHtml, function () {
+                    // This code will execute after the HTML content has been loaded
+                    console.log("HTML content loaded successfully");
+
+                });
+                // Delay the execution of the next statement by a short duration
+                setTimeout(function () {
+                    // This code will execute after a short delay
+                    console.log("Timeout HTML content loaded successfully");
+                    if ('@Model?.PrintToPrinter' === 'True' || toPrinter === true) {
+                        printToPrinter();
+                    }
+                }, 1500); // Adjust the delay duration as needed
+            },
+            error: function () {
+                console.error('Failed to load the partial view.');
+            }
+        });
+    }
+
+    function onBackToList() {
+        window.location.href = '/DemoProject/ProductLabel/Index';
+    }
+
+    function onBack() {
+        // Try to use referrer if available and from same origin
+        var referrer = document.referrer;
+        if (referrer && referrer.indexOf(window.location.origin) === 0) {
+            var referrerPath = new URL(referrer).pathname;
+            if (referrerPath && referrerPath !== window.location.pathname) {
+                window.location.href = referrer;
+                return;
+            }
+        }
+        // Fallback to Index
+        window.location.href = '/DemoProject/ProductLabel/Index';
+    }
+
+    function onPrintLabel() {
+        printToPrinter();
+    }
+
+
+
+</script>
