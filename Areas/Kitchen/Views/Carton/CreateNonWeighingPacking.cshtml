@@ -1,0 +1,224 @@
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@model Corno.Web.Areas.Kitchen.Dto.Carton.CartonCrudDto
+
+@{
+    Layout = "~/Views/Shared/_AppLayout.cshtml";
+    ViewBag.BoxTitle = "Create New Non Weighing Packing";
+    ViewBag.ControllerName = "Carton";
+    ViewBag.SubmitAction = "CreateNonWeighingPacking";
+}
+
+<style>
+    .top-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 10px;
+    }
+
+    .form-section {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        flex-grow: 1;
+    }
+
+    .button-section {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .uniform-button.k-button {
+        width: 180px !important;
+        height: 30px !important;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12pt;
+    }
+
+    #grid {
+        height: calc(100vh - 200px);
+    }
+</style>
+
+<div class="container-fluid">
+    <div class="top-section">
+        <div class="form-section">
+            <label class="specialFontSize">Warehouse Order</label>
+            @(Html.Kendo().TextBoxFor(m => m.WarehouseOrderNo)
+                .Value(Model.WarehouseOrderNo)
+                .HtmlAttributes(new { @class = "specialFontSize", @readonly = "readonly", style = "width: 250px;" }))
+            @(Html.Kendo().TextBoxFor(m => m.Barcode)
+                .HtmlAttributes(new { @class = "w-100", id = "Barcode", placeholder = "Scan Barcode here", style = "width: 250px;" }))
+        </div>
+
+        <div class="button-section">
+            <div class="k-actions k-action-buttons, k-actions-vertical k-actions-end">
+                @(Html.Kendo().Button()
+                    .Name("btnList")
+                    .Content("List")
+                    .ApplyStandardSettingsWithType(ButtonType.Info, "arrow-left", ComponentSize.Medium)
+                    .Events(e => e.Click("onBack"))
+                    .HtmlAttributes(new { @class = "uniform-button" }))
+                @(Html.Kendo().Button()
+                    .Name("cancel")
+                    .Content("Cancel Carton")
+                    .ApplyStandardSettingsWithType(ButtonType.Danger, "cancel", ComponentSize.Medium)
+                    .Events(ev => ev.Click("onCancel"))
+                    .HtmlAttributes(new { @class = "uniform-button" }))
+                @(Html.Kendo().Button()
+                    .Name("preview")
+                    .Content("Preview")
+                    .ApplyStandardSettingsWithType(ButtonType.Success, "preview", ComponentSize.Medium)
+                    .Events(ev => ev.Click("onPreview"))
+                    .HtmlAttributes(new { @class = "uniform-button" }))
+                @(Html.Kendo().Button()
+                    .Name("print")
+                    .Content("Print")
+                    .ApplyStandardSettingsWithType(ButtonType.Primary, "print", ComponentSize.Medium)
+                    .Events(ev => ev.Click("onPrint"))
+                    .HtmlAttributes(new { @class = "uniform-button" }))
+            </div>
+        </div>
+    </div>
+
+    <div>
+        @(Html.Kendo().Grid(Model?.CartonDetailsDtos)
+            .Name("grid")
+            .Columns(columns =>
+            {
+                columns.Bound(m => m.Position)
+                    .ClientTemplate("#= Position #" + "<input type='hidden' name='DetailViewModels[#= index(data)#].Position' value='#= Position #' />   ");
+                columns.Bound(m => m.Description).Align(TextAlign.Left)
+                    .ClientTemplate("#= Description #" + "<input type='hidden' name='DetailViewModels[#= index(data)#].Description' value='#= Description #' />");
+                columns.Bound(m => m.ItemCode).Align(TextAlign.Left)
+                    .ClientTemplate("#= ItemCode #" + "<input type='hidden' name='DetailViewModels[#= index(data)#].ItemCode' value='#= ItemCode #' />");
+                columns.Bound(m => m.Barcode)
+                    .ClientTemplate("#= Barcode #" + "<input type='hidden' name='DetailViewModels[#= index(data)#].Barcode' value='#= Barcode #' />");
+                columns.Bound(m => m.CarcassCode)
+                    .ClientTemplate("#= CarcassCode #" + "<input type='hidden' name='DetailViewModels[#= index(data)#].CarcassCode' value='#= CarcassCode #' />");
+                columns.Bound(m => m.AssemblyCode)
+                    .ClientTemplate("#= AssemblyCode #" + "<input type='hidden' name='DetailViewModels[#= index(data)#].AssemblyCode' value='#= AssemblyCode #' />");
+                columns.Bound(m => m.Quantity)
+                    .ClientTemplate("#= Quantity #" + "<input type='hidden' name='DetailViewModels[#= index(data)#].Quantity' value='#= Quantity #' />");
+            })
+            .DataSource(dataSource => dataSource
+                .Ajax()
+                .ServerOperation(false)
+                .Events(e => e.Error("onGridError"))))
+    </div>
+
+    @(Html.Kendo().Window()
+        .Name("partialViewContainer")
+        .Title("Label Preview")
+        .Visible(false)
+        .Modal(true)
+        .Draggable(true)
+        .Resizable()
+        .Width(800)
+        .Height(480)
+        )
+</div>
+
+<iframe id="printFrame" style="display:none;"></iframe>
+
+<script>
+    $(document).ready(function () {
+        $("#Barcode").on("keypress", function (e) {
+            if (e.which !== 13 && e.which !== 10) return;
+
+            e.preventDefault();
+            const barcode = $(this).val();
+            if (!ValidateBarcodes(barcode)) return;
+
+            const formData = buildFormData();
+            fetchCommon('/Carton/ValidateNonWeighingBarcodeAsync', formData, function (data) {
+                if (data.Success) {
+                    const grid = $("#grid").data("kendoGrid");
+                    grid.dataSource.data(data.dto.CartonDetailsDtos);
+                    $("#WarehouseOrderNo").val(data.dto.WarehouseOrderNo);
+                    $("#Barcode").val('').focus();
+                } else {
+                    ShowError(data.Message);
+                }
+            });
+        });
+    });
+
+    function buildFormData() {
+        const formData = new FormData();
+        formData.append("WarehouseOrderNo", $("#WarehouseOrderNo").val());
+        formData.append("Barcode", $("#Barcode").val());
+
+        const grid = $("#grid").data("kendoGrid");
+        const gridData = grid.dataSource.data();
+        formData.append("CartonDetailsDtosJson", JSON.stringify(gridData));
+
+        return formData;
+    }
+
+    function clearFormAndGrid() {
+        const grid = $("#grid").data("kendoGrid");
+        grid.dataSource.data([]);
+        $("#WarehouseOrderNo").val('');
+        $("#Barcode").val('').focus();
+    }
+
+    function onPrint(e) {
+        e.preventDefault();
+        const formData = buildFormData();
+        fetchAndPrint('/Carton/PrintNonWeighingAsync', formData, function() {
+            clearFormAndGrid();
+            $("#Barcode").val('').focus();
+        });
+    }
+
+    function onPreview(e) {
+        e.preventDefault();
+        const formData = buildFormData();
+        fetchAndPreviewPdf('/Carton/PreviewNonWeighingAsync', formData, 'Non Weighing Packing', function() {
+            $("#Barcode").val('').focus();
+        });
+    }
+
+    function onCancel(e) {
+        e.preventDefault();
+        const formData = new FormData();
+        formData.append("WarehouseOrderNo", $("#WarehouseOrderNo").val());
+
+        fetchCommon('/Carton/CancelNonWeighing', formData, function (data) {
+            if (data.Success) {
+                clearFormAndGrid();
+            } else {
+                ShowError(data.Message);
+            }
+        });
+    }
+
+    function ShowError(message) {
+        bootbox.alert({
+            title: "Error",
+            message: message,
+            centerVertical: true,
+        });
+    };
+
+    function ValidateBarcodes(barcode) {
+        if (!barcode) {
+            ShowError("Please, Scan customer barcode");
+            return false;
+        }
+        return true;
+    }
+
+    function onBack() {
+        window.location.href = '@Url.Action("Index", "Carton", new { area = "Kitchen" })';
+    }
+</script>
+

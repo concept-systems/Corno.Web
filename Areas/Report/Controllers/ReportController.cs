@@ -5,6 +5,7 @@ using Corno.Web.Globals;
 using Corno.Web.Logger;
 using Corno.Web.Services.Interfaces;
 using Corno.Web.Services.Report.Interfaces;
+using Kendo.Mvc.Extensions;
 
 namespace Corno.Web.Areas.Report.Controllers;
 
@@ -34,12 +35,13 @@ public class ReportController : SuperController
             if (null == type)
                 throw new Exception("Report (" + reportName + ") is not assigned to selected form in site-map or not part of assembly.");
 
-            var report = _reportFactory.CreateReport(type);
-            Session[FieldConstants.Label] = report ?? throw new Exception("Invalid report type " + reportName);
-            /*var report = (BaseReport)DependencyResolver.Current.GetService(type);
-            Session[FieldConstants.Label] = report ?? throw new Exception("Invalid report type " + reportName);*/
-            /*var report = Bootstrapper.Get<BaseReport>(type);
-            Session[FieldConstants.Label] = report ?? throw new Exception("Invalid report type " + reportName);*/
+            // CRITICAL: Use AssemblyQualifiedName, NOT FullName
+            ViewBag.ReportTypeName = type.AssemblyQualifiedName;  // e.g., "Corno.Web.Areas.Kitchen.Reports.HandoverRpt, Corno.Web"
+            ViewBag.BoxTitle = type.Name.SplitPascalCase().Replace("Rpt", "Report");
+
+            /*// Pass the report type name to the view - HTML5 viewer will use TypeReportSourceResolver
+            // This is the standard practice - no need to store in Session
+            ViewBag.ReportTypeName = type.FullName;*/
         }
         catch (Exception exception)
         {

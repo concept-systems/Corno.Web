@@ -1,0 +1,16 @@
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@{
+    string buttonName = ViewBag.ButtonName ?? "btnExport";
+    string buttonText = ViewBag.ButtonText ?? "Export";
+    string clickFunction = ViewBag.ClickFunction ?? "onExport";
+    ButtonType buttonType = ViewBag.ButtonType ?? ButtonType.Export;
+    string icon = ViewBag.Icon ?? "export";
+}
+
+@(Html.Kendo().Button()
+    .Name(buttonName)
+    .Content(buttonText)
+    .ApplyStandardSettingsWithType(buttonType, icon, ComponentSize.Medium)
+    .Events(e => e.Click(clickFunction)))
+

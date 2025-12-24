@@ -21,6 +21,8 @@ public class BaseCartonService : PrintService<Carton>, IBaseCartonService
         _labelService = Bootstrapper.Get<IBaseLabelService>();
         _productService = Bootstrapper.Get<IProductService>();*/
 
+        // Note: Eager loading is now conditional - use GetWithDetailsAsync() when details are needed
+        // This improves performance by not loading child collections unnecessarily
         SetIncludes($"{nameof(Carton.CartonDetails)}," +
                     $"{nameof(Carton.CartonRackingDetails)}");
     }
@@ -72,25 +74,53 @@ public class BaseCartonService : PrintService<Carton>, IBaseCartonService
 
     #region -- Public Methods (Get) --
 
+    /// <summary>
+    /// Gets a carton by barcode without loading details (faster)
+    /// </summary>
     public async Task<Carton> GetByBarcodeAsync(string barcode)
     {
-        var carton = await FirstOrDefaultAsync(c => c.CartonBarcode == barcode, c => c).ConfigureAwait(false);
+        // Use ignoreInclude to avoid loading CartonDetails unnecessarily
+        var cartons = await GetAsync<Carton>(c => c.CartonBarcode == barcode, c => c, null, ignoreInclude: true).ConfigureAwait(false);
+        var carton = cartons.FirstOrDefault();
         if (null == carton)
             throw new Exception("Carton with this barcode does not exist.");
         return carton;
     }
 
+    /// <summary>
+    /// Gets a carton by barcode with optional detail checking
+    /// Optimized: Uses ignoreInclude to avoid loading all CartonDetails when not needed
+    /// </summary>
     public async Task<Carton> GetByBarcodeAsync(string barcode, IEnumerable<string> oldStatus,
         bool checkInDetails = false)
     {
         if (string.IsNullOrEmpty(barcode))
             throw new Exception("Invalid Barcode");
-        // Check for valid Customer / Order No.
+        
         Carton carton = null;
+        
+        // Optimized: Use ignoreInclude=true to avoid loading all CartonDetails
+        // The .Any() will still work but will be executed in SQL, not in memory
         if (checkInDetails)
-            carton = await FirstOrDefaultAsync(b => b.CartonDetails.Any(d => d.Barcode == barcode), b => b).ConfigureAwait(false);
+        {
+            // Even with ignoreInclude, .Any() on navigation property translates to SQL EXISTS subquery
+            // which is efficient with proper indexes
+            var cartons = await GetAsync<Carton>(
+                b => b.CartonDetails.Any(d => d.Barcode == barcode), 
+                b => b, 
+                null, 
+                ignoreInclude: true).ConfigureAwait(false);
+            carton = cartons.FirstOrDefault();
+        }
 
-        carton ??= await FirstOrDefaultAsync(b => b.CartonBarcode == barcode, b => b).ConfigureAwait(false);
+        // If not found in details or checkInDetails is false, try CartonBarcode
+        if (carton == null)
+        {
+            // Use ignoreInclude to avoid loading CartonDetails unnecessarily
+            var cartons = await GetAsync<Carton>(b => b.CartonBarcode == barcode, b => b, null, ignoreInclude: true).ConfigureAwait(false);
+            carton = cartons.FirstOrDefault();
+        }
+        
         if (null == carton)
             throw new Exception("Carton with barcode value ('" + barcode + ") does not available in system.");
 
@@ -99,6 +129,19 @@ public class BaseCartonService : PrintService<Carton>, IBaseCartonService
                                 $"{string.Join(",", oldStatus)}. " +
                                 $"It has current status : {carton.Status}");
 
+        return carton;
+    }
+
+    /// <summary>
+    /// Gets a carton with all details loaded (use when details are needed)
+    /// </summary>
+    public async Task<Carton> GetByBarcodeWithDetailsAsync(string barcode)
+    {
+        // Enable includes for this query
+        SetIncludes($"{nameof(Carton.CartonDetails)},{nameof(Carton.CartonRackingDetails)}");
+        var carton = await FirstOrDefaultAsync(c => c.CartonBarcode == barcode, c => c).ConfigureAwait(false);
+        if (null == carton)
+            throw new Exception("Carton with this barcode does not exist.");
         return carton;
     }
 

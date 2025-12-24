@@ -1,7 +1,6 @@
-@using Corno.Web.Globals
 @using Corno.Web.Helper
 @using Kendo.Mvc.UI
-@model Corno.Web.Areas.DemoProject.Dtos.LabelDto
+@model Corno.Web.Areas.DemoProject.Dtos.LabelCrudDto
 
 @{
     Layout = "~/Views/Shared/_LayoutBase.cshtml";
@@ -24,26 +23,14 @@
 @section sectionBaseHeader
 {
     <div class="k-actions k-actions-horizontal k-actions-end">
-        @(Html.Kendo().Button()
-            .Name("btnBack")
-            .Content("Back")
-            .ApplyStandardSettingsWithType(ButtonType.Info, "arrow-60-left", ComponentSize.Medium)
-            .HtmlAttributes(new { onclick = $"window.location.href='{Url.Action("Index", "Label", new { area = "DemoProject" })}'; return false;" }))
+        @Html.Partial("~/Views/Shared/Buttons/_BackButton")
     </div>
 }
 
 @section sectionBaseFooter
 {
     <div class="k-actions k-actions-horizontal k-actions-end">
-        @(Html.Kendo().Button()
-            .Name("btnSave")
-            .Content("Save")
-            .ApplyStandardSettingsWithType(ButtonType.Save, "save", ComponentSize.Medium)
-            .HtmlAttributes(new
-            {
-                type = "submit",
-                name = "action:Create"
-            }))
+        @Html.Partial("~/Views/Shared/Buttons/_SaveButton", new { HtmlAttributes = new { name = "action:Create" } })
     </div>
 }
 

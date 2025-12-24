@@ -10,7 +10,7 @@ namespace Corno.Web.Areas.DemoProject.Services.Interfaces;
 
 public interface IProductLabelService : IBaseService<Label>
 {
-    Task<List<Label>> CreateLabelsAsync(LabelDto dto, string userId);
+    Task<List<Label>> CreateLabelsAsync(LabelCrudDto dto, string userId);
     Task<BaseReport> CreateLabelReportAsync(List<Label> labels, Product product, int? labelFormatId, bool bDuplicate);
     Task UpdateDatabaseAsync(List<Label> labels);
 }

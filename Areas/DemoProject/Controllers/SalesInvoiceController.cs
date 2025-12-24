@@ -4,12 +4,17 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Web.Mvc;
 using Corno.Web.Areas.DemoProject.Dtos;
+using Corno.Web.Areas.DemoProject.Reports;
 using Corno.Web.Areas.DemoProject.Services.Interfaces;
 using Corno.Web.Controllers;
+using Corno.Web.Extensions;
 using Corno.Web.Globals;
+using Corno.Web.Logger;
 using Corno.Web.Models.Sales;
+using Corno.Web.Services.Interfaces;
 using Corno.Web.Services.Masters.Interfaces;
 using Corno.Web.Services.Sales.Interfaces;
+using Corno.Web.Windsor;
 using Kendo.Mvc.Extensions;
 using Kendo.Mvc.UI;
 using Mapster;
@@ -38,9 +43,8 @@ public class SalesInvoiceController : SuperController
         TypeAdapterConfig<SalesInvoiceDto, SalesInvoice>
             .NewConfig()
             .IgnoreNullValues(true)
-            .Map(dest => dest.Code, src => src.InvoiceNo)
-            // Map details collection
-            .Map(dest => dest.SalesInvoiceDetails, src => (src.Details ?? new List<SalesInvoiceDetailDto>()).Select(d => d.Adapt<SalesInvoiceDetail>()).ToList())
+            // Map details collection (type difference)
+            .Map(dest => dest.SalesInvoiceDetails, src => (src.SalesInvoiceDetailDtos ?? new List<SalesInvoiceDetailDto>()).Select(d => d.Adapt<SalesInvoiceDetail>()).ToList())
             .AfterMapping((src, dest) =>
             {
                 // Set audit/default fields similar to Kitchen PlanService
@@ -63,14 +67,12 @@ public class SalesInvoiceController : SuperController
         TypeAdapterConfig<SalesInvoiceDetailDto, SalesInvoiceDetail>
             .NewConfig()
             .IgnoreNullValues(true)
-            .Map(dest => dest.ProductId, src => src.ProductId)
-            //.Map(dest => dest.ProductName, src => src.ProductName)
-            .Map(dest => dest.Quantity, src => src.Quantity)
-            .Map(dest => dest.Rate, src => src.Rate)
-            //.Map(dest => dest.Amount, src => src.Amount)
-            .Map(dest => dest.Barcode, src => src.Barcode)
-            .AfterMapping((_, dest) =>
+            .AfterMapping((src, dest) =>
             {
+                // Update 
+                dest.Rate = src.Mrp.ToDouble();
+                dest.Amount = src.Amount.ToDouble();
+
                 dest.ModifiedDate = DateTime.Now;
                 dest.ModifiedBy = User?.Identity?.Name ?? "System";
                 if (dest.Id <= 0)
@@ -80,6 +82,27 @@ public class SalesInvoiceController : SuperController
                 }
                 dest.Status = string.IsNullOrEmpty(dest.Status) ? StatusConstants.Active : dest.Status;
             });
+
+        // Reverse mapping: entity -> dto (including details)
+        TypeAdapterConfig<SalesInvoice, SalesInvoiceDto>
+            .NewConfig()
+            .IgnoreNullValues(true)
+            // Name difference
+            .Map(dest => dest.MobileNo, src => src.GetProperty(FieldConstants.Mobile, string.Empty))
+            .Map(dest => dest.SalesInvoiceDetailDtos, src => (src.SalesInvoiceDetails ?? new List<SalesInvoiceDetail>()).Select(d => d.Adapt<SalesInvoiceDetailDto>()).ToList());
+
+        // Reverse mapping: detail entity -> dto
+        TypeAdapterConfig<SalesInvoiceDetail, SalesInvoiceDetailDto>
+            .NewConfig()
+            .IgnoreNullValues(true)
+            .Map(dest => dest.Id, src => src.Id)
+            // Name difference
+            .Map(dest => dest.Mrp, src => src.Rate);
+            // PackingTypeId and NetWeight
+        TypeAdapterConfig<SalesInvoiceDetail, SalesInvoiceDetailDto>
+            .ForType()
+            .Map(dest => dest.PackingTypeId, src => src.PackingTypeId)
+            .Map(dest => dest.NetWeight, src => src.NetWeight);
     }
     #endregion
 
@@ -97,7 +120,6 @@ public class SalesInvoiceController : SuperController
     /// Validates the SalesInvoiceDto for required fields and business rules
     /// </summary>
     /// <param name="dto">The DTO to validate</param>
-    /// <returns>True if validation passes, false otherwise</returns>
     private void ValidateSalesInvoiceDto(SalesInvoiceDto dto)
     {
         // Validate Mobile
@@ -113,11 +135,11 @@ public class SalesInvoiceController : SuperController
             throw new Exception("Payment mode is required.");
 
         // Validate Paid Amount
-        if (dto.PaidAmount is null or <= 0)
-            throw new Exception("Payment Mode is required."); 
+        /*if (dto.PaidAmount is null or <= 0)
+            throw new Exception("Payment Mode is required."); */
 
         // Validate at least one product in details
-        if (dto.Details is not { Count: > 0 })
+        if (dto.SalesInvoiceDetailDtos is not { Count: > 0 })
             throw new Exception(@"At least one product is required in the invoice details.");
     }
 
@@ -133,7 +155,6 @@ public class SalesInvoiceController : SuperController
     {
         var dto = new SalesInvoiceDto
         {
-            PrintToPrinter = false,
             InvoiceDate = DateTime.Now
         };
         Session[FieldConstants.Label] = null;
@@ -141,11 +162,11 @@ public class SalesInvoiceController : SuperController
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
+    /*[ValidateAntiForgeryToken]*/
     //[MultipleButton(Name = "action", Argument = "Create")]
     public async Task<ActionResult> Create(SalesInvoiceDto dto)
     {
-        if (!ModelState.IsValid)
+        /*if (!ModelState.IsValid)
             return View(dto);
 
         try
@@ -155,6 +176,9 @@ public class SalesInvoiceController : SuperController
 
             // Map dto (including details) to entity and save
             var entity = dto.Adapt<SalesInvoice>();
+            // Set serial number to next max only for new invoices (when not already set)
+            if (entity.SerialNo <= 0)
+                entity.SerialNo = await _salesInvoiceService.GetNextSerialNoAsync().ConfigureAwait(false);
             await _salesInvoiceService.AddAndSaveAsync(entity).ConfigureAwait(false);
 
             return RedirectToAction("Index");
@@ -162,7 +186,7 @@ public class SalesInvoiceController : SuperController
         catch (Exception exception)
         {
             HandleControllerException(exception);
-        }
+        }*/
 
         return View(dto);
     }
@@ -176,8 +200,17 @@ public class SalesInvoiceController : SuperController
                 throw new Exception("Invalid Id");
 
             var salesInvoiceDto = salesInvoice.Adapt<SalesInvoiceDto>();
-            salesInvoiceDto.PrintToPrinter = false;
-            Session[FieldConstants.Label] = null;
+
+            // Populate names for product and packing type before save (optional display enrichment)
+            var miscMasterService = Bootstrapper.Get<IMiscMasterService>();
+            var productIds = salesInvoiceDto.SalesInvoiceDetailDtos.Select(d => d.ProductId).Distinct().ToList();
+            var products = await _productService.GetViewModelListAsync(p => productIds.Contains(p.Id));
+            var packingTypeIds = salesInvoiceDto.SalesInvoiceDetailDtos.Select(d => d.PackingTypeId).Distinct().ToList();
+            var packingTypes = await miscMasterService.GetViewModelListAsync(p => packingTypeIds.Contains(p.Id));
+            salesInvoiceDto.SalesInvoiceDetailDtos.ForEach(d => {
+                d.ProductName = products.FirstOrDefault(x => x.Id == d.ProductId)?.Name;
+                d.PackingTypeShortName = packingTypes.FirstOrDefault(x => x.Id == d.PackingTypeId)?.Description;
+            });
 
             return View(salesInvoiceDto);
         }
@@ -190,11 +223,11 @@ public class SalesInvoiceController : SuperController
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
+    //[ValidateAntiForgeryToken]
     //[MultipleButton(Name = "action", Argument = "Edit")]
     public async Task<ActionResult> Edit(SalesInvoiceDto dto)
     {
-        if (!ModelState.IsValid)
+        /*if (!ModelState.IsValid)
             return View(dto);
 
         try
@@ -209,9 +242,31 @@ public class SalesInvoiceController : SuperController
             // Adapt header fields
             dto.Adapt(existing);
 
-            // Replace details with adapted ones
-            existing.SalesInvoiceDetails = (dto.Details ?? new List<SalesInvoiceDetailDto>())
+            // Merge details by Id: update existing, add new, remove deleted
+            var incomingDetails = (dto.SalesInvoiceDetailDtos ?? new List<SalesInvoiceDetailDto>())
                 .Select(d => d.Adapt<SalesInvoiceDetail>()).ToList();
+
+            // Update existing rows
+            foreach (var inc in incomingDetails)
+            {
+                if (inc.Id > 0)
+                {
+                    var existingDetail = existing.SalesInvoiceDetails.FirstOrDefault(x => x.Id == inc.Id);
+                    if (existingDetail != null)
+                        inc.Adapt(existingDetail);
+                    else
+                        existing.SalesInvoiceDetails.Add(inc);
+                }
+                else
+                {
+                    // New row
+                    existing.SalesInvoiceDetails.Add(inc);
+                }
+            }
+
+            // Remove rows that are not in incoming list (deleted by user)
+            var incomingIds = new HashSet<int>(incomingDetails.Where(x => x.Id > 0).Select(x => x.Id));
+            existing.SalesInvoiceDetails.RemoveAll(x => x.Id > 0 && !incomingIds.Contains(x.Id));
 
             await _salesInvoiceService.UpdateAndSaveAsync(existing).ConfigureAwait(false);
 
@@ -220,7 +275,7 @@ public class SalesInvoiceController : SuperController
         catch (Exception exception)
         {
             HandleControllerException(exception);
-        }
+        }*/
 
         return View(dto);
     }
@@ -233,9 +288,20 @@ public class SalesInvoiceController : SuperController
             if (null == model)
                 throw new Exception("Invalid Id");
 
+            // Ensure reverse mapping config is applied before adaptation
+            ConfigureMapping();
             var dto = model.Adapt<SalesInvoiceDto>();
-            dto.PrintToPrinter = false;
-            Session[FieldConstants.Label] = null;
+
+            // Update Product Names & Packing Type Names
+            var miscMasterService = Bootstrapper.Get<IMiscMasterService>();
+            var productIds = dto.SalesInvoiceDetailDtos.Select(d => d.ProductId).Distinct().ToList();
+            var products = await _productService.GetViewModelListAsync(p => productIds.Contains(p.Id));
+            var packingTypeIds = dto.SalesInvoiceDetailDtos.Select(d => d.PackingTypeId).Distinct().ToList();
+            var packingTypes = await miscMasterService.GetViewModelListAsync(p => packingTypeIds.Contains(p.Id));
+            dto.SalesInvoiceDetailDtos.ForEach(d => {
+                d.ProductName = products.FirstOrDefault(x => x.Id == d.ProductId)?.Name;
+                d.PackingTypeShortName = packingTypes.FirstOrDefault(x => x.Id == d.PackingTypeId)?.Description;
+            });
 
             return View(dto);
         }
@@ -261,12 +327,29 @@ public class SalesInvoiceController : SuperController
             if (null == label)
                 throw new Exception($"barcode '{barcode}' is not found");
             var product = await _productService.FirstOrDefaultAsync(p => p.Id == label.ProductId, p => p).ConfigureAwait(false);
+            // MRP from label extra properties
+            var mrp = label.GetProperty(FieldConstants.Mrp, 0);
+            var miscService = Bootstrapper.Get<IMiscMasterService>();
+            var packingType = await miscService.GetViewModelAsync(label.PackingTypeId ?? 0).ConfigureAwait(false);
+            var netWeight = label.NetWeight;
+
+            var quantity = 1; // Default quantity for barcode scan
             return Json(new
             {
                 Success = true,
-                label.ProductId,
-                ProductName = product?.Name,
-                Quantity = 1,
+                SalesInvoiceDetailDto = new SalesInvoiceDetailDto
+                {
+                    Id = 0,
+                    ProductId = label.ProductId,
+                    ProductName = product?.Name,
+                    PackingTypeId = label.PackingTypeId,
+                    PackingTypeShortName = packingType?.Description,
+                    Barcode = label.Barcode,
+                    Quantity = quantity,
+                    Mrp = mrp,
+                    Amount = mrp.ToDouble() * quantity,
+                    NetWeight = netWeight.ToDouble()
+                },
             }, JsonRequestBehavior.AllowGet);
         }
         catch (Exception exception)
@@ -298,6 +381,94 @@ public class SalesInvoiceController : SuperController
     public ActionResult EditingInline_Create([DataSourceRequest] DataSourceRequest request, SalesInvoiceDetailDto detail)
     {
         return Json(new[] { detail }.ToDataSourceResult(request, ModelState));
+    }
+
+    [HttpPost]
+    public async Task<ActionResult> Preview(SalesInvoiceDto dto)
+    {
+        try
+        {
+            // Validate DTO
+            ValidateSalesInvoiceDto(dto);
+
+            // Create report
+            var report = await CreateSalesInvoiceReportAsync(dto);
+            return File(report.ToDocumentBytes(), "application/pdf");
+        }
+        catch (Exception exception)
+        {
+            HandleControllerException(exception);
+            var message = LogHandler.GetDetailException(exception)?.Message;
+            return Json(new { Success = false, Message = message },
+                JsonRequestBehavior.AllowGet);
+        }
+    }
+
+    [HttpPost]
+    public async Task<ActionResult> Save(SalesInvoiceDto dto)
+    {
+        try
+        {
+            // Validate DTO (common rules)
+            ValidateSalesInvoiceDto(dto);
+
+            // Delegate business logic to service
+            var entity = await _salesInvoiceService.SaveInvoiceAsync(dto).ConfigureAwait(false);
+
+            // Ensure DTO reflects persisted entity
+            dto.Id = entity.Id;
+            dto.Code = entity.Code;
+
+            return Json(new
+            {
+                Success = true,
+                Id = entity.Id,
+                Code = entity.Code
+            }, JsonRequestBehavior.AllowGet);
+        }
+        catch (Exception exception)
+        {
+            HandleControllerException(exception);
+            var message = LogHandler.GetDetailException(exception)?.Message;
+            return Json(new { Success = false, Message = message },
+                JsonRequestBehavior.AllowGet);
+        }
+    }
+
+    [HttpPost]
+    public async Task<ActionResult> Print(SalesInvoiceDto dto)
+    {
+        /*if (!ModelState.IsValid)
+            return Json(new { Success = false, Message = "Invalid model state" }, JsonRequestBehavior.AllowGet);*/
+        
+        try
+        {
+            // Validate DTO
+            ValidateSalesInvoiceDto(dto);
+
+            // Use common service method so Save & Save & Print share logic
+            var entity = await _salesInvoiceService.SaveInvoiceAsync(dto).ConfigureAwait(false);
+
+            // Ensure DTO is in sync for report generation
+            dto.Id = entity.Id;
+            dto.Code = entity.Code;
+
+            // Create report
+            var report = await CreateSalesInvoiceReportAsync(dto);
+            return File(report.ToDocumentBytes(), "application/pdf");
+        }
+        catch (Exception exception)
+        {
+            HandleControllerException(exception);
+            var message = LogHandler.GetDetailException(exception)?.Message;
+            return Json(new { Success = false, Message = message },
+                JsonRequestBehavior.AllowGet);
+        }
+    }
+
+    private async Task<SalesInvoiceReceiptRpt> CreateSalesInvoiceReportAsync(SalesInvoiceDto dto)
+    {
+        return new SalesInvoiceReceiptRpt(dto);
     }
 
     #endregion

@@ -10,7 +10,8 @@
 <div class="grid-container-full-height">
     @(Html.Kendo().Grid<ProductIndexDto>()
         .Name("grid")
-        .ApplyIndexSettings() // 👈 Apply index settings (full height, responsive)
+        .AddCommonSettings()
+        .AddResponsiveSettings()
         .AddExportToolBar(enableExcel: true, enablePdf: true, enableSearch: true, customToolbar: toolbar =>
         {
             toolbar.Custom()
@@ -24,9 +25,9 @@
         {
             columns.Bound(m => m.Id);
             columns.Bound(m => m.Code)
-                .Title("Code");
+                .Title("Code").Align(TextAlign.Left);
             columns.Bound(m => m.Name)
-                .Title("Name");
+                .Title("Name").Align(TextAlign.Left);
             columns.AddStatusColumn();
             columns.Command(command =>
             {
@@ -34,10 +35,10 @@
                     .IconClass("k-icon k-i-edit k-text-info")
                     .Click("onEditClick")
                     .Visible("function(dataItem) { return dataItem.Status === 'Active'; }");
-                command.Custom("Delete").Text("")
+                /*command.Custom("Delete").Text("")
                     .IconClass("k-icon k-i-delete k-text-error")
                     .Click("onDeleteClick")
-                    .Visible("function(dataItem) { return dataItem.Status === 'Active'; }");
+                    .Visible("function(dataItem) { return dataItem.Status === 'Active'; }");*/
             })
             .Title("Actions")
             .Width(100);

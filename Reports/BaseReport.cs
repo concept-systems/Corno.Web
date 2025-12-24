@@ -58,10 +58,10 @@ public class BaseReport : Report
     #endregion
 
     #region -- Events --
-    public virtual void OnActionExecuting(object sender, InteractiveActionCancelEventArgs args)
+    /*public virtual void OnActionExecuting(object sender, InteractiveActionCancelEventArgs args)
     {
 
-    }
+    }*/
 
     private void BaseReport_Error(object sender, ErrorEventArgs eventArgs)
     {

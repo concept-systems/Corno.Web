@@ -20,6 +20,11 @@ public sealed class CartonViewDto : BaseDto
 
     public ReportBook ReportBook { get; set; }
 
+    /// <summary>
+    /// Base64 encoded PDF of the carton label, used for inline preview/print.
+    /// </summary>
+    public string Base64 { get; set; }
+
     public List<CartonDetailsDto> CartonDetailsDtos { get; set; }
     public List<CartonRackingDetailDto> CartonRackingDetailDtos { get; set; }
 

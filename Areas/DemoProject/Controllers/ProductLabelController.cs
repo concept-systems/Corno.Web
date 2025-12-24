@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Web.Mvc;
-using Corno.Web.Areas.Admin.Services.Interfaces;
+﻿using Corno.Web.Areas.Admin.Services.Interfaces;
 using Corno.Web.Areas.DemoProject.Dtos;
 using Corno.Web.Areas.DemoProject.Services.Interfaces;
+using Corno.Web.Areas.Masters.Dtos.Product;
 using Corno.Web.Controllers;
 using Corno.Web.Dtos;
 using Corno.Web.Extensions;
@@ -17,7 +13,15 @@ using Corno.Web.Services.Masters.Interfaces;
 using Corno.Web.Windsor;
 using Kendo.Mvc.Extensions;
 using Kendo.Mvc.UI;
+using Mapster;
 using Microsoft.AspNet.Identity;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Web.Http.Results;
+using System.Web.Mvc;
+using Corno.Web.Services.Interfaces;
 using Volo.Abp.Data;
 
 namespace Corno.Web.Areas.DemoProject.Controllers;
@@ -25,10 +29,12 @@ namespace Corno.Web.Areas.DemoProject.Controllers;
 public class ProductLabelController : SuperController
 {
     #region -- Constructors --
-    public ProductLabelController(IProductLabelService labelService, IProductService productService)
+    public ProductLabelController(IProductLabelService labelService, IProductService productService,
+        IMiscMasterService miscMasterService)
     {
         _labelService = labelService;
         _productService = productService;
+        _miscMasterService = miscMasterService;
 
         const string viewPath = "~/Areas/DemoProject/views/ProductLabel/";
         _indexPath = $"{viewPath}/Index.cshtml";
@@ -41,6 +47,7 @@ public class ProductLabelController : SuperController
 
     private readonly IProductLabelService _labelService;
     private readonly IProductService _productService;
+    private readonly IMiscMasterService _miscMasterService;
 
     private readonly string _indexPath;
     private readonly string _createPath;
@@ -49,7 +56,7 @@ public class ProductLabelController : SuperController
 
     #region -- Private Methods --
 
-    private async Task<LabelDto> CreateLabelDtoAsync(int? id)
+    private async Task<LabelCrudDto> CreateLabelDtoAsync(int? id)
     {
         var label = await _labelService.FirstOrDefaultAsync<Label>(l => l.Id == id, l => l);
         if (label == null)
@@ -61,19 +68,19 @@ public class ProductLabelController : SuperController
         var userService = Bootstrapper.Get<IUserService>();
         var users = await userService.GetAsync(p => userIds.Contains(p.Id), p => p);
 
-        var dto = new LabelDto
+        var dto = new LabelCrudDto
         {
             ProductId = product?.Id,
             ProductName = product?.Name,
             LabelDate = label.LabelDate,
             Weight = label.NetWeight ?? 0,
-            Rate = label.GetProperty(FieldConstants.Rate, 0),
+            Mrp = label.GetProperty(FieldConstants.Mrp, 0),
             ManufacturingDate = label.GetProperty(FieldConstants.ManufacturingDate, DateTime.MinValue),
-            ExpiryDate = label.GetProperty("ExpiryDate", DateTime.MinValue),
+            ExpiryDate = label.GetProperty(FieldConstants.ExpiryDate, DateTime.MinValue),
 
             PrintToPrinter = false,
 
-            Details = label.LabelDetails.Select(d => new LabelDetailDto
+            Details = label.LabelDetails.Select(d => new LabelCrudDetailDto
             {
                 ScanDate = d.ScanDate,
                 ModifiedBy = users.FirstOrDefault(p => p.Id == d.ModifiedBy)?.UserName,
@@ -95,11 +102,11 @@ public class ProductLabelController : SuperController
     public virtual ActionResult Create()
     {
         Session[FieldConstants.Label] = null;
-        return View(_createPath, new LabelDto());
+        return View(_createPath, new LabelCrudDto());
     }
 
     [HttpPost]
-    public async Task<ActionResult> Print(LabelDto dto)
+    public async Task<ActionResult> Print(LabelCrudDto dto)
     {
         if (!ModelState.IsValid)
             return View(_createPath, dto);
@@ -136,7 +143,7 @@ public class ProductLabelController : SuperController
     }
 
     [HttpPost]
-    public async Task<ActionResult> Preview(LabelDto dto)
+    public async Task<ActionResult> Preview(LabelCrudDto dto)
     {
         if (!ModelState.IsValid)
             return View(_createPath, dto);
@@ -208,26 +215,28 @@ public class ProductLabelController : SuperController
     {
         try
         {
-            var query = (IEnumerable<Label>)_labelService.GetQuery();
+            var query = _labelService.GetQuery();
+            var result = await query.ToDataSourceResultAsync(request).ConfigureAwait(false);
 
-            var productQuery = (IEnumerable<Product>)_productService.GetQuery();
+            var labels = (List<Label>)result.Data;
 
-            var data = from label in query
-                       where (label.ProductId ?? 0) > 0
-                       join product in productQuery on label.ProductId equals product.Id
-                       select new LabelDto
-                       {
-                           Id = label.Id,
-                           LabelDate = label.LabelDate,
-                           ProductName = product?.Name,
-                           Weight = label.Quantity,
-                           Rate = label.GetProperty(FieldConstants.Rate, 0) > 0 ? label.GetProperty(FieldConstants.Rate, 0) : product?.Mrp,
-                           ExpiryDate = label.GetProperty("ExpiryDate", DateTime.MinValue),
-                           ManufacturingDate = label.GetProperty(FieldConstants.ManufacturingDate, DateTime.MinValue),
-                       };
-            var result = await data.ToDataSourceResultAsync(request).ConfigureAwait(false);
-            //var result = await query.ToDataSourceResultAsync(request);
+            // Post-process only the current page to populate MRP, ManufacturingDate and ExpiryDate
+            var productIds = labels.Select(p => p.ProductId).Distinct().ToList();
+            var products = await _productService.GetViewModelListAsync(p => productIds.Contains(p.Id));
+            var packingTypeIds = labels.Select(p => p.PackingTypeId).Distinct().ToList();
+            var packingTypes = await _miscMasterService.GetViewModelListAsync(m => packingTypeIds.Contains(m.Id));
+            var labelIndexDtos = labels.Adapt<List<LabelIndexDto>>();
+            foreach (var labelIndexDto in labelIndexDtos)
+            {
+                labelIndexDto.ProductName = products.FirstOrDefault(p => p.Id == labelIndexDto.ProductId)?.Name;
+                labelIndexDto.PackingTypeName = packingTypes.FirstOrDefault(p => p.Id == labelIndexDto.PackingTypeId)?.Name;
 
+                labelIndexDto.Mrp = labelIndexDto.GetProperty(FieldConstants.Mrp, 0);
+                labelIndexDto.ManufacturingDate = labelIndexDto.GetProperty(FieldConstants.ManufacturingDate, DateTime.MinValue);
+                labelIndexDto.ExpiryDate = labelIndexDto.GetProperty(FieldConstants.ExpiryDate, DateTime.MinValue);
+            }
+
+            result.Data = labelIndexDtos;
             return Json(result, JsonRequestBehavior.AllowGet);
         }
         catch (Exception exception)

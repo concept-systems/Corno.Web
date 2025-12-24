@@ -10,7 +10,7 @@
 }
 
 <div class="grid-container-full-height">
-    @(Html.Kendo().Grid<LabelDto>()
+    @(Html.Kendo().Grid<LabelIndexDto>()
         .Name("grid")
         .ApplyIndexSettings(customToolbar: toolbar =>
         {
@@ -21,20 +21,26 @@
         .Events(events => events.ApplyCommonEvents())
         .Columns(columns =>
         {
-            columns.Bound(m => m.Id).Hidden(true);
+            columns.Bound(m => m.Id).Title("Id")
+                .Align(TextAlign.Center);
+            columns.Bound(m => m.Barcode).Title("Barcode")
+                .Align(TextAlign.Left);
             columns.Bound(m => m.LabelDate).Title("Date")
                 .Format("{0:dd/MM/yyyy}")
                 .Align(TextAlign.Center);
             columns.Bound(m => m.ProductName).Title("Product")
                 .Align(TextAlign.Left);
-            columns.Bound(m => m.Weight)
+            columns.Bound(m => m.NetWeight)
                 .Align(TextAlign.Right);
-            columns.Bound(m => m.Rate).Title("MRP")
+            columns.Bound(m => m.PackingTypeName)
+                .Title("Unit")
                 .Align(TextAlign.Right);
-            columns.Bound(m => m.ExpiryDate).Title("Exp. Date")
+            columns.Bound(m => m.Mrp).Title("MRP")
+                .Align(TextAlign.Right);
+            columns.Bound(m => m.ManufacturingDate).Title("Mfg. Date")
                 .Format("{0:dd/MM/yyyy}")
                 .Align(TextAlign.Center);
-            columns.Bound(m => m.ManufacturingDate).Title("Mfg. Date")
+            columns.Bound(m => m.ExpiryDate).Title("Exp. Date")
                 .Format("{0:dd/MM/yyyy}")
                 .Align(TextAlign.Center);
             // Use GridHelper status column
@@ -54,7 +60,7 @@
         )
         .DataSource(dataSource => dataSource
             .ApplyCommonDataSourceSettings("GetIndexViewModels", "ProductLabel", "DemoProject")
-            .Sort(s => s.Add(FieldConstants.LabelDate).Descending())
+            .Sort(s => s.Add(FieldConstants.Id).Descending())
         ))
 </div>
 

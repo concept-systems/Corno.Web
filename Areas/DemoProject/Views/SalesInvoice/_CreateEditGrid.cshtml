@@ -8,7 +8,6 @@
         .Name("Barcode")
         .HtmlAttributes(new
         {
-        //required = "required",
             @class = "w-100",
             placeholder = "Scan barcode here..."
         }))
@@ -21,31 +20,44 @@
                  .Name("grid")
                  .Columns(columns =>
                  {
-                     columns.Bound(m => m.ProductName)
-                        .ClientTemplate("#= ProductName #" + "<input type='hidden' name='Details[#= index(data)#].ProductName' value='#= ProductName #' />")
+                     columns.Bound(m => m.ProductId)
+                        .ClientTemplate("#= ProductName #" + "<input type='hidden' name='Details[#= index(data)#].ProductId' value='#= ProductId #' />")
                         .HtmlAttributes(new { style = "text-align: left" })
-                        .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" });
-                     columns.Bound(m => m.Barcode)
+                        .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                        .Title("Product");
+
+                    columns.Bound(m => m.Mrp)
+                        .ClientTemplate("#= Mrp #" + "<input type='hidden' name='Details[#= index(data)#].Mrp' value='#= Mrp #' />")
+                        .HtmlAttributes(new { style = "text-align: right" })
+                        .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                        .FooterHtmlAttributes(new { style = "text-align: right" })
+                        .ClientFooterTemplate("Total : #= kendo.toString(sum, 'n2') #");
+
+                    // Show NetWeight with PackingTypeName separated by space
+                    // Also include hidden inputs for NetWeight, PackingTypeId, PackingTypeName, and Quantity
+                    columns.Bound(m => m.NetWeight)
+                         .Title("Weight")
+                         .ClientTemplate(
+                             "#= NetWeight # #= PackingTypeName #" +
+                             "<input type='hidden' name='Details[#= index(data)#].NetWeight' value='#= NetWeight #' />" +
+                             "<input type='hidden' name='Details[#= index(data)#].PackingTypeId' value='#= PackingTypeId #' />" +
+                             "<input type='hidden' name='Details[#= index(data)#].PackingTypeName' value='#= PackingTypeName #' />" +
+                             "<input type='hidden' name='Details[#= index(data)#].Quantity' value='#= Quantity #' />"
+                         )
+                         .HtmlAttributes(new { style = "text-align: right" })
+                         .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" });
+
+                    columns.Bound(m => m.Barcode)
                          .ClientTemplate("#= Barcode #" + "<input type='hidden' name='Details[#= index(data)#].Barcode' value='#= Barcode #' />")
                          .HtmlAttributes(new { style = "text-align: left" })
                          .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" });
-                     columns.Bound(m => m.Quantity)
-                         .ClientTemplate("#= Quantity #" + "<input type='hidden' name='Details[#= index(data)#].Quantity' value='#= Quantity #' />")
-                         .HtmlAttributes(new { style = "text-align: right" })
-                         .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
-                         .FooterHtmlAttributes(new { style = "text-align: right" })
-                         .ClientFooterTemplate("Total : #=sum#"); // Display sum in footer
                  })
                  .Sortable()
-                 //.Pageable()
                  .Scrollable()
                  .DataSource(dataSource => dataSource
                      .Ajax()
                      .ServerOperation(false)
-                     .Aggregates(aggregates =>
-                     {
-                         aggregates.Add(m => m.Quantity).Sum(); // Define aggregate for Quantity column
-                     })
+                     .Aggregates(aggregates => { aggregates.Add(m => m.Mrp).Sum(); })
                      .Events(e => e.Error("onError")))
                  .Resizable(resize => resize.Columns(true))
                  .Reorderable(reorder => reorder.Columns(true)))
@@ -59,34 +71,35 @@
 
             var barcode = $(this).val();
 
-            // Validate barcodes
             if (true === ValidateBarcodes(barcode)) {
-                // Validate in Server
                 $.ajax({
                     url: '/DemoProject/SalesInvoice/ValidateBarcode',
                     type: 'GET',
                     dataType: 'json',
-                    data: {
-                        barcode: barcode
-                    },
+                    data: { barcode: barcode },
                     success: function (response) {
                         console.log("Data received:", response);
                         if (response.Success) {
-                            // Add new Row in grid
-                            AddNewRowInGrid(barcode, response.ProductId, response.ProductName, response.Quantity);
+                            var detail =
+                                response.Detail ||
+                                response.SalesInvoiceDetailDto ||
+                                response.Data ||
+                                {
+                                    Barcode: response.Barcode,
+                                    ProductId: response.ProductId,
+                                    ProductName: response.ProductName,
+                                    PackingTypeId: response.PackingTypeId,
+                                    PackingTypeName: response.PackingTypeName,
+                                    Quantity: response.Quantity,
+                                    Mrp: response.Mrp,
+                                    NetWeight: response.NetWeight
+                                };
 
-                            // Clear the TextBoxes
-                            $(this).val("");
-                            $('#Barcode').val('');
-                            // Focus on KB Barcode text box
-                            $('#Barcode').focus();
+                            AddNewRowInGrid(detail);
+
+                            $('#Barcode').val('').focus();
                         } else {
                             ShowError(response.Message);
-                            @*bootbox.alert({
-                                title: "Error",
-                                message: response.Message,
-                                centerVertical: true, // Center vertically (requires Bootstrap 4 or higher)
-                            });*@
                         }
                     },
                     error: function (xhr, status, error) {
@@ -103,13 +116,12 @@
         bootbox.alert({
             title: "Error",
             message: message,
-            centerVertical: true, // Center vertically (requires Bootstrap 4 or higher)
+            centerVertical: true,
         });
     };
 
     function ValidateBarcodes(barcode) {
         if (!barcode) {
-            //alert("Please, Scan customer barcode");
             ShowError("Please, Scan customer barcode");
             return false;
         }
@@ -119,23 +131,35 @@
     function IsBarcodeAvailableInGrid(grid, barcode) {
         var existingRecords = grid.dataSource.data();
         var barcodeExists = existingRecords.some(function (record) {
-            return record.Barcode === barcode
+            return record.Barcode === barcode;
         });
 
         return barcodeExists;
     }
 
-    function AddNewRowInGrid(barcode, productId, productName, quantity) {
+    function AddNewRowInGrid(detailDto) {
         var grid = $("#grid").data("kendoGrid");
-        var alreadyResult = IsBarcodeAvailableInGrid(grid, barcode);
-        //alert(alreadyResult);
-        if (alreadyResult === true) {
-            //alert("Barcode already scanned");
+        if (!detailDto) {
+            ShowError("Invalid product detail received.");
+            return;
+        }
+
+        if (IsBarcodeAvailableInGrid(grid, detailDto.Barcode) === true) {
             ShowError("Barcode already scanned");
             return;
         }
 
-        grid.dataSource.add({ Barcode: barcode, ProductId: productId, ProductName: productName, Quantity: quantity});
+        grid.dataSource.add({
+            ProductId: detailDto.ProductId,
+            ProductName: detailDto.ProductName,
+            PackingTypeId: detailDto.PackingTypeId,
+            PackingTypeName: detailDto.PackingTypeName,
+            Barcode: detailDto.Barcode,
+            Quantity: detailDto.Quantity,
+            Mrp: detailDto.Mrp,
+            NetWeight: detailDto.NetWeight
+        });
+
         grid.dataSource.sync();
     }
 

@@ -21,35 +21,12 @@
     ViewBag.Controller = "PartLabel";
 }
 
-@*@section sectionBaseHeader
-{
-    <div class="k-actions k-actions-horizontal k-actions-end">
-        @(Html.Kendo().Button()
-            .Name("btnBack")
-            .Content("Back")
-            .ApplyStandardSettingsWithType(ButtonType.Info, "arrow-60-left", ComponentSize.Medium)
-            .HtmlAttributes(new { onclick = $"window.location.href='{Url.Action("Index", "PartLabel", new { area = "Kitchen" })}'; return false;" }))
-    </div>
-}*@
-
 @section sectionBaseFooter
 {
     <div class="k-actions k-actions-horizontal k-actions-end">
-        @(Html.Kendo().Button()
-            .Name("btnBack")
-            .Content("Back")
-            .ApplyStandardSettingsWithType(ButtonType.Info, "arrow-60-left", ComponentSize.Medium)
-            .HtmlAttributes(new { onclick = $"window.location.href='{Url.Action(ViewBag.Index, ViewBag.Controller, new { area = ViewBag.Area, miscType = ViewBag.MiscType })}'; return false;" }))
-        @(Html.Kendo().Button()
-            .Name("preview")
-            .Content("Preview")
-            .ApplyStandardSettingsWithType(ButtonType.Info, "preview", ComponentSize.Medium)
-            .Events(e => e.Click("onPreview")))
-        @(Html.Kendo().Button()
-            .Name("print")
-            .Content("Print")
-            .ApplyStandardSettingsWithType(ButtonType.Primary, "print", ComponentSize.Medium)
-            .Events(e => e.Click("onPrint")))
+        @Html.Partial("Buttons/_BackButton")
+        @Html.Partial("Buttons/_PreviewButton")
+        @Html.Partial("Buttons/_PrintButton")
     </div>
 }
 

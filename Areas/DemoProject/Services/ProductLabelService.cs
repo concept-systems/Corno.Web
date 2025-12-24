@@ -12,7 +12,9 @@ using Corno.Web.Models.Packing;
 using Corno.Web.Reports;
 using Corno.Web.Repository.Interfaces;
 using Corno.Web.Services;
+using Corno.Web.Services.Interfaces;
 using Corno.Web.Services.Masters.Interfaces;
+using Corno.Web.Windsor;
 using Volo.Abp.Data;
 
 namespace Corno.Web.Areas.DemoProject.Services;
@@ -41,7 +43,7 @@ public sealed class ProductLabelService : BaseService<Label>, IProductLabelServi
 
     #region -- Protected Methods --
 
-    private static void ValidateDto(LabelDto dto)
+    private static void ValidateDto(LabelCrudDto dto)
     {
         if (dto.ProductId.ToInt() <= 0)
             throw new Exception("Invalid Product.");
@@ -61,7 +63,7 @@ public sealed class ProductLabelService : BaseService<Label>, IProductLabelServi
 
     #region -- Public Methods --
 
-    public async Task<List<Label>> CreateLabelsAsync(LabelDto dto, string userId)
+    public async Task<List<Label>> CreateLabelsAsync(LabelCrudDto dto, string userId)
     {
         // 1. Validate Dto
         ValidateDto(dto);
@@ -75,12 +77,21 @@ public sealed class ProductLabelService : BaseService<Label>, IProductLabelServi
             d.PackingTypeId == dto.PackingTypeId);
         if (null == productPacketDetail)
             throw new Exception("Packing type not available in system");
+        var mrp = productPacketDetail.GetProperty(FieldConstants.Mrp, 0);
+        if (mrp <= 0)
+        {
+            var miscMasterService = Bootstrapper.Get<IMiscMasterService>();
+            var packingType = await miscMasterService.GetViewModelAsync(productPacketDetail.PackingTypeId);
+            throw new Exception($@"No MRP defined for product '{product.Name}' and Unit '{packingType.Name}'");
+        }
+
         // 3. Get Max SerialNo (async)
         var maxSerialNo = await _genericRepository.MaxAsync(c => c.CompanyId > 0, c => c.SerialNo).ConfigureAwait(false);
         var serialNo = maxSerialNo + 1;
 
         // 4. Create Labels
         var labels = new List<Label>();
+        
         for (var index = 0; index < dto.Quantity; index++)
         {
             var label = new Label
@@ -111,9 +122,9 @@ public sealed class ProductLabelService : BaseService<Label>, IProductLabelServi
             });
 
             label.SetProperty(FieldConstants.ManufacturingDate, dto.ManufacturingDate);
-            label.SetProperty("ExpiryDate", dto.ExpiryDate);
-            label.SetProperty(FieldConstants.Rate, productPacketDetail.GetProperty(FieldConstants.Rate, 0));
-
+            label.SetProperty(FieldConstants.ExpiryDate, dto.ExpiryDate);
+            label.SetProperty(FieldConstants.Mrp, mrp);
+            
             labels.Add(label);
 
             serialNo++;

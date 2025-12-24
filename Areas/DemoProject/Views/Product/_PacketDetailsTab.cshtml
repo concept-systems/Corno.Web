@@ -1,9 +1,11 @@
 ﻿@model Corno.Web.Areas.Masters.Dtos.Product.ProductDto
 @using Kendo.Mvc.UI
+@using Corno.Web.Helper
 
 <div class="row">
     @(Html.Kendo().Grid(Model.ProductPacketDtos)
         .Name("grid")
+        .ApplyCommonSettings()
         .Columns(columns =>
         {
             columns.Bound(p => p.Id)
@@ -12,31 +14,28 @@
             columns.Bound(p => p.PackingTypeId)
                 .ClientTemplate("#= PackingTypeName  #" +
                                 "<input type='hidden' name='ProductPacketDtos[#= index(data)#].PackingTypeId' value='#= PackingTypeId #' />")
-                .Width(180);
+                .Title("Packet")
+                .Align(TextAlign.Left);
             columns.Bound(p => p.Quantity)
                 .ClientTemplate("#= Quantity #" +
                                 "<input type='hidden' name='ProductPacketDtos[#= index(data)#].Quantity' value='#= Quantity #'   />")
-                .Width(50);
+                .Align(TextAlign.Right);
             columns.Bound(p => p.Mrp)
                 .ClientTemplate("#= Mrp #" +
                                 "<input type='hidden' name='ProductPacketDtos[#= index(data)#].Mrp' value='#= Mrp #'   />")
-                .Width(50)
-                .Title("MRP");
+                .Title("MRP")
+                .Align(TextAlign.Right);
             columns.Command(command =>
             {
                 command.Edit();
                 command.Destroy();
-            }).Width(200);
+            });
         })
         .ToolBar(toolbar => toolbar.Create())
         //.Editable(editable => editable.Mode(GridEditMode.InLine).ConfirmDelete("Continue to delete this record?").DisplayDeleteConfirmation("Continue to delete this record?"))
         .Editable(editable => editable.Mode(GridEditMode.PopUp)
             /*.TemplateName(@"~/Areas/DemoProject/Views/Product/_PacketPopup"))*/
             .TemplateName("_PacketPopup1"))
-        .Pageable()
-        .Filterable(f => f.Mode(GridFilterMode.Row))
-        .Sortable()
-        .Scrollable()
         //.HtmlAttributes(new { style = "height:550px;" })
         .DataSource(dataSource => dataSource
             .Ajax()

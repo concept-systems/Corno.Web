@@ -1,0 +1,339 @@
+@using System.ComponentModel
+@using Corno.Web.Globals
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@model Corno.Web.Areas.Kitchen.Dto.StoreLabel.StoreLabelCrudDto
+@{
+    ViewBag.Create = "Create";
+
+    var controllerName = "Label";
+    var action = "CreateStoreKhalapur";
+
+    ViewBag.BoxTitle = "Store Khalapur";
+    ViewBag.Title = "Store Khalapur";
+}
+
+<div class=" k-content">
+    @using (Ajax.BeginForm(action, controllerName, new AjaxOptions { HttpMethod = "POST", OnComplete = "displayUploadMediaMsg" }, new { enctype = "multipart/form-data", id = "form" }))
+    {
+        @Html.AntiForgeryToken()
+        <div class="row">
+            <div class="col-6">
+                <!-- Placeholder for the partial view -->
+                <div id="partialViewContainer" style="height: 100%"></div>
+            </div>
+            <div class="col-6">
+                @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+                <div class="row">
+                    <div class="form-group required row">
+                        @Html.LabelFor(m => m.DueDate, "Due Date :",
+                            new { @class = "col-4 col-form-label" })
+                        <div class="col-8">
+                            @(Html.Kendo().DatePickerFor(m => m.DueDate)
+                                .Format("yyyy-MM-dd")
+                                .Events(e => e.Change("onDueDateChange"))
+                                .HtmlAttributes(new { @class = "w-100" }))
+                        </div>
+                    </div>
+                    <div class="form-group required row">
+                        @Html.LabelFor(m => m.LotNo, "Lot No :", new { @class = "col-4 col-form-label" })
+                        <div class="col-8">
+                            @(Html.Kendo().MultiColumnComboBoxFor(m => m.LotNo)
+                                .DataTextField(FieldConstants.LotNo)
+                                .DataValueField(FieldConstants.LotNo)
+                                .HtmlAttributes(new { @class = "col-12" })
+                                .Filter("contains")
+                                .Placeholder("Select ...")
+                                .Suggest(true)
+                                //.Events(e => e.Select("OnLotSelect"))
+                                .Columns(columns => { columns.Add().Field(FieldConstants.LotNo).Title(FieldConstants.LotNo); })
+                                .DataSource(dataSource => dataSource
+                                    .Read(read => { read.Action("GetStoreKhalapurLotNos", "Label").Data("getLotParameters"); })
+                                    .ServerFiltering(true)
+                                )
+                                .AutoBind(false)
+                                .CascadeFrom(FieldConstants.DueDate))
+
+                            <script>
+                                function getLotParameters() {
+                                    return {
+                                        dueDate: $('#DueDate').val()
+                                    }
+                                }
+                            </script>
+                        </div>
+                    </div>
+                    <div class="form-group required row">
+                        @Html.LabelFor(m => m.WarehouseOrderNo, "Warehouse Order:", new { @class = "col-4 col-form-label" })
+                        <div class="col-8">
+                            @(Html.Kendo().MultiColumnComboBoxFor(m => m.WarehouseOrderNo)
+                                .DataTextField(FieldConstants.WarehouseOrderNo)
+                                .DataValueField(FieldConstants.WarehouseOrderNo)
+                                .HtmlAttributes(new {  @class = "w-100" })
+                                .Filter("contains")
+                                .Placeholder("Select ...")
+                                .Suggest(true)
+                                // .Events(e => e.Select("OnLotSelect"))
+                                .Columns(columns => { columns.Add().Field(FieldConstants.WarehouseOrderNo).Title(FieldConstants.WarehouseOrderNo); })
+                                .DataSource(dataSource => dataSource
+                                    .Read(read => { read.Action("GetStoreKhalapurWarehouseOrderNos", "Label").Data("getWarehouseParameters"); })
+                                    .ServerFiltering(true)
+                                )
+                                .AutoBind(false)
+                                .CascadeFrom(FieldConstants.LotNo))
+
+                            <script>
+                                function getWarehouseParameters() {
+                                    return {
+                                        lotNo: $('#LotNo').val()
+                                    }
+                                }
+                            </script>
+                        </div>
+                    </div>
+
+                <div class="form-group required row">
+                    @Html.LabelFor(m => m.Family, "Family :", new { @class = "col-4 col-form-label" })
+                    <div class="col-8">
+                        @(Html.Kendo().MultiColumnComboBoxFor(m => m.Family)
+                            .DataTextField(FieldConstants.Family)
+                            .DataValueField(FieldConstants.Family)
+                            .HtmlAttributes(new { @class = "w-100" })
+                            .Filter("contains")
+                            .Placeholder("Select ...")
+                            .Suggest(true)
+                            .Events(e => e.Change("OnFamilyChange"))
+                            .Columns(columns => { columns.Add().Field(FieldConstants.Family).Title(FieldConstants.Family); })
+                            .DataSource(dataSource => dataSource
+                                .Read(read => { read.Action("GetStoreKhalapurFamilies", "Label").Data("getFamilyParameters"); })
+                                .ServerFiltering(true)
+                            )
+                            .AutoBind(false)
+                            .CascadeFrom(FieldConstants.WarehouseOrderNo))
+
+                        <script>
+                                function getFamilyParameters() {
+                                    return {
+                                        warehouseOrderNo: $('#WarehouseOrderNo').val()
+                                    }
+                                }
+                            </script>
+                    </div>
+                </div>
+
+                <div class="form-group required row">
+                    <div class="col-12">
+                        @(Html.Kendo().Grid(Model.StoreLabelCrudDetailDtos)
+                            .Name("grid")
+                            .ToolBar(toolbar => { toolbar.Search(); })
+                            .Pageable()
+
+                            .Scrollable()
+                            .Sortable(s => s.InitialDirection(ListSortDirection.Descending))
+                            .Resizable(resize => resize.Columns(true)) // Allow column resizing
+                            .PersistSelection()
+                            .HtmlAttributes(new { style = "height: 400px;" })
+                            .Columns(columns =>
+                            {
+                                columns.Template(@<text></text>)
+                                    .ClientTemplate("<input type='checkbox' class='chkIsSelected' #= IsSelected ? checked='checked':'' # name='StoreLabelCrudDetailDtos[#= index(data)#].IsSelected' value='#= IsSelected #' />")
+                                    .HeaderTemplate("<input type='checkbox' id='selectAll' class='select-all' />")
+                                    .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                                    .HtmlAttributes(new { style = "text-align: center" })
+                                    .Title("");
+                                columns.Bound(p => p.Position)
+                                    .ClientTemplate("#= Position #" + "<input type='hidden' name='StoreLabelCrudDetailDtos[#= index(data)#].Position' value='#= Position #' />")
+                                    .HtmlAttributes(new { style = "text-align: center" })
+                                    .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                                    .Title("Position");
+                                columns.Bound(p => p.ItemCode)
+                                    .ClientTemplate("#= ItemCode #" + "<input type='hidden' name='StoreLabelCrudDetailDtos[#= index(data)#].ItemCode' value='#= ItemCode #' />")
+                                    .HtmlAttributes(new { style = "text-align: center" })
+                                    .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                                    .Title("Item Code");
+                                columns.Bound(p => p.ItemName)
+                                    .HtmlAttributes(new { style = "text-align: center" })
+                                    .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                                    .Title("Type");
+                            })
+                            .DataSource(dataSource => dataSource
+                                .Ajax()
+                                .Read(read => { read.Action("GetStoreKhalapurItems", "Label").Data("getItemsParameters"); })
+                                .Model(model =>
+                                {
+                                    model.Field(p => p.IsSelected).DefaultValue(false); // Default value for IsSelected
+                                })
+                                .ServerOperation(false))
+                            .Resizable(resize => resize.Columns(true))
+                            .Reorderable(reorder => reorder.Columns(true)))
+                    </div>
+                </div>
+                    <script>
+                        function getItemsParameters() {
+                            //alert($("#Family").data("kendoMultiColumnComboBox").input.val());
+                            return {
+                                warehouseOrderNo: $('#WarehouseOrderNo').val(),
+                                family: $("#Family").data("kendoMultiColumnComboBox").input.val()
+                            }
+                        }
+                    </script>
+                    <div class="k-actions k-actions-horizontal k-actions-end">
+                        @(Html.Kendo().Button()
+                            .Name("preview")
+                            .Content("Preview")
+                            .ApplyStandardSettingsWithType(ButtonType.Info, "preview", ComponentSize.Medium)
+                            .Events(e => e.Click("onPrintLabel"))
+                            .HtmlAttributes(new {
+                                type = "submit",
+                                name = "action:Preview"
+                            }))
+
+                        @(Html.Kendo().Button()
+                            .Name("print")
+                            .Content("Print")
+                            .ApplyStandardSettingsWithType(ButtonType.Primary, "print", ComponentSize.Medium)
+                            .HtmlAttributes(new
+                            {
+                                type = "submit",
+                                name = "action:Print",
+                                @class = ""
+                            }))
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+        $("#form").kendoValidator({
+            rules: {
+                requiredMultiColumnComboBox: function (input) {
+                    if (input.is("[data-role=multicolumncombobox]")) {
+                        return input.val() !== "";
+                    }
+                    return true;
+                },
+                requiredDatePicker: function (input) {
+                    if (input.is("[data-role=datepicker]")) {
+                        var value = input.val();
+                        // Check if the value is a valid date
+                        return kendo.parseDate(value) !== null;
+                    }
+                    return true;
+                }
+            },
+            messages: {
+                requiredMultiColumnComboBox: function (input) {
+                    var comboBoxName = input.attr("name");
+                    switch (comboBoxName) {
+                        case "LotNo":
+                            return "Please select Lot No.";
+                        case "Family":
+                            return "Please select Family.";
+                        case "ItemId":
+                            return "Please select Item.";
+                        // Add cases for other comboboxes as needed
+                        default:
+                            return "Please select a value for the ComboBox.";
+                    }
+                },
+                requiredDatePicker: "Please select due date."
+            }
+        });
+
+        LoadPartialView()
+    });
+
+    $(function () {
+        // Handle "Select All" checkbox click
+        $('#grid').on('click', '.select-all', function () {
+            var isChecked = $(this).is(':checked'); // Get the state of the "Select All" checkbox
+            var grid = $('#grid').data('kendoGrid'); // Get the Kendo Grid instance
+
+            // Iterate through all rows and update their checkboxes
+            grid.dataSource.view().forEach(function (dataItem) {
+                dataItem.set('IsSelected', isChecked); // Update the IsSelected property
+            });
+
+            // Refresh the grid to reflect the changes
+            grid.refresh();
+        });
+
+        // Handle individual row checkbox click
+        $('#grid').on('click', '.chkIsSelected', function () {
+            var isChecked = $(this).is(':checked'); // Get the state of the clicked checkbox
+            var grid = $('#grid').data('kendoGrid'); // Get the Kendo Grid instance
+            var dataItem = grid.dataItem($(this).closest('tr')); // Get the data item for the row
+
+            // Update the IsSelected property of the data item
+            dataItem.set('IsSelected', isChecked);
+
+            // Check if all checkboxes are selected and update the "Select All" checkbox
+            var allChecked = grid.dataSource.view().every(function (dataItem) {
+                return dataItem.IsSelected;
+            });
+            $('#selectAll').prop('checked', allChecked);
+        });
+    });
+   
+    function LoadPartialView(toPrinter) {
+        $.ajax({
+            url: '/Label/LoadPartialView', // Replace with your actual controller and action
+            method: 'GET',
+            data: { 'partialViewName': 'Partials/ReportViewer_New' },
+             success: function (partialHtml) {
+             // Load HTML content into the element
+             $('#partialViewContainer').html(partialHtml, function () {
+                 // This code will execute after the HTML content has been loaded
+                 console.log("HTML content loaded successfully");
+
+             });
+
+                 // Delay the execution of the next statement by a short duration
+                 setTimeout(function () {
+                     // This code will execute after a short delay
+                     console.log("Timeout HTML content loaded successfully");
+                     if ('@Model.PrintToPrinter' === 'True' || toPrinter === true) {
+                         printToPrinter();
+              }}, 2000); // Adjust the delay duration as needed
+             },
+         error: function () {
+             console.error('Failed to load the partial view.');
+             }
+        });
+    }
+
+    function onDueDateChange(e) {
+        //alert("hello");
+        var cmblotNo = $("#LotNo").data("kendoMultiColumnComboBox");
+        cmblotNo.dataSource.read();
+    }
+
+    function OnFamilyChange(e) {
+        // Get the selected family item
+        var selectedFamily = e.dataItem;
+        // Refresh the grid data based on the selected family
+        $('#grid').data('kendoGrid').dataSource.read();
+    } 
+
+    function onPrintLabel(e) {
+        $.ajax({
+            url: '/Label/PreviewStoreKhalapur', // Replace ControllerName with your actual controller name
+            type: 'POST',
+            data: { /* Pass any required data here */ },
+            success: function (response) {
+                // Handle the success response (e.g., update the view or show a message)
+                console.log("Preview successfully processed.");
+            },
+            error: function (xhr, status, error) {
+                // Handle the error response
+                console.error("Error occurred: ", error);
+            }
+        });
+    }
+
+</script>
+

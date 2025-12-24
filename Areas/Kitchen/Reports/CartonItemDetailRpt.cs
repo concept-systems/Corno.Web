@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using Corno.Web.Areas.Kitchen.Services.Interfaces;
 using Corno.Web.Globals;
+using Corno.Web.Models.Plan;
 using Corno.Web.Reports;
 using Corno.Web.Services.Masters.Interfaces;
 using Corno.Web.Windsor;
@@ -49,10 +50,21 @@ public partial class CartonItemDetailRpt : BaseReport
         var cartonService = Bootstrapper.Get<ICartonService>();
         var labelService = Bootstrapper.Get<ILabelService>();
 
+        // Optimized: Load plan (needs PlanItemDetails for the report)
         var plan = RunAsync(() => planService.GetByWarehouseOrderNoAsync(warehouseOrderNo));
+        
+        // Optimized: Enable includes for CartonDetails since we need them for the report
+        //cartonService.SetIncludes($"{nameof(Corno.Web.Models.Packing.Carton.CartonDetails)}");
         var cartons = RunAsync(() => cartonService.GetAsync(c => c.WarehouseOrderNo == warehouseOrderNo,
             c => c));
-        var barcodes = cartons.SelectMany(c => c.CartonDetails, (c, d) => d.Barcode).ToList();
+        
+        // Extract barcodes for label query - filter out null/empty barcodes
+        var barcodes = cartons.SelectMany(c => c.CartonDetails, (c, d) => d.Barcode)
+            .Where(b => !string.IsNullOrEmpty(b))
+            .Distinct()
+            .ToList();
+        
+        // Optimized: Use projection to only select needed fields from Labels, ignore includes
         var labels = RunAsync(() => labelService
                 .GetAsync(b => b.WarehouseOrderNo == warehouseOrderNo && barcodes.Contains(b.Barcode), b => new
                 {
@@ -61,20 +73,23 @@ public partial class CartonItemDetailRpt : BaseReport
                     b.Position,
                     b.SerialNo,
                     b.LabelDate,
-
                     b.ItemId,
                     b.Barcode,
                     b.Quantity,
                     b.Status
-                }));
-        var dataSource = cartons.SelectMany(d => d.CartonDetails, (c, d) =>
+                }, null, ignoreInclude: true));
+        
+        // Optimized: Create lookup dictionaries for faster in-memory joins (O(1) instead of O(n))
+        var labelLookup = labels.ToDictionary(l => l.Barcode ?? string.Empty, StringComparer.OrdinalIgnoreCase);
+        var planItemDetailLookup = plan?.PlanItemDetails?.ToDictionary(p => p.Position ?? string.Empty, StringComparer.OrdinalIgnoreCase);
+        
+        // Optimized: Use dictionary lookups instead of FirstOrDefault in loop (much faster for large datasets)
+        var dataSource = cartons.SelectMany(c => c.CartonDetails, (c, d) =>
             {
-                var label = labels.FirstOrDefault(l =>
-                    l.Barcode == d.Barcode);
-                /*var item = items.FirstOrDefault(i =>
-                    i.Id == label.ItemId );*/
-                var planItemDetail = plan?.PlanItemDetails.FirstOrDefault(x =>
-                    x.Position == d.Position);
+                labelLookup.TryGetValue(d.Barcode ?? string.Empty, out var label);
+                PlanItemDetail planItemDetail = null;
+                planItemDetailLookup?.TryGetValue(d.Position ?? string.Empty, out planItemDetail);
+
                 return new
                 {
                     plan?.SoNo,
@@ -85,11 +100,9 @@ public partial class CartonItemDetailRpt : BaseReport
                     label?.SerialNo,
                     label?.LabelDate,
                     label?.Barcode,
-
                     OneLineItemCode = plan?.System,
                     ItemCode = planItemDetail?.DrawingNo,
                     ItemName = planItemDetail?.Description,
-                        
                     d.Quantity,
                     label?.Status
                 };

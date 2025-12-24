@@ -25,12 +25,7 @@
                 </h5>
             </div>
             <div class="col-12 col-md-1">
-                @(Html.Kendo().Button()
-                        .Name("BackToList")
-                        .Content("List")
-                        .ApplyStandardSettingsWithType(ButtonType.Info, "arrow-left", ComponentSize.Medium)
-                        .Events(e => e.Click("onBackToList"))
-                        .HtmlAttributes(new{@class = "w-100"}))
+                @Html.Partial("Buttons/_ListButton", new { ButtonName = "BackToList", HtmlAttributes = new { @class = "w-100" } })
             </div>
         </div>
     </div>
@@ -38,16 +33,57 @@
     <div class="k-card-body">
         <div class="row">
             <div class="col-12 col-md-6 mb-3 mb-md-0">
-                @Html.Partial("_ReportViewer", Model)
+                @*@Html.Partial("_ReportViewer", Model)*@
             </div>
             <div class="col-12 col-md-6">
                 @Html.ValidationSummary(false, "", new { @class = "text-danger" })
                 <div class="row">
-                    @Html.Partial("_EditViewHeader", Model)
+                    <div class="form-group required row">
+                        @Html.LabelFor(m => m.MobileNo, "Mobile :", new { @class = "col-12 col-sm-4 col-md-4 col-form-label" })
+                        <div class="col-12 col-sm-8 col-md-8">
+                            @Html.HiddenFor(m => m.MobileNo)
+                            @Html.DisplayFor(m => m.MobileNo)
+                        </div>
+                    </div>
+                    <div class="form-group required row">
+                        @Html.LabelFor(m => m.CustomerName, "Customer :", new { @class = "col-12 col-sm-4 col-md-4 col-form-label" })
+                        <div class="col-12 col-sm-8 col-md-8">
+                            @Html.HiddenFor(m => m.CustomerName)
+                            @Html.DisplayFor(m => m.CustomerName)
+                        </div>
+                    </div>
+                    <div class="form-group required row">
+                        @Html.LabelFor(m => m.InvoiceDate, "Invoice Date :", new { @class = "col-12 col-sm-4 col-md-4 col-form-label" })
+                        <div class="col-12 col-sm-8 col-md-8">
+                            @Html.HiddenFor(m => m.InvoiceDate)
+                            @Html.DisplayFor(m => m.InvoiceDate)
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        @Html.LabelFor(m => m.PaymentMode, "Payment Mode :", new { @class = "col-12 col-sm-4 col-md-4 col-form-label" })
+                        <div class="col-12 col-sm-8 col-md-8">
+                            @Html.HiddenFor(m => m.PaymentMode)
+                            @Html.DisplayFor(m => m.PaymentMode)
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        @Html.LabelFor(m => m.PaidAmount, "Paid Amount :", new { @class = "col-12 col-sm-4 col-md-4 col-form-label" })
+                        <div class="col-12 col-sm-8 col-md-8">
+                            @Html.HiddenFor(m => m.PaidAmount)
+                            @if (Model.PaidAmount.HasValue)
+                            {
+                                <span class="text-right">@Model.PaidAmount.Value.ToString("N2")</span>
+                            }
+                            else
+                            {
+                                <span>-</span>
+                            }
+                        </div>
+                    </div>
                     <hr />
                     <div class="form-group row">
                         <div class="col-12">
-                            @(Html.Kendo().Grid(Model?.Details)
+                            @(Html.Kendo().Grid(Model.SalesInvoiceDetailDtos)
                                 .Name("grid")
                                 .ToolBar(t => t.Search())
                                 .Pageable()
@@ -59,24 +95,44 @@
                                 .Columns(columns =>
                                 {
                                     columns.Bound(m => m.ProductName)
-                                        .HtmlAttributes(new { style = "text-align: center" })
+                                        .Title("Product")
+                                        .HtmlAttributes(new { style = "text-align: left" })
                                         .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
-                                        .Width(500);
+                                        .Width(300);
+
+                                    columns.Bound(m => m.Mrp)
+                                        .Title("MRP")
+                                        .HtmlAttributes(new { style = "text-align: right" })
+                                        .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                                        .FooterHtmlAttributes(new { style = "text-align: right" })
+                                        .ClientFooterTemplate("Total : #= kendo.toString(sum, 'n2') #")
+                                        .Width(150);
+
+                                    // Show NetWeight with PackingTypeName separated by space
+                                    columns.Bound(m => m.NetWeight)
+                                        .Title("Weight")
+                                        .ClientTemplate("#= NetWeight # #= PackingTypeName #")
+                                        .HtmlAttributes(new { style = "text-align: right" })
+                                        .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                                        .Width(200);
+
                                     columns.Bound(m => m.Quantity)
-                                        .HtmlAttributes(new { style = "text-align: center" })
+                                        .Title("Qty")
+                                        .HtmlAttributes(new { style = "text-align: right" })
                                         .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
-                                        .ClientFooterTemplate("Count: #=count#")
-                                        .Width(500);
+                                        .Width(100);
+
                                     columns.Bound(m => m.Barcode)
-                                        .HtmlAttributes(new { style = "text-align: center" })
+                                        .Title("Barcode")
+                                        .HtmlAttributes(new { style = "text-align: left" })
                                         .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
-                                        .Width(500);
+                                        .Width(300);
                                 })
                                 .DataSource(dataSource => dataSource
                                     .Ajax()
                                     .Aggregates(aggregates =>
                                     {
-                                        aggregates.Add(p => p.Barcode).Count();
+                                        aggregates.Add(p => p.Mrp).Sum();
                                     })
                                     .PageSize(10)
                                     .Model(model => model.Id(p => p.Barcode))
@@ -88,12 +144,7 @@
                     {
                         <div class="form-group row">
                             <div class="offset-9 col-3">
-                                @(Html.Kendo().Button()
-                                    .Name("print")
-                                    .Content("Re-Print Label")
-                                    .ApplyStandardSettingsWithType(ButtonType.Primary, "print", ComponentSize.Medium)
-                                    .Events(e => e.Click("onPrintLabel"))
-                                    .HtmlAttributes(new { @class = "w-100" }))
+                                @Html.Partial("Buttons/_PrintButton", new { ButtonName = "print", ButtonText = "Re-Print Label", ClickFunction = "onPrintLabel", HtmlAttributes = new { @class = "w-100" } })
                             </div>
                         </div>
                     }
@@ -137,7 +188,7 @@
     }
 
     function onBackToList() {
-        window.location.href = '/Knorr_Bremse/DemoProject/Index';
+        window.location.href = '/DemoProject/SalesInvoice/Index';
     }
 
     function onPrintLabel() {

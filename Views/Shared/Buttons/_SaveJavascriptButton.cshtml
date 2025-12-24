@@ -1,0 +1,17 @@
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@{
+    string buttonName = ViewBag.ButtonName ?? "btnSave";
+    string buttonText = ViewBag.ButtonText ?? "Save";
+    string clickFunction = ViewBag.ClickFunction ?? "onSave";
+    ButtonType buttonType = ViewBag.ButtonType ?? ButtonType.Save;
+    string icon = ViewBag.Icon ?? "save";
+}
+
+@(Html.Kendo().Button()
+    .Name(buttonName)
+    .Content(buttonText)
+    .ApplyStandardSettingsWithType(buttonType, icon, ComponentSize.Medium)
+    .Events(e => e.Click(clickFunction)))
+
+

@@ -19,11 +19,13 @@ public class ReportsController : ReportsControllerBase
         var appPath = HttpContext.Current.Server.MapPath("~/");
         var reportsPath = Path.Combine(appPath, "Reports");
 
-        //Add resolver for trdx/trdp report definitions, 
-        //then add resolver for class report definitions as fallback resolver; 
-        //finally create the resolver and use it in the ReportServiceConfiguration instance.
-        var resolver = new UriReportSourceResolver(reportsPath)
-            .AddFallbackResolver(new TypeReportSourceResolver());
+        //Standard practice: Use TypeReportSourceResolver for class-based reports
+        //TypeReportSourceResolver will create report instances from type names (e.g., "Corno.Web.Areas.Report.Reports.MyReport")
+        //No Session required - reports are created on-demand by the resolver
+        var resolver = new TypeReportSourceResolver();
+        
+        // If you also need to support .trdx/.trdp files, you can add UriReportSourceResolver as fallback
+        // For now, using only TypeReportSourceResolver for class-based reports (standard approach)
 
         //Setup the ReportServiceConfiguration
         configurationInstance = new ReportServiceConfiguration

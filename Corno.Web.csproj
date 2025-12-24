@@ -16,7 +16,8 @@
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <MvcBuildViews>false</MvcBuildViews>
     <UseIISExpress>true</UseIISExpress>
-    <Use64BitIISExpress>false</Use64BitIISExpress>
+    <Use64BitIISExpress>
+    </Use64BitIISExpress>
     <IISExpressSSLPort>44341</IISExpressSSLPort>
     <IISExpressAnonymousAuthentication />
     <IISExpressWindowsAuthentication />
@@ -756,10 +757,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>bin\Telerik.Reporting.Services.WebApi.dll</HintPath>
     </Reference>
-    <Reference Include="Telerik.ReportViewer.WebForms, Version=18.3.24.1112, Culture=neutral, PublicKeyToken=a9d7983dfcc261be, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>bin\Telerik.ReportViewer.WebForms.dll</HintPath>
-    </Reference>
     <Reference Include="Volo.Abp.Core, Version=9.2.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\Volo.Abp.Core.9.2.0\lib\netstandard2.0\Volo.Abp.Core.dll</HintPath>
     </Reference>
@@ -889,13 +886,13 @@
     <Compile Include="Areas\Admin\Services\RoleService.cs" />
     <Compile Include="Areas\Admin\Services\UserRoleService.cs" />
     <Compile Include="Areas\Admin\Services\UserService.cs" />
-    <Compile Include="Areas\DemoProject\Controllers\LabelController.cs" />
     <Compile Include="Areas\DemoProject\Controllers\ProductController.cs" />
     <Compile Include="Areas\DemoProject\Controllers\ProductLabelController.cs" />
     <Compile Include="Areas\DemoProject\Controllers\SalesInvoiceController.cs" />
     <Compile Include="Areas\DemoProject\DemoProjectAreaRegistration.cs" />
-    <Compile Include="Areas\DemoProject\Dtos\LabelDetailDto.cs" />
-    <Compile Include="Areas\DemoProject\Dtos\LabelDto.cs" />
+    <Compile Include="Areas\DemoProject\Dtos\LabelCrudDetailDto.cs" />
+    <Compile Include="Areas\DemoProject\Dtos\LabelIndexDto.cs" />
+    <Compile Include="Areas\DemoProject\Dtos\LabelCrudDto.cs" />
     <Compile Include="Areas\DemoProject\Dtos\SalesInvoiceDetailDto.cs" />
     <Compile Include="Areas\DemoProject\Dtos\SalesInvoiceDto.cs" />
     <Compile Include="Areas\DemoProject\Dtos\SalesInvoiceIndexDto.cs" />
@@ -917,9 +914,13 @@
     <Compile Include="Areas\DemoProject\Labels\ProductLabelSmallRpt.Designer.cs">
       <DependentUpon>ProductLabelSmallRpt.cs</DependentUpon>
     </Compile>
-    <Compile Include="Areas\DemoProject\Services\Interfaces\ILabelService.cs" />
+    <Compile Include="Areas\DemoProject\Reports\SalesInvoiceReceiptRpt.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Areas\DemoProject\Reports\SalesInvoiceReceiptRpt.Designer.cs">
+      <DependentUpon>SalesInvoiceReceiptRpt.cs</DependentUpon>
+    </Compile>
     <Compile Include="Areas\DemoProject\Services\Interfaces\IProductLabelService.cs" />
-    <Compile Include="Areas\DemoProject\Services\LabelService.cs" />
     <Compile Include="Areas\DemoProject\Services\ProductLabelService.cs" />
     <Compile Include="Areas\DemoProject\ViewModels\LabelDisplayDetailViewModel.cs" />
     <Compile Include="Areas\DemoProject\ViewModels\LabelViewModel.cs" />
@@ -944,6 +945,8 @@
     <Compile Include="Areas\Kitchen\Controllers\StoreKhalapurController.cs" />
     <Compile Include="Areas\Kitchen\Controllers\StoreShirwalController.cs" />
     <Compile Include="Areas\Kitchen\Controllers\SubAssemblyLabelController.cs" />
+    <Compile Include="Areas\Kitchen\Controllers\LabelController.cs" />
+    <Compile Include="Areas\Kitchen\Controllers\CartonController.cs" />
     <Compile Include="Areas\Kitchen\Controllers\TrolleyConfigController.cs" />
     <Compile Include="Areas\Kitchen\Controllers\TrolleyLabelController.cs" />
     <Compile Include="Areas\Kitchen\Dto\Carcass\CarcassCrudDto.cs" />
@@ -1513,6 +1516,7 @@
     <Compile Include="Services\Report\ReportServiceResolver.cs" />
     <Compile Include="Services\Report\ReportFactory.cs" />
     <Compile Include="Services\Report\Interfaces\IReportFactory.cs" />
+    <Compile Include="Services\Report\SessionReportSourceResolver.cs" />
     <Compile Include="Services\Sales\BaseSalesInvoiceService.cs" />
     <Compile Include="Services\Sales\Interfaces\IBaseSalesInvoiceService.cs" />
     <Compile Include="Services\Sales\Interfaces\ISalesOrderService.cs" />
@@ -1526,20 +1530,6 @@
     <Compile Include="Services\Warehouse\Interfaces\IBaseRackOutService.cs" />
     <Compile Include="Startup.cs" />
     <Compile Include="Models\SessionGlobals.cs" />
-    <Compile Include="Views\Shared\Partials\ReportViewer_New.aspx.cs">
-      <DependentUpon>ReportViewer_New.aspx</DependentUpon>
-      <SubType>ASPXCodeBehind</SubType>
-    </Compile>
-    <Compile Include="Views\Shared\Partials\ReportViewer_New.aspx.designer.cs">
-      <DependentUpon>ReportViewer_New.aspx</DependentUpon>
-    </Compile>
-    <Compile Include="Views\Shared\Partials\ReportViewer.aspx.cs">
-      <DependentUpon>ReportViewer.aspx</DependentUpon>
-      <SubType>ASPXCodeBehind</SubType>
-    </Compile>
-    <Compile Include="Views\Shared\Partials\ReportViewer.aspx.designer.cs">
-      <DependentUpon>ReportViewer.aspx</DependentUpon>
-    </Compile>
     <Compile Include="Helpers\MenuIconHelper.cs" />
     <Compile Include="Windsor\Bootstrapper.cs" />
     <Compile Include="Windsor\ServicesModule.cs" />
@@ -2176,18 +2166,43 @@
     <Content Include="Content\kendo\2023.1.117\Uniform\sprite_2x.png" />
     <Content Include="Content\kendo\2023.1.117\Uniform\sprite_kpi.png" />
     <Content Include="Content\kendo\2023.1.117\Uniform\sprite_kpi_2x.png" />
-    <Content Include="Content\kendo\ReportViewer\js\telerikReportViewer-17.0.23.118.js" />
-    <Content Include="Content\kendo\ReportViewer\js\telerikReportViewer-17.0.23.118.min.js" />
-    <Content Include="Content\kendo\ReportViewer\js\telerikReportViewer.kendo-17.0.23.118.min.js" />
-    <Content Include="Content\kendo\ReportViewer\js\telerikReportViewer.stringResources-17.0.23.118.js" />
+    <!-- HTML5 ReportViewer files for version 18.3.24.1112 -->
+    <Content Include="Content\kendo\ReportViewer\Html5\font\font-icons.css" />
+    <Content Include="Content\kendo\ReportViewer\Html5\font\font-icons.min.css" />
+    <Content Include="Content\kendo\ReportViewer\Html5\font\reporting-icons.ttf" />
+    <Content Include="Content\kendo\ReportViewer\Html5\font\ReportingIcons-18.3.24.1112.ttf" />
+    <Content Include="Content\kendo\ReportViewer\Html5\js\telerikReportViewer-18.3.24.1112.js" />
+    <Content Include="Content\kendo\ReportViewer\Html5\js\telerikReportViewer-18.3.24.1112.min.js" />
+    <Content Include="Content\kendo\ReportViewer\Html5\js\telerikReportViewer.kendo-18.3.24.1112.js" />
+    <Content Include="Content\kendo\ReportViewer\Html5\js\telerikReportViewer.kendo-18.3.24.1112.min.js" />
+    <Content Include="Content\kendo\ReportViewer\Html5\js\telerikReportViewer.stringResources-18.3.24.1112.js" />
+    <Content Include="Content\kendo\ReportViewer\Html5\styles\telerikReportViewer-18.3.24.1112.css" />
+    <Content Include="Content\kendo\ReportViewer\Html5\styles\telerikReportViewer-18.3.24.1112.min.css" />
+    <Content Include="Content\kendo\ReportViewer\Html5\styles\kendo.blueopal.min.css" />
+    <Content Include="Content\kendo\ReportViewer\Html5\styles\kendo.common.min.css" />
+    <Content Include="Content\kendo\ReportViewer\Html5\styles\kendo.common.min.css.README.txt" />
+    <Content Include="Content\kendo\ReportViewer\Html5\styles\blueopal\editor.png" />
+    <Content Include="Content\kendo\ReportViewer\Html5\styles\blueopal\imagebrowser.png" />
+    <Content Include="Content\kendo\ReportViewer\Html5\styles\blueopal\indeterminate.gif" />
+    <Content Include="Content\kendo\ReportViewer\Html5\styles\blueopal\loading-image.gif" />
+    <Content Include="Content\kendo\ReportViewer\Html5\styles\blueopal\loading.gif" />
+    <Content Include="Content\kendo\ReportViewer\Html5\styles\blueopal\loading_2x.gif" />
+    <Content Include="Content\kendo\ReportViewer\Html5\styles\blueopal\markers.png" />
+    <Content Include="Content\kendo\ReportViewer\Html5\styles\blueopal\markers_2x.png" />
+    <Content Include="Content\kendo\ReportViewer\Html5\styles\blueopal\slider-h.gif" />
+    <Content Include="Content\kendo\ReportViewer\Html5\styles\blueopal\slider-v.gif" />
+    <Content Include="Content\kendo\ReportViewer\Html5\styles\blueopal\sprite.png" />
+    <Content Include="Content\kendo\ReportViewer\Html5\styles\blueopal\sprite_2x.png" />
+    <Content Include="Content\kendo\ReportViewer\Html5\styles\blueopal\sprite_kpi.png" />
+    <Content Include="Content\kendo\ReportViewer\Html5\styles\blueopal\sprite_kpi_2x.png" />
+    <Content Include="Content\kendo\ReportViewer\Html5\templates\telerikReportViewerTemplate-18.3.24.1112.html" />
+    <Content Include="Content\kendo\ReportViewer\Html5\templates\telerikReportViewerTemplate-FA-18.3.24.1112.html" />
+    <!-- Old version files (kept for reference) -->
     <Content Include="Content\kendo\ReportViewer\styles\blueopal\loading.gif" />
     <Content Include="Content\kendo\ReportViewer\styles\blueopal\sprite.png" />
     <Content Include="Content\kendo\ReportViewer\styles\kendo.blueopal.min.css" />
     <Content Include="Content\kendo\ReportViewer\styles\kendo.common.min.css" />
     <Content Include="Content\kendo\ReportViewer\styles\kendo.common.min.css.README.txt" />
-    <Content Include="Content\kendo\ReportViewer\styles\telerikReportViewer-17.0.23.118.css" />
-    <Content Include="Content\kendo\ReportViewer\templates\telerikReportViewerTemplate-17.0.23.118.html" />
-    <Content Include="Content\kendo\ReportViewer\templates\telerikReportViewerTemplate-FA-17.0.23.118.html" />
     <Content Include="Content\pace\templates\pace-theme-barber-shop.tmpl.css" />
     <Content Include="Content\pace\templates\pace-theme-big-counter.tmpl.css" />
     <Content Include="Content\pace\templates\pace-theme-bounce.tmpl.css" />
@@ -2479,11 +2494,22 @@
     <Content Include="Areas\Kitchen\Views\Weighing\_Weighing.cshtml" />
     <Content Include="Areas\Kitchen\Views\SubAssemblyLabel\View.cshtml" />
     <Content Include="Areas\Kitchen\Views\PartLabel\_PartialIndex.cshtml" />
+    <Content Include="Areas\Kitchen\Views\Label\Index.cshtml" />
+    <Content Include="Areas\Kitchen\Views\Label\_PartialIndex.cshtml" />
+    <Content Include="Areas\Kitchen\Views\Label\CreatePartLabel.cshtml" />
+    <Content Include="Areas\Kitchen\Views\Label\CreateStoreKhalapur.cshtml" />
+    <Content Include="Areas\Kitchen\Views\Label\CreateStoreShirwal.cshtml" />
+    <Content Include="Areas\Kitchen\Views\Label\CreateStiffenerLabel.cshtml" />
+    <Content Include="Areas\Kitchen\Views\Label\View.cshtml" />
+    <Content Include="Areas\Kitchen\Views\Label\_StoreKhalapur.cshtml" />
+    <Content Include="Areas\Kitchen\Views\Label\_StoreShirwal.cshtml" />
+    <Content Include="Areas\Kitchen\Views\Label\_StiffenerLabel.cshtml" />
+    <Content Include="Areas\Kitchen\Views\Carton\Index.cshtml" />
+    <Content Include="Areas\Kitchen\Views\Carton\_PartialIndex.cshtml" />
+    <Content Include="Areas\Kitchen\Views\Carton\CreateCarcass.cshtml" />
+    <Content Include="Areas\Kitchen\Views\Carton\CreateNonWeighingPacking.cshtml" />
+    <Content Include="Areas\Kitchen\Views\Carton\View.cshtml" />
     <Content Include="Areas\DemoProject\Sitemaps\Main.sitemap" />
-    <Content Include="Areas\DemoProject\Views\Label\Create.cshtml" />
-    <Content Include="Areas\DemoProject\Views\Label\Index.cshtml" />
-    <Content Include="Areas\DemoProject\Views\Label\View.cshtml" />
-    <Content Include="Areas\DemoProject\Views\Label\_Label.cshtml" />
     <Content Include="Areas\DemoProject\Views\ProductLabel\Create.cshtml" />
     <Content Include="Areas\DemoProject\Views\ProductLabel\Index.cshtml" />
     <Content Include="Areas\DemoProject\Views\ProductLabel\View.cshtml" />
@@ -2501,14 +2527,11 @@
     <Content Include="Areas\DemoProject\Views\SalesInvoice\Edit.cshtml" />
     <Content Include="Areas\DemoProject\Views\SalesInvoice\Index.cshtml" />
     <Content Include="Areas\DemoProject\Views\SalesInvoice\View.cshtml" />
-    <Content Include="Areas\DemoProject\Views\SalesInvoice\_CreateEditGrid.cshtml" />
-    <Content Include="Areas\DemoProject\Views\SalesInvoice\_CreateHeader.cshtml" />
-    <Content Include="Areas\DemoProject\Views\SalesInvoice\_EditViewHeader.cshtml" />
-    <Content Include="Areas\DemoProject\Views\SalesInvoice\_ReportViewer.cshtml" />
-    <Content Include="Areas\DemoProject\Views\SalesInvoice\_UserEntry.cshtml" />
     <Content Include="Areas\DemoProject\Views\web.config" />
     <Content Include="Areas\Euro\Views\ItemLabel\View.cshtml" />
     <Content Include="Areas\Euro\Views\web.config" />
+    <Content Include="Areas\DemoProject\Views\SalesInvoice\_SalesInvoice.cshtml" />
+    <Content Include="Areas\DemoProject\Views\SalesInvoice\_SalesInvoiceHeaderButtons.cshtml" />
     <None Include="Dockerfile" />
     <None Include=".dockerignore">
       <DependentUpon>Dockerfile</DependentUpon>
@@ -2746,136 +2769,20 @@
     <Content Include="Scripts\esm\popper.js.map" />
     <Content Include="Scripts\esm\popper-utils.min.js.map" />
     <Content Include="Scripts\esm\popper-utils.js.map" />
-    <None Include="Properties\PublishProfiles\FolderProfile1.pubxml" />
-    <None Include="Properties\PublishProfiles\FolderProfile10.pubxml" />
-    <None Include="Properties\PublishProfiles\FolderProfile11.pubxml" />
-    <None Include="Properties\PublishProfiles\FolderProfile12.pubxml" />
-    <None Include="Properties\PublishProfiles\FolderProfile13.pubxml" />
-    <None Include="Properties\PublishProfiles\FolderProfile2.pubxml" />
-    <None Include="Properties\PublishProfiles\FolderProfile3.pubxml" />
-    <None Include="Properties\PublishProfiles\FolderProfile4.pubxml" />
-    <None Include="Properties\PublishProfiles\FolderProfile5.pubxml" />
-    <None Include="Properties\PublishProfiles\FolderProfile6.pubxml" />
-    <None Include="Properties\PublishProfiles\FolderProfile7.pubxml" />
-    <None Include="Properties\PublishProfiles\FolderProfile8.pubxml" />
-    <None Include="Properties\PublishProfiles\FolderProfile9.pubxml" />
     <None Include="Properties\PublishProfiles\umeshkale-001-site1 - FTP.pubxml" />
     <None Include="Properties\PublishProfiles\umeshkale-001-site1 - Web Deploy.pubxml" />
     <None Include="Properties\PublishProfiles\umeshkale-001-subsite2 - FTP.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite2 - FTP1.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite2 - FTP10.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite2 - FTP11.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite2 - FTP12.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite2 - FTP13.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite2 - FTP14.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite2 - FTP2.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite2 - FTP3.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite2 - FTP4.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite2 - FTP5.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite2 - FTP6.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite2 - FTP7.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite2 - FTP8.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite2 - FTP9.pubxml" />
     <None Include="Properties\PublishProfiles\umeshkale-001-subsite2 - Web Deploy.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite2 - Web Deploy1.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite2 - Web Deploy10.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite2 - Web Deploy11.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite2 - Web Deploy12.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite2 - Web Deploy13.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite2 - Web Deploy14.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite2 - Web Deploy2.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite2 - Web Deploy3.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite2 - Web Deploy4.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite2 - Web Deploy5.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite2 - Web Deploy6.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite2 - Web Deploy7.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite2 - Web Deploy8.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite2 - Web Deploy9.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite4 - FTP.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite4 - FTP1.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite4 - FTP2.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite4 - FTP3.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite4 - FTP4.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite4 - FTP5.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite4 - FTP6.pubxml" />
     <None Include="Properties\PublishProfiles\umeshkale-001-subsite4 - Web Deploy.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite4 - Web Deploy1.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite4 - Web Deploy2.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite4 - Web Deploy3.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite4 - Web Deploy4.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite4 - Web Deploy5.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite4 - Web Deploy6.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite4 - Web Deploy7.pubxml" />
     <None Include="Properties\PublishProfiles\umeshkale-001-subsite5 - FTP.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite5 - FTP1.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite5 - FTP2.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite5 - FTP3.pubxml" />
     <None Include="Properties\PublishProfiles\umeshkale-001-subsite5 - Web Deploy.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite5 - Web Deploy1.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite5 - Web Deploy2.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite5 - Web Deploy3.pubxml" />
     <None Include="Properties\PublishProfiles\umeshkale-001-subsite6 - FTP.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite6 - FTP1.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite6 - FTP2.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite6 - FTP3.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite6 - FTP4.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite6 - FTP5.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite6 - FTP6.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite6 - FTP7.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite6 - FTP8.pubxml" />
     <None Include="Properties\PublishProfiles\umeshkale-001-subsite6 - Web Deploy.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite6 - Web Deploy1.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite6 - Web Deploy2.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite6 - Web Deploy3.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite6 - Web Deploy4.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite6 - Web Deploy5.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite6 - Web Deploy6.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite6 - Web Deploy7.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite6 - Web Deploy8.pubxml" />
     <None Include="Properties\PublishProfiles\umeshkale-001-subsite7 - FTP.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite7 - FTP1.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite7 - FTP10.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite7 - FTP11.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite7 - FTP12.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite7 - FTP13.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite7 - FTP14.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite7 - FTP15.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite7 - FTP16.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite7 - FTP17.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite7 - FTP18.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite7 - FTP2.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite7 - FTP3.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite7 - FTP4.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite7 - FTP5.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite7 - FTP6.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite7 - FTP7.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite7 - FTP8.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite7 - FTP9.pubxml" />
     <None Include="Properties\PublishProfiles\umeshkale-001-subsite7 - Web Deploy.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite7 - Web Deploy1.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite7 - Web Deploy10.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite7 - Web Deploy11.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite7 - Web Deploy12.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite7 - Web Deploy13.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite7 - Web Deploy14.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite7 - Web Deploy15.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite7 - Web Deploy16.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite7 - Web Deploy17.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite7 - Web Deploy18.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite7 - Web Deploy2.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite7 - Web Deploy3.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite7 - Web Deploy4.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite7 - Web Deploy5.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite7 - Web Deploy6.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite7 - Web Deploy7.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite7 - Web Deploy8.pubxml" />
-    <None Include="Properties\PublishProfiles\umeshkale-001-subsite7 - Web Deploy9.pubxml" />
     <None Include="Properties\PublishProfiles\warehousemanagement - FTP.pubxml" />
-    <None Include="Properties\PublishProfiles\warehousemanagement - FTP1.pubxml" />
     <None Include="Properties\PublishProfiles\warehousemanagement - ReadOnly - FTP.pubxml" />
-    <None Include="Properties\PublishProfiles\warehousemanagement - ReadOnly - FTP1.pubxml" />
     <None Include="Properties\PublishProfiles\warehousemanagement - Web Deploy.pubxml" />
-    <None Include="Properties\PublishProfiles\warehousemanagement - Web Deploy1.pubxml" />
     <Content Include="Scripts\bootstrap.min.js.map" />
     <Content Include="Scripts\bootstrap.js.map" />
     <Content Include="Scripts\bootstrap.esm.min.js.map" />
@@ -4979,8 +4886,6 @@
     <Content Include="Scripts\umd\popper-utils.min.js" />
     <Content Include="Scripts\umd\popper.js" />
     <Content Include="Scripts\umd\popper.min.js" />
-    <Content Include="Views\Shared\Partials\ReportViewer_New.aspx" />
-    <Content Include="Views\Shared\Partials\ReportViewer.aspx" />
     <Content Include="Web.config">
       <SubType>Designer</SubType>
     </Content>
@@ -5031,20 +4936,25 @@
     <Content Include="Views\Shared\EditorTemplates\Time.cshtml" />
     <Content Include="Views\Shared\EditorTemplates\Url.cshtml" />
     <Content Include="Views\Shared\_LayoutBase.cshtml" />
-    <Content Include="Views\Shared\_LayoutCreate_old1.cshtml" />
-    <Content Include="Views\Shared\_LayoutDelete_old.cshtml" />
     <Content Include="Views\Shared\_LayoutDetails.cshtml" />
-    <Content Include="Views\Shared\_LayoutEdit_old.cshtml" />
     <Content Include="Views\Shared\Partials\_Actions.cshtml" />
     <Content Include="Views\Shared\Partials\_MasterDelete.cshtml" />
     <Content Include="Views\Shared\Partials\_MasterEdit.cshtml" />
     <Content Include="Views\Shared\Partials\_ViewBagConstants.cshtml" />
     <Content Include="Views\Shared\Partials\_CommonViewBag.cshtml" />
-    <Content Include="Views\Shared\Partials\_BackButton.cshtml" />
-    <Content Include="Views\Shared\Partials\_SaveButton.cshtml" />
-    <Content Include="Views\Shared\Partials\_DeleteButton.cshtml" />
+    <Content Include="Views\Shared\Buttons\_AddButton.cshtml" />
+    <Content Include="Views\Shared\Buttons\_BackButton.cshtml" />
+    <Content Include="Views\Shared\Buttons\_CancelButton.cshtml" />
+    <Content Include="Views\Shared\Buttons\_DeleteButton.cshtml" />
+    <Content Include="Views\Shared\Buttons\_EditButton.cshtml" />
+    <Content Include="Views\Shared\Buttons\_ExportButton.cshtml" />
+    <Content Include="Views\Shared\Buttons\_ImportButton.cshtml" />
+    <Content Include="Views\Shared\Buttons\_ListButton.cshtml" />
+    <Content Include="Views\Shared\Buttons\_PreviewButton.cshtml" />
+    <Content Include="Views\Shared\Buttons\_PrintButton.cshtml" />
+    <Content Include="Views\Shared\Buttons\_SaveButton.cshtml" />
+    <Content Include="Views\Shared\Buttons\_ViewButton.cshtml" />
     <Content Include="Views\Shared\Partials\_ConfirmDeleteScript.cshtml" />
-    <Content Include="Views\Shared\_LayoutIndex2.cshtml" />
     <Content Include="Views\MachineConfiguration\MachineConfiguration.cshtml" />
     <Content Include="Views\Shared\Partials\_Breadcrumb.cshtml" />
     <Content Include="Views\Shared\Partials\_Progressbar.cshtml" />
@@ -5066,10 +4976,7 @@
     <Content Include="Views\Shared\EditorTemplates\Corno\MultiColumnComboBoxMasterViewModel.cshtml" />
     <Content Include="Views\Shared\_LayoutCrud.cshtml" />
     <Content Include="Views\Account\ChangePassword.cshtml" />
-    <Content Include="Views\Shared\_LayoutPrint_old.cshtml" />
-    <Content Include="Views\Shared\_LayoutReport_old.cshtml" />
     <Content Include="Views\Shared\Partials\_Search.cshtml" />
-    <Content Include="Views\Shared\_LayoutIndex_old.cshtml" />
     <Content Include="Views\Shared\EditorTemplates\TextArea.cshtml" />
     <Content Include="Views\Shared\EditorTemplates\Corno\NumericTextBoxFor.cshtml" />
     <Content Include="Views\Shared\EditorTemplates\Corno\PackingType.cshtml" />
@@ -5382,28 +5289,16 @@
     <Content Include="Views\Shared\EditorTemplates\Item\_PacketPopup.cshtml" />
     <Content Include="Scripts\README.md" />
     <Content Include="Views\Shared\EditorTemplates\Ido\_PacketPopup.cshtml" />
-    <Content Include="Volo.Abp.Core.abppkg.analyze.json" />
-    <Content Include="Volo.Abp.Core.abppkg" />
-    <Content Include="Volo.Abp.Localization.Abstractions.abppkg.analyze.json" />
-    <Content Include="Volo.Abp.Localization.Abstractions.abppkg" />
-    <Content Include="Volo.Abp.Uow.abppkg.analyze.json" />
-    <Content Include="Volo.Abp.Uow.abppkg" />
-    <Content Include="Volo.Abp.Validation.Abstractions.abppkg.analyze.json" />
-    <Content Include="Volo.Abp.Validation.Abstractions.abppkg" />
-    <Content Include="Volo.Abp.ObjectExtending.abppkg.analyze.json" />
-    <Content Include="Volo.Abp.ObjectExtending.abppkg" />
-    <Content Include="Volo.Abp.EventBus.Abstractions.abppkg.analyze.json" />
-    <Content Include="Volo.Abp.EventBus.Abstractions.abppkg" />
-    <Content Include="Volo.Abp.Data.abppkg.analyze.json" />
-    <Content Include="Volo.Abp.Data.abppkg" />
     <Content Include="Views\Shared\Partials\_WeighingScale.cshtml" />
     <Content Include="Views\Shared\Partials\_GlobalLoader.cshtml" />
+    <Content Include="Views\Shared\Partials\ReportViewer_Html5.cshtml" />
+    <Content Include="Views\Shared\Buttons\_SaveAndPrintButton.cshtml" />
+    <Content Include="Views\Shared\Buttons\_SaveJavascriptButton.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
     <Folder Include="Areas\Admin\Data\" />
     <Folder Include="Areas\Admin\Views\Shared\" />
-    <Folder Include="Areas\DemoProject\Reports\" />
     <Folder Include="Areas\DemoProject\Views\Shared\" />
     <Folder Include="Areas\Euro\Models\" />
     <Folder Include="Areas\Masters\Views\Shared\" />
@@ -5429,6 +5324,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Areas\DemoProject\Labels\ProductLabelSmallRpt.resx">
       <DependentUpon>ProductLabelSmallRpt.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Areas\DemoProject\Reports\SalesInvoiceReceiptRpt.resx">
+      <DependentUpon>SalesInvoiceReceiptRpt.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Areas\Kitchen\Labels\BranchLabelRpt.resx">
       <DependentUpon>BranchLabelRpt.cs</DependentUpon>

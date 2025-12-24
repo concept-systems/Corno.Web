@@ -18,6 +18,12 @@ public sealed class CarcassViewDto : BaseDto
     public double? PrintQuantity { get; set; }
     public bool PrintToPrinter { get; set; }
     public ReportBook ReportBook { get; set; }
+
+    /// <summary>
+    /// Base64 encoded PDF of the carcass carton label, used for inline preview/print.
+    /// </summary>
+    public string Base64 { get; set; }
+
     public List<CarcassDetailsDto> CarcassDetailsDtos { get; set; }
     public List<CarcassRackingDetailDto> CarcassRackingDetailDtos { get; set; }
 

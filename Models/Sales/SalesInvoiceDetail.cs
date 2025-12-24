@@ -27,6 +27,9 @@ public class SalesInvoiceDetail : BaseModel
     public double? Total { get; set; }
     public string Barcode { get; set; }
 
+    public int? PackingTypeId { get; set; }
+    public double? NetWeight { get; set; }
+
     public double? PendingQuantity { get; set; }
 
     [NotMapped]

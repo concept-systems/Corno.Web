@@ -18,10 +18,7 @@
 		<siteMapNode name="Plan" title="Plan" formname="Corno.Concept.Clients.Godrej.KitWeigh.Forms.PlanningForm" icon="Plan" web="true" windows="true" controller="Plan" action="Index" area="Kitchen" roles="administrator Press shop Kitting WIP Sorting" />
 	</siteMapNode>
 	<siteMapNode name="Labels" title="Labels" web="true" windows="true" roles="administrator Press shop Kitting Sorting Stores Shirwal WIP M8 Test1">
-		<siteMapNode name="PartLabelForm" title="Part Label" formname="Corno.Concept.Clients.Godrej.KitWeigh.Forms.Label.PartLabelForm" icon="Label" web="true" windows="true" controller="PartLabel" action="Index" area="Kitchen" roles="administrator Press shop Kitting Sorting WIP M8 Test1" />
-		<siteMapNode name="StoreKhalapurForm" title="Store Khalapur" formname="Corno.Concept.Clients.Godrej.KitWeigh.Forms.Label.StoreLabelForm" icon="Label" web="true" windows="true" controller="StoreKhalapur" action="Index" area="Kitchen" roles="administrator Press shop Kitting Sorting Stores WIP M8 Test1" />
-		<siteMapNode name="StiffenerLabelForm" title="Stiffener Label" formname="Corno.Concept.Clients.Godrej.KitWeigh.Forms.Label.StiffenerLabelForm" icon="Label" web="true" windows="true" controller="StiffenerLabel" action="Index" area="Kitchen" roles="administrator Sorting Stores WIP M8 Test1" />
-		<siteMapNode name="StoreShirwalForm" title="Store Shirwal" formname="Corno.Concept.Clients.Godrej.KitWeigh.Forms.Label.StoreShirwalForm" icon="Label" web="true" windows="true" controller="StoreShirwal" action="Index" area="Kitchen" roles="administrator Sorting Shirwal WIP M8 Test1" />
+		<siteMapNode name="LabelForm" title="Labels" formname="Corno.Concept.Clients.Godrej.KitWeigh.Forms.Label.LabelForm" icon="Label" web="true" windows="true" controller="Label" action="Index" area="Kitchen" roles="administrator Press shop Kitting Sorting Stores Shirwal WIP M8 Test1" />
 		<siteMapNode name="TrolleyLabelForm" title="Trolley Label" formname="Corno.Concept.Clients.Godrej.KitWeigh.Forms.Label.TrolleyLabelForm" icon="Label" web="true" windows="true" controller="TrolleyLabel" action="Index" area="Kitchen" roles="administrator Sorting WIP M8 Test1" />
 	</siteMapNode>
 	<siteMapNode name="Productions" title="Productions" web="true" windows="true" roles="administrator Packing Press shop Kitting Sorting Shirwal WIP M8 Put To Light">
@@ -30,9 +27,8 @@
 		<siteMapNode name="SubAssemblyLabelForm" title="Sub Assembly" formname="Corno.Concept.Clients.Godrej.KitWeigh.Forms.Operations.SubAssemblyLabelForm" icon="Label" web="true" windows="true" controller="SubAssemblyLabel" action="Index" area="Kitchen" roles="administrator Packing Sorting Shirwal WIP M8 Put To Light" />
 	</siteMapNode>
 	<siteMapNode name="Packing" title="Packing" web="true" windows="true" roles="administrator Packing Sorting Shirwal WIP M8">
-		<siteMapNode name="NonWeighingForm" title="Non Weighing" formname="Corno.Concept.Clients.Godrej.KitWeigh.Forms.Packing.NonWeighingPackingForm" icon="Packing" controller="NonWeighingPacking" action="Index" area="Kitchen" web="true" windows="true" roles="administrator Packing Sorting Shirwal WIP M8" />
+		<siteMapNode name="CartonForm" title="Cartons" formname="Corno.Concept.Clients.Godrej.KitWeigh.Forms.Packing.CartonForm" icon="Packing" controller="Carton" action="Index" area="Kitchen" web="true" windows="true" roles="administrator Packing Sorting Shirwal WIP M8" />
 		<siteMapNode name="WeighingPackingForm" title="Weighing" formname="Corno.Concept.Clients.Godrej.KitWeigh.Forms.Packing.WeighingPackingForm" icon="Packing" controller="Weighing" action="Index" area="Kitchen" web="true" windows="true" roles="administrator Packing Sorting Shirwal WIP M8" />
-		<siteMapNode name="PackCarcassForm" title="Carcass" formname="Corno.Concept.Clients.Godrej.KitWeigh.Forms.Packing.CarcassPackingForm" icon="Packing" controller="Carcass" action="Index" area="Kitchen" web="true" windows="true" roles="administrator Packing Sorting Shirwal WIP M8" />
 	</siteMapNode>
 	<siteMapNode name="WMS" title="WMS" web="true" windows="false" roles="administrator Packing Sorting Shirwal WIP M8">
 		<siteMapNode name="PalletInForm" title="Pallet In " formname="Corno.Concept.Clients.Godrej.KitWeigh.Forms.Packing.NonWeighingPackingForm" icon="PalletIn" controller="PalletIn" action="Index" area="Kitchen" web="true" windows="false" roles="administrator Packing Sorting Shirwal WIP M8" />

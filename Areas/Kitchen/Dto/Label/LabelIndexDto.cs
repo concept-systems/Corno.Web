@@ -16,4 +16,5 @@ public class LabelIndexDto
     public double? OrderQuantity { get; set; }
     public double? Quantity { get; set; }
     public string Status { get; set; }
+    public string LabelType { get; set; }
 }

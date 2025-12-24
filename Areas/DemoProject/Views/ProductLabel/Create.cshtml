@@ -1,7 +1,7 @@
 ﻿@using Corno.Web.Globals
 @using Corno.Web.Helper
 @using Kendo.Mvc.UI
-@model Corno.Web.Areas.DemoProject.Dtos.LabelDto
+@model Corno.Web.Areas.DemoProject.Dtos.LabelCrudDto
 
 @{
     Layout = "~/Views/Shared/_LayoutBase.cshtml";
@@ -21,24 +21,12 @@
     ViewBag.Controller = "ProductLabel";
 }
 
-@section sectionBaseFooter
+@section sectionBaseHeader
 {
-    <div class="k-actions k-actions-horizontal k-actions-end">
-        @(Html.Kendo().Button()
-            .Name("btnBack")
-            .Content("Back")
-            .ApplyStandardSettingsWithType(ButtonType.Info, "arrow-60-left", ComponentSize.Medium)
-            .HtmlAttributes(new { onclick = $"window.location.href='{Url.Action(ViewBag.Index, ViewBag.Controller, new { area = ViewBag.Area, miscType = ViewBag.MiscType })}'; return false;" }))
-        @(Html.Kendo().Button()
-            .Name("preview")
-            .Content("Preview")
-            .ApplyStandardSettingsWithType(ButtonType.Info, "preview", ComponentSize.Medium)
-            .Events(e => e.Click("onPreview")))
-        @(Html.Kendo().Button()
-            .Name("print")
-            .Content("Print")
-            .ApplyStandardSettingsWithType(ButtonType.Primary, "print", ComponentSize.Medium)
-            .Events(e => e.Click("onPrint")))
+    <div class="k-card-actions k-actions-horizontal k-actions-end">
+        @Html.Partial("Buttons/_BackButton")
+        @Html.Partial("Buttons/_PreviewButton")
+        @Html.Partial("Buttons/_PrintButton")
     </div>
 }
 
@@ -58,16 +46,70 @@
         return formData;
     }
 
+    // Fetch PDF and load it into the side-by-side preview panel iframe.
+    // Optionally trigger a callback (e.g., to print).
+    function fetchPdfToPreviewPanel(url, formData, onLoaded) {
+        fetch(url, {
+            method: 'POST',
+            body: formData
+        })
+            .then(async response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch PDF');
+                }
+
+                const contentType = response.headers.get('Content-Type');
+                if (contentType && contentType.includes('application/json')) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.Message || 'Unknown error occurred');
+                }
+
+                const blob = await response.blob();
+                const pdfUrl = URL.createObjectURL(blob);
+
+                const iframe = document.getElementById('productLabelPreviewFrame');
+                if (iframe) {
+                    iframe.src = pdfUrl;
+                }
+
+                if (typeof onLoaded === 'function') {
+                    onLoaded();
+                }
+            })
+            .catch(error => {
+                if (typeof showErrorMessage === 'function') {
+                    showErrorMessage(error.message);
+                } else {
+                    console.error(error.message);
+                }
+            });
+    }
+
     function onPrint(e) {
         e.preventDefault();
         const formData = buildFormData();
         fetchAndPrint('/DemoProject/ProductLabel/Print', formData, onPrintSuccess);
     }
 
+    @*function onPrint(e) {
+        e.preventDefault();
+        const formData = buildFormData();
+
+        // Load PDF into preview panel and then print the iframe
+        fetchPdfToPreviewPanel('/DemoProject/ProductLabel/Print', formData, function () {
+            if (typeof printIFramePdf === 'function') {
+                printIFramePdf('productLabelPreviewFrame');
+            }
+            onPrintSuccess();
+        });
+    }*@
+
     function onPreview(e) {
         e.preventDefault();
         const formData = buildFormData();
-        fetchAndPreviewPdf('/DemoProject/ProductLabel/Preview', formData, "Product Label");
+
+        // Only load PDF into preview panel (no print)
+        fetchPdfToPreviewPanel('/DemoProject/ProductLabel/Preview', formData);
     }
 
     function onPrintSuccess() {
@@ -91,7 +133,12 @@
 
         $("#ManufacturingDate").data("kendoDatePicker").value(null);
         $("#ExpiryDate").data("kendoDatePicker").value(null);
-        $("#Quantity").data("kendoTextBox").value("");
+        
+        // Quantity is now NumericTextBox, not TextBox
+        const quantityNumericBox = $("#Quantity").data("kendoNumericTextBox");
+        if (quantityNumericBox) {
+            quantityNumericBox.value(null);
+        }
     }
 </script>
 

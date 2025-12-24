@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using Corno.Web.Models.Base;
+using Corno.Web.Dtos;
 
 namespace Corno.Web.Areas.DemoProject.Dtos;
 
-public class SalesInvoiceDto : BaseModel
+public class SalesInvoiceDto : BaseDto
 {
     #region -- Properties --
-    public string InvoiceNo { get; set; }
     public DateTime InvoiceDate { get; set; }
     public string CustomerName { get; set; }
     
@@ -15,8 +14,6 @@ public class SalesInvoiceDto : BaseModel
     public string PaymentMode { get; set; }
     public double? PaidAmount { get; set; }
 
-    public bool PrintToPrinter { get; set; } = default;
-
-    public virtual List<SalesInvoiceDetailDto> Details { get; set; } = new();
+    public virtual List<SalesInvoiceDetailDto> SalesInvoiceDetailDtos { get; set; } = [];
     #endregion
 }

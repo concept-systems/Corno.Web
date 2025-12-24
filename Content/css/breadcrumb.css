@@ -112,3 +112,17 @@
     }
 }
 
+/* Sales Invoice mobile header actions: show buttons in a single row only on small screens */
+.sales-invoice-mobile-actions {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .sales-invoice-mobile-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+        margin-bottom: 10px;
+    }
+}
+

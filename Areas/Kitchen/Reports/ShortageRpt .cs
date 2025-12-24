@@ -38,7 +38,7 @@ public partial class ShortageRpt : BaseReport
         var plans = RunAsync(() => planService.GetAsync(p => DbFunctions.TruncateTime(p.DueDate) >= DbFunctions.TruncateTime(fromDate) &&
                                        DbFunctions.TruncateTime(p.DueDate) <= DbFunctions.TruncateTime(toDate),
             p => new { p.LotNo }));
-        return plans.Select(p => new { p.LotNo }).ToList();
+        return plans.Select(p => new { p.LotNo }).Distinct().ToList();
     }
 
     private void ShortageRpt_NeedDataSource(object sender, EventArgs e)
@@ -46,22 +46,20 @@ public partial class ShortageRpt : BaseReport
         var report = (Telerik.Reporting.Processing.Report)sender;
 
         var lotNos = ((object[])report.Parameters[FieldConstants.LotNo].Value).OfType<string>().ToList();
-        var locationId = report.Parameters[FieldConstants.Location].Value.ToString().ToInt();
-        var bUpdateQuantity = report.Parameters["UpdateQuantities"].Value.ToBoolean();
+        /*var locationId = report.Parameters[FieldConstants.Location].Value.ToString().ToInt();
+        var bUpdateQuantity = report.Parameters["UpdateQuantities"].Value.ToBoolean();*/
 
         var planService = Bootstrapper.Get<IPlanService>();
         var itemService = Bootstrapper.Get<IBaseItemService>();
         var miscMasterService = Bootstrapper.Get<IMiscMasterService>();
 
-        var plans = RunAsync(() => planService.GetAsync<Plan>(p => lotNos.Contains(p.LotNo) && (p.Status == StatusConstants.InProcess || p.Status == StatusConstants.Active),
+        //planService.SetIncludes($"{nameof(Plan.PlanItemDetails)},{nameof(Plan.PlanPacketDetails)}");
+        var plans = RunAsync(() => planService.GetAsync(p => lotNos.Contains(p.LotNo) ,
                 p => p));
-        var families = RunAsync(() => planService.GetFamiliesAsync(0));
-        /*if (bUpdateQuantity)
-        {
-            foreach (var plan in plans.Where(plan => plan.Status != StatusConstants.Packed))
-                planService.UpdatePackQuantities(plan);
-        }*/
+        /*foreach (var plan in plans)
+            planService.UpdateQuantitiesAsync(plan).ConfigureAwait(false).GetAwaiter().GetResult();*/
 
+        //plans = plans.Take(1).ToList();
         var dataSource = from plan in plans
                          from planItemDetail in plan.PlanItemDetails
                          where (planItemDetail.OrderQuantity ?? 0) > (planItemDetail.PackQuantity ?? 0)

@@ -37,7 +37,7 @@ public class LabelController : SuperController
 
     #region -- Private Methods --
 
-    private async Task<LabelDto> CreateLabelDtoAsync(int? id)
+    private async Task<LabelCrudDto> CreateLabelDtoAsync(int? id)
     {
         var label = await _labelService.FirstOrDefaultAsync<Label>(l => l.Id == id, l => l);
         if (label == null)
@@ -49,19 +49,19 @@ public class LabelController : SuperController
         var userService = Bootstrapper.Get<IUserService>();
         var users = await userService.GetAsync(p => userIds.Contains(p.Id), p => p);
 
-        var dto = new LabelDto
+        var dto = new LabelCrudDto
         {
             ItemId = item?.Id,
             ItemName = item?.Name,
             LabelDate = label?.LabelDate,
             Weight = label.NetWeight ?? 0,
-            Rate = label.GetProperty(FieldConstants.Rate, 0),
+            Mrp = label.GetProperty(FieldConstants.Rate, 0),
             ManufacturingDate = label.GetProperty(FieldConstants.ManufacturingDate, DateTime.MinValue),
             ExpiryDate = label.GetProperty("ExpiryDate", DateTime.MinValue),
 
             PrintToPrinter = false,
 
-            Details = label.LabelDetails.Select(d => new LabelDetailDto
+            Details = label.LabelDetails.Select(d => new LabelCrudDetailDto
             {
                 ScanDate = d.ScanDate,
                 ModifiedBy = users.FirstOrDefault(p => p.Id == d.ModifiedBy)?.UserName,
@@ -77,7 +77,7 @@ public class LabelController : SuperController
     #region -- Actions --
     public ActionResult Index()
     {
-        return View(new LabelDto());
+        return View(new LabelCrudDto());
     }
 
     public virtual ActionResult Create()
@@ -90,13 +90,13 @@ public class LabelController : SuperController
         {
             HandleControllerException(exception);
         }
-        return View(new LabelDto());
+        return View(new LabelCrudDto());
     }
 
     [HttpPost]
     //[ValidateAntiForgeryToken]
     //[MultipleButton(Name = "action", Argument = "Print")]
-    public async Task<ActionResult> Create(LabelDto dto)
+    public async Task<ActionResult> Create(LabelCrudDto dto)
     {
         if (!ModelState.IsValid)
             return View(dto);
@@ -173,13 +173,13 @@ public class LabelController : SuperController
             var data = from label in query
                        where (label.ItemId ?? 0) > 0
                        join item in itemQuery on label.ItemId equals item.Id
-                       select new LabelDto
+                       select new LabelCrudDto
                        {
                            Id = label.Id,
                            LabelDate = label.LabelDate,
                            ItemName = item?.Name,
                            Weight = label.Quantity,
-                           Rate = label.GetProperty(FieldConstants.Rate, 0) > 0 ? label.GetProperty(FieldConstants.Rate, 0) : item?.Rate,
+                           Mrp = label.GetProperty(FieldConstants.Rate, 0) > 0 ? label.GetProperty(FieldConstants.Rate, 0) : item?.Rate,
                            ExpiryDate = label.GetProperty("ExpiryDate", DateTime.MinValue),
                            ManufacturingDate = label.GetProperty(FieldConstants.ManufacturingDate, DateTime.MinValue),
                        };

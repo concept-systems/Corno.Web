@@ -1,0 +1,12 @@
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@{
+    string confirmFunction = ViewBag.ConfirmFunction ?? "confirmDelete";
+}
+
+@(Html.Kendo().Button()
+    .Name("btnDelete")
+    .Content("Delete")
+    .ApplyStandardSettingsWithType(ButtonType.Delete, "trash", ComponentSize.Medium)
+    .Events(e => e.Click(confirmFunction)))
+

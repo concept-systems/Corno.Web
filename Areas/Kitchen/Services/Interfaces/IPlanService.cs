@@ -1,13 +1,11 @@
 ﻿using System.Threading.Tasks;
 using Corno.Web.Models.Plan;
 using Corno.Web.Services.Plan.Interfaces;
-using Corno.Web.Services.Progress.Interfaces;
 using System.Collections;
 using System;
 using System.Collections.Generic;
 using Corno.Web.Areas.Kitchen.Dto.Label;
 using Corno.Web.Areas.Kitchen.Dto.Plan;
-using System.IO;
 using Corno.Web.Services.Import.Interfaces;
 using Kendo.Mvc.UI;
 
@@ -21,9 +19,6 @@ public interface IPlanService : IBasePlanService, IFileImportService<BmImportDto
     Task<IEnumerable<string>> GetFamiliesAsync(int locationId, List<PlanItemDetail> planItemDetails = null);
     Task<IEnumerable<string>> GetFamiliesAsync(int locationId, Plan plan);
     Task<IEnumerable> GetLotNosAsync(DateTime dueDate);
-    Task<List<BmImportDto>> ImportAsync(Stream fileStream, string filePath, IBaseProgressService progressService,
-        string userId, string sessionId, ImportSessionService sessionService);
-    
     // View Model Methods
     Task<PlanViewDto> GetViewModelAsync(Plan plan);
     Task<PositionDetailDto> FillLabelInformationAsync(PositionDetailDto positionView);

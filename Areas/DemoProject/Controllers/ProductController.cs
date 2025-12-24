@@ -55,9 +55,9 @@ public class ProductController : SuperController
                     var packetDetail = dest.ProductPacketDetails[index];
 
                     if (packetDto.Mrp.HasValue)
-                        packetDetail.ExtraProperties["Mrp"] = packetDto.Mrp.Value;
+                        packetDetail.ExtraProperties[FieldConstants.Mrp] = packetDto.Mrp.Value;
                     else
-                        packetDetail.ExtraProperties.Remove("Mrp");
+                        packetDetail.ExtraProperties.Remove(FieldConstants.Mrp);
                 }
             });
 
@@ -79,8 +79,8 @@ public class ProductController : SuperController
                     var packetDetail = src.ProductPacketDetails[index];
                     var packetDto = dest.ProductPacketDtos[index];
 
-                    if (!packetDetail.ExtraProperties.ContainsKey("Mrp")) continue;
-                    var mrpValue = packetDetail.ExtraProperties.GetOrDefault("Mrp");
+                    if (!packetDetail.ExtraProperties.ContainsKey(FieldConstants.Mrp)) continue;
+                    var mrpValue = packetDetail.ExtraProperties.GetOrDefault(FieldConstants.Mrp);
                     if (mrpValue != null && double.TryParse(mrpValue.ToString(), out var mrp))
                         packetDto.Mrp = mrp;
                 }
@@ -287,9 +287,9 @@ public class ProductController : SuperController
             {
                 var dto = productDto.ProductPacketDtos[index];
                 var entity = product.ProductPacketDetails.FirstOrDefault(p => p.Id == dto.Id);
-                if (entity != null && entity.ExtraProperties != null && entity.ExtraProperties.ContainsKey("Mrp"))
+                if (entity != null && entity.ExtraProperties.ContainsKey(FieldConstants.Mrp))
                 {
-                    var mrpValue = entity.ExtraProperties.GetOrDefault("Mrp");
+                    var mrpValue = entity.ExtraProperties.GetOrDefault(FieldConstants.Mrp);
                     if (mrpValue != null && double.TryParse(mrpValue.ToString(), out var mrp))
                         dto.Mrp = mrp;
                 }

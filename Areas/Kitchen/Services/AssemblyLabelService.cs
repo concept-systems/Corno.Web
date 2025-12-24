@@ -17,13 +17,14 @@ using Corno.Web.Areas.Kitchen.Services.Interfaces;
 using Corno.Web.Repository.Interfaces;
 using Corno.Web.Services.File.Interfaces;
 using Corno.Web.Windsor;
+using MoreLinq;
 
 namespace Corno.Web.Areas.Kitchen.Services;
 
 public class AssemblyLabelService : LabelService, IAssemblyLabelService
 {
     #region -- Constructors --
-    public AssemblyLabelService(IGenericRepository<Label> genericRepository, 
+    public AssemblyLabelService(IGenericRepository<Label> genericRepository,
         IBaseItemService itemService, IExcelFileService<SalvaginiExcelDto> excelFileService,
         IUserService userService)
     : base(genericRepository, excelFileService, userService)
@@ -66,7 +67,7 @@ public class AssemblyLabelService : LabelService, IAssemblyLabelService
                         throw new Exception($"At least single label should be sorted.");
                 }
                 else
-                    throw new Exception($"Label {label.Barcode}' has no 'Sorted' status. Expected status is '{string.Join(",", expectedStatus)}'.");
+                    throw new Exception($"Label {label.Barcode}' has '{label.Status}' status. Expected status is '{string.Join(",", expectedStatus)}'.");
             }
 
             var assemblyCode = label.AssemblyCode;
@@ -75,7 +76,9 @@ public class AssemblyLabelService : LabelService, IAssemblyLabelService
         }
 
         var label1 = labels.First();
-        var assemblyLabelCount = plan.PlanItemDetails.Where(d => d.AssemblyCode == label1.AssemblyCode)
+        var assemblyLabelCount = plan.PlanItemDetails
+            .Where(d => d.AssemblyCode == label1.AssemblyCode)
+            .DistinctBy(d => d.Position)
             .Select(d => d.OrderQuantity).Sum().ToInt();
         if (assemblyLabelCount <= 1)
             throw new Exception($"There are only {assemblyLabelCount} items against assembly code {label1.AssemblyCode} 1");
@@ -86,18 +89,20 @@ public class AssemblyLabelService : LabelService, IAssemblyLabelService
 
     #region  -- Public Methods --
 
-    public async Task<List<Label>> CreateLabelsAsync(SubAssemblyCrudDto dto, Plan plan, Label label1)
+    public async Task<List<Label>> CreateLabelsAsync(SubAssemblyCrudDto dto, Plan plan, Label label1,
+        bool bUpdateDatabase)
     {
         // 1. Validate Dto
         ValidateDto(dto);
 
         var planItemDetail = plan.PlanItemDetails.FirstOrDefault(d => d.Position == label1.Position);
-        var labels = await GetAsync(
-            p => p.WarehouseOrderNo == label1.WarehouseOrderNo && p.AssemblyCode == label1.AssemblyCode,
-            p => p,
+        var labels = await GetAsync(p => p.WarehouseOrderNo == label1.WarehouseOrderNo && 
+                                         p.AssemblyCode == label1.AssemblyCode, p => p,
             null, // Explicitly specify null for the orderBy parameter
             false // Explicitly specify false for the last bool parameter to resolve ambiguity
         ).ConfigureAwait(false);
+        // Remove duplicate barcodes.
+        labels = labels.DistinctBy(l => l.Barcode).ToList();
 
         // Validate labels
         ValidateLabels(labels, plan);
@@ -145,10 +150,11 @@ public class AssemblyLabelService : LabelService, IAssemblyLabelService
         var links = string.Join(",", labels.Select(p => p.Id.ToString()));
         labels.ForEach(p => p.Links = links);
 
-        // Update Database
-        await UpdateDatabaseAsync(assemblyLabel, labels, plan).ConfigureAwait(false);
+        //// Update Database
+        if (bUpdateDatabase)
+            await UpdateDatabaseAsync(assemblyLabel, labels, plan).ConfigureAwait(false);
 
-        return new List<Label> { assemblyLabel };
+        return [assemblyLabel];
     }
 
     public async Task<BaseReport> CreateLabelReportAsync(IEnumerable<Label> labels, bool bDuplicate)

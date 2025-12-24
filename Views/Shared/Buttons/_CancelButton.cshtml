@@ -1,0 +1,37 @@
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@{
+    string buttonName = ViewBag.ButtonName ?? "btnCancel";
+    string buttonText = ViewBag.ButtonText ?? "Cancel";
+    string clickFunction = ViewBag.ClickFunction;
+    string cancelUrl = ViewBag.CancelUrl;
+    ButtonType buttonType = ViewBag.ButtonType ?? ButtonType.Cancel;
+    string icon = ViewBag.Icon ?? "cancel";
+    
+    var buttonBuilder = Html.Kendo().Button()
+        .Name(buttonName)
+        .Content(buttonText)
+        .ApplyStandardSettingsWithType(buttonType, icon, ComponentSize.Medium);
+    
+    if (!string.IsNullOrEmpty(clickFunction))
+    {
+        buttonBuilder = buttonBuilder.Events(e => e.Click(clickFunction));
+    }
+    else if (!string.IsNullOrEmpty(cancelUrl))
+    {
+        buttonBuilder = buttonBuilder.HtmlAttributes(new { onclick = $"window.location.href='{cancelUrl}'; return false;" });
+    }
+    else
+    {
+        // Default: go back
+        string indexAction = ViewBag.Index ?? "Index";
+        string controller = ViewBag.Controller;
+        string area = ViewBag.Area;
+        object miscType = ViewBag.MiscType;
+        string backUrl = Url.Action(indexAction, controller, new { area = area, miscType = miscType });
+        buttonBuilder = buttonBuilder.HtmlAttributes(new { onclick = $"window.location.href='{backUrl}'; return false;" });
+    }
+}
+
+@buttonBuilder
+

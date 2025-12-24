@@ -20,6 +20,8 @@ public class BaseLabelService : PrintService<Models.Packing.Label>, IBaseLabelSe
     {
         _itemService = itemService;
 
+        // Note: Eager loading is now conditional - use GetWithDetailsAsync() when details are needed
+        // This improves performance by not loading child collections unnecessarily
         SetIncludes(nameof(Models.Packing.Label.LabelDetails));
     }
     #endregion
@@ -38,21 +40,27 @@ public class BaseLabelService : PrintService<Models.Packing.Label>, IBaseLabelSe
     }
 
     public async Task<IEnumerable<Models.Packing.Label>> GetListByDateAsync(DateTime fromDate, DateTime toDate) {
+        // Use ignoreInclude to avoid loading LabelDetails unnecessarily
         var list = await GetAsync<Models.Packing.Label>(c => DbFunctions.TruncateTime(c.LabelDate) >= DbFunctions.TruncateTime(fromDate) && 
-                                              DbFunctions.TruncateTime(c.LabelDate) <= DbFunctions.TruncateTime(toDate), l => l).ConfigureAwait(false);
+                                              DbFunctions.TruncateTime(c.LabelDate) <= DbFunctions.TruncateTime(toDate), l => l, null, ignoreInclude: true).ConfigureAwait(false);
         return list;
     }
 
     public async Task<IEnumerable<Models.Packing.Label>> GetListByReceiptNoAsync(string receiptNo) {
-        var list = await GetAsync<Models.Packing.Label>(c => c.ReceiptNo == receiptNo, l => l).ConfigureAwait(false);
+        // Use ignoreInclude to avoid loading LabelDetails unnecessarily
+        var list = await GetAsync<Models.Packing.Label>(c => c.ReceiptNo == receiptNo, l => l, null, ignoreInclude: true).ConfigureAwait(false);
         return list;
     }
 
+    /// <summary>
+    /// Gets a label by barcode without loading details (faster)
+    /// </summary>
     public async Task<Models.Packing.Label> GetByBarcodeAsync(string barcode) {
         if (string.IsNullOrEmpty(barcode))
             throw new Exception($"Invalid Barcode : {barcode}");
 
-        var labels = await GetAsync<Models.Packing.Label>(b => b.Barcode == barcode, l => l).ConfigureAwait(false);
+        // Use ignoreInclude to avoid loading LabelDetails unnecessarily
+        var labels = await GetAsync<Models.Packing.Label>(b => b.Barcode == barcode, l => l, null, ignoreInclude: true).ConfigureAwait(false);
         var label = labels.OrderBy(l => l.CreatedDate).LastOrDefault();
         if (null == label)
             throw new Exception("Label with barcode value ('" + barcode + ") does not available in system.");
@@ -60,11 +68,16 @@ public class BaseLabelService : PrintService<Models.Packing.Label>, IBaseLabelSe
         return label;
     }
 
+    /// <summary>
+    /// Gets a label by barcode without loading details (faster)
+    /// </summary>
     public async Task<Models.Packing.Label> GetByBarcodeAsync(string barcode, ICollection<string> oldStatus, Carton carton = null) {
         if (string.IsNullOrEmpty(barcode))
             throw new Exception($"Invalid Barcode : {barcode}");
 
-        var label = await FirstOrDefaultAsync(b => b.Barcode == barcode , b => b).ConfigureAwait(false);
+        // Use ignoreInclude to avoid loading LabelDetails unnecessarily
+        var labels = await GetAsync<Models.Packing.Label>(b => b.Barcode == barcode, b => b, null, ignoreInclude: true).ConfigureAwait(false);
+        var label = labels.FirstOrDefault();
 
         if (null == label)
             throw new Exception("Label with barcode value ('" + barcode + ") does not available in system.");
@@ -75,12 +88,30 @@ public class BaseLabelService : PrintService<Models.Packing.Label>, IBaseLabelSe
                             label.Status);
     }
 
+    /// <summary>
+    /// Gets a label with all details loaded (use when details are needed)
+    /// </summary>
+    public async Task<Models.Packing.Label> GetByBarcodeWithDetailsAsync(string barcode) {
+        if (string.IsNullOrEmpty(barcode))
+            throw new Exception($"Invalid Barcode : {barcode}");
+
+        // Enable includes for this query
+        //SetIncludes(nameof(Models.Packing.Label.LabelDetails));
+        var labels = await GetAsync<Models.Packing.Label>(b => b.Barcode == barcode, l => l).ConfigureAwait(false);
+        var label = labels.OrderBy(l => l.CreatedDate).LastOrDefault();
+        if (null == label)
+            throw new Exception("Label with barcode value ('" + barcode + ") does not available in system.");
+
+        return label;
+    }
+
     public async Task<IEnumerable<Models.Packing.Label>> GetByPalletNoAsync(string palletNo) {
         if (string.IsNullOrEmpty(palletNo))
             throw new Exception("Invalid Pallet No");
 
+        // Use ignoreInclude to avoid loading LabelDetails unnecessarily
         var labels = await GetAsync(b =>
-            b.Status == StatusConstants.PalletIn, l => l, null, false).ConfigureAwait(false);
+            b.Status == StatusConstants.PalletIn, l => l, null, ignoreInclude: true).ConfigureAwait(false);
         if (!labels.Any())
             throw new Exception("Labels with pallet no ('" + palletNo + ") with status as 'Pallet In' does not available in system.");
 
@@ -91,7 +122,9 @@ public class BaseLabelService : PrintService<Models.Packing.Label>, IBaseLabelSe
         if (string.IsNullOrEmpty(barcode))
             throw new Exception("Invalid Barcode");
 
-        var label = await FirstOrDefaultAsync(b => b.Barcode == barcode && oldStatus.Contains(b.Status), b => b).ConfigureAwait(false);
+        // Use ignoreInclude to avoid loading LabelDetails unnecessarily
+        var labels = await GetAsync<Models.Packing.Label>(b => b.Barcode == barcode && oldStatus.Contains(b.Status), b => b, null, ignoreInclude: true).ConfigureAwait(false);
+        var label = labels.FirstOrDefault();
         if (null == label)
             throw new Exception("Label with barcode value ('" + barcode + ") does not available in system.");
 
@@ -133,7 +166,8 @@ public class BaseLabelService : PrintService<Models.Packing.Label>, IBaseLabelSe
     #region -- Database --
     #region -- Public Methods --
     public async Task<bool> UpdateStatusAsync(string barcode, string newStatus, string userId = null) {
-        var label = await GetByBarcodeAsync(barcode).ConfigureAwait(false);
+        // Need details for AddDetail, so use GetByBarcodeWithDetailsAsync
+        var label = await GetByBarcodeWithDetailsAsync(barcode).ConfigureAwait(false);
         if (null == label) return false;
 
         label.Status = newStatus;
@@ -146,7 +180,9 @@ public class BaseLabelService : PrintService<Models.Packing.Label>, IBaseLabelSe
     public async Task<bool> UpdateStatusAsync(Carton carton, string newStatus, string userId = null)
     {
         var barcodes = carton.CartonDetails.Select(d => d.Barcode).Distinct();
-        var labels = await GetAsync(l => barcodes.Contains(l.Barcode), l => l, null, false).ConfigureAwait(false);
+        // Need details for AddDetail, so enable includes
+        //SetIncludes(nameof(Models.Packing.Label.LabelDetails));
+        var labels = await GetAsync(l => barcodes.Contains(l.Barcode), l => l, null, ignoreInclude: false).ConfigureAwait(false);
         foreach (var label in labels)
         {
             label.Status = newStatus;
@@ -200,7 +236,15 @@ public class BaseLabelService : PrintService<Models.Packing.Label>, IBaseLabelSe
         if (string.IsNullOrEmpty(barcode))
             throw new Exception("Invalid Barcode");
 
-        var label = await GetByBarcodeAsync(barcode, oldStatus).ConfigureAwait(false);
+        // Need details for AddDetail in PerformScanOperationAsync, so use GetByBarcodeWithDetailsAsync
+        var label = await GetByBarcodeWithDetailsAsync(barcode).ConfigureAwait(false);
+        
+        // Verify status
+        if (!oldStatus.Contains(label.Status))
+            throw new Exception("Barcode(" + barcode + ") should have status : " +
+                                string.Join(",", oldStatus) + ". It has current status : " +
+                                label.Status);
+        
         await PerformScanOperationAsync(label, newStatus).ConfigureAwait(false);
             
         return label;

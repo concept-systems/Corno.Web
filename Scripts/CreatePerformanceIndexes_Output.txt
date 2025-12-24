@@ -1,0 +1,31 @@
+Changed database context to 'Godrej.New.Kitchen'.
+Index already exists: IX_CartonDetail_CartonId
+Index already exists: IX_LabelDetail_LabelId
+Index already exists: IX_PlanItemDetail_PlanId
+Msg 1919, Level 16, State 1, Server CONCEPT-LPT007, Line 9
+Column 'Barcode' in table 'CartonDetail' is of a type that is invalid for use as a key column in an index.
+Index already exists: IX_CartonDetail_Position
+Index already exists: IX_CartonDetail_PackingTypeId_ItemId
+Index already exists: IX_Label_Barcode
+Index already exists: IX_Label_WarehouseOrderNo
+Index already exists: IX_Label_LabelDate
+Index already exists: IX_Carton_WarehouseOrderNo
+Index already exists: IX_Carton_CartonBarcode
+Index already exists: IX_Carton_WarehouseOrderNo_Status
+Index already exists: IX_Carton_PackingDate
+Msg 156, Level 15, State 1, Server CONCEPT-LPT007, Line 10
+Incorrect syntax near the keyword 'Plan'.
+Msg 156, Level 15, State 1, Server CONCEPT-LPT007, Line 6
+Incorrect syntax near the keyword 'Plan'.
+Msg 156, Level 15, State 1, Server CONCEPT-LPT007, Line 6
+Incorrect syntax near the keyword 'Plan'.
+Index already exists: IX_PlanItemDetail_Position
+Index already exists: IX_PlanItemDetail_ItemId
+========================================
+Index creation script completed!
+========================================
+ 
+Next steps:
+1. Update statistics: UPDATE STATISTICS Carton; UPDATE STATISTICS CartonDetail; etc.
+2. Monitor query performance using SQL Server Profiler or Extended Events
+3. Review execution plans to verify index usage

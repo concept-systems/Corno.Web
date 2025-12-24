@@ -14,21 +14,11 @@ namespace Corno.Web.Areas.Kitchen.Reports.Racking;
 public partial class CurrentRackInStatusRpt : BaseReport
 {
     #region -- Constructors --
-    public CurrentRackInStatusRpt(/*ICartonService cartonService, IBaseItemService itemService*/)
+    public CurrentRackInStatusRpt()
     {
-
         InitializeComponent();
-
-        /*_cartonService = cartonService;
-        _itemService = itemService;*/
     }
     #endregion
-
-    /*#region -- Data Members --
-    private readonly ICartonService _cartonService;
-    private readonly IBaseItemService _itemService;
-
-    #endregion*/
 
     #region -- Events --
     private void CurrentRackInStatusRpt_NeedDataSource(object sender, EventArgs e)
@@ -71,6 +61,9 @@ public partial class CurrentRackInStatusRpt : BaseReport
                     cartonRackingDetail?.PalletNo
                 };
             });
+
+        if (!datSource.Any())
+            return;
 
         report.DataSource = datSource;
     }

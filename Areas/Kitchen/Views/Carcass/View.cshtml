@@ -22,8 +22,7 @@
 
 <!-- container templates -->
 <script id="template-partial-view" type="text/x-kendo-template">
-    <!-- Placeholder for the partial view -->
-            <div id="partialViewContainer" style="height: 100%"></div>
+    <iframe id="pdfFrame" width="100%" height="100%" style="border: none; min-height: 400px;"></iframe>
 </script>
 <script id="template-header" type="text/x-kendo-template">
    <table class="k-table k-table-auto table table-bordered">
@@ -203,35 +202,13 @@
 
 <script>
     $(document).ready(function () {
-        LoadPartialView()
+        // Inline preview of carton label similar to PartLabel
+        var base64 = '@Html.Raw(Model.Base64 ?? string.Empty)';
+        var cleanBase64 = base64.replace(/\s/g, '');
+        if (cleanBase64) {
+            loadPdf(cleanBase64, 'pdfFrame');
+        }
     });
-
-    function LoadPartialView(toPrinter) {
-        $.ajax({
-            url: '/Carcass/LoadPartialView', // Replace with your actual controller and action
-            method: 'GET',
-            data: { 'partialViewName': 'Partials/ReportViewer_New' },
-            success: function (partialHtml) {
-                // Load HTML content into the element
-                $('#partialViewContainer').html(partialHtml, function () {
-                    // This code will execute after the HTML content has been loaded
-                    console.log("HTML content loaded successfully");
-
-                });
-                // Delay the execution of the next statement by a short duration
-                setTimeout(function () {
-                    // This code will execute after a short delay
-                    console.log("Timeout HTML content loaded successfully");
-                    if ('@Model.PrintToPrinter' === 'True' || toPrinter === true) {
-                        printToPrinter();
-                    }
-                }, 1500); // Adjust the delay duration as needed
-            },
-            error: function () {
-                console.error('Failed to load the partial view.');
-            }
-        });
-    }
 
     function onBackToList() {
         window.location.href = '@Url.Action("Index", "Carcass", new { area = "Kitchen" })';
@@ -250,6 +227,9 @@
         window.location.href = '@Url.Action("Index", "Plan", new { area = "Kitchen" })';
     }
     function onPrintLabel() {
-        printToPrinter();
+        var base64 = '@Html.Raw(Model.Base64 ?? string.Empty)';
+        if (base64 && base64.trim() !== '') {
+            printIFramePdf('pdfFrame');
+        }
     }
 </script>

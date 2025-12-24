@@ -172,7 +172,7 @@ public class PartLabelService : LabelService, IPartLabelService
 
         var report = await CreateLabelReportAsync([label], true).ConfigureAwait(false);
         dto.Base64 = Convert.ToBase64String(report.ToDocumentBytes());
-        System.IO.File.WriteAllBytes("D://debug.pdf", report.ToDocumentBytes());
+        //System.IO.File.WriteAllBytes("D://debug.pdf", report.ToDocumentBytes());
 
         return dto;
     }

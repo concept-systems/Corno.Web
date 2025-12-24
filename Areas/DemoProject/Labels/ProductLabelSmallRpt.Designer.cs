@@ -373,7 +373,7 @@ namespace Corno.Web.Areas.DemoProject.Labels
             this.barcode1.Style.Font.Name = "Courier New";
             this.barcode1.Value = "= Fields.Barcode1";
             // 
-            // panel2
+            // panel2 (second label group)
             // 
             this.panel2.Items.AddRange(new Telerik.Reporting.ReportItemBase[] {
             this.barcode1,
@@ -537,7 +537,7 @@ namespace Corno.Web.Areas.DemoProject.Labels
             this.barcode2.Style.Font.Name = "Courier New";
             this.barcode2.Value = "= Fields.Barcode2";
             // 
-            // panel3
+            // panel3 (third label group)
             // 
             this.panel3.Items.AddRange(new Telerik.Reporting.ReportItemBase[] {
             this.barcode2,

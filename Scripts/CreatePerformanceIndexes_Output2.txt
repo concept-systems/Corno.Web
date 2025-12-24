@@ -1,0 +1,29 @@
+Changed database context to 'Godrej.New.Kitchen'.
+Index already exists: IX_CartonDetail_CartonId
+Index already exists: IX_LabelDetail_LabelId
+Index already exists: IX_PlanItemDetail_PlanId
+Error creating index IX_CartonDetail_Barcode: Column 'Barcode' in table 'CartonDetail' is of a type that is invalid for use as a key column in an index.
+Index already exists: IX_CartonDetail_Position
+Index already exists: IX_CartonDetail_PackingTypeId_ItemId
+Index already exists: IX_Label_Barcode
+Index already exists: IX_Label_WarehouseOrderNo
+Index already exists: IX_Label_LabelDate
+Index already exists: IX_Carton_WarehouseOrderNo
+Index already exists: IX_Carton_CartonBarcode
+Index already exists: IX_Carton_WarehouseOrderNo_Status
+Index already exists: IX_Carton_PackingDate
+Index already exists: IX_Plan_WarehouseOrderNo
+Msg 1934, Level 16, State 1, Server CONCEPT-LPT007, Line 5
+CREATE INDEX failed because the following SET options have incorrect settings: 'QUOTED_IDENTIFIER'. Verify that SET options are correct for use with indexed views and/or indexes on computed columns and/or filtered indexes and/or query notifications and/or XML data type methods and/or spatial index operations.
+Msg 1934, Level 16, State 1, Server CONCEPT-LPT007, Line 5
+CREATE INDEX failed because the following SET options have incorrect settings: 'QUOTED_IDENTIFIER'. Verify that SET options are correct for use with indexed views and/or indexes on computed columns and/or filtered indexes and/or query notifications and/or XML data type methods and/or spatial index operations.
+Index already exists: IX_PlanItemDetail_Position
+Index already exists: IX_PlanItemDetail_ItemId
+========================================
+Index creation script completed!
+========================================
+ 
+Next steps:
+1. Update statistics: UPDATE STATISTICS Carton; UPDATE STATISTICS CartonDetail; etc.
+2. Monitor query performance using SQL Server Profiler or Extended Events
+3. Review execution plans to verify index usage

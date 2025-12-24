@@ -1,0 +1,31 @@
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@{
+    string indexAction = ViewBag.Index ?? "Index";
+    string controller = ViewBag.Controller;
+    string area = ViewBag.Area;
+    object miscType = ViewBag.MiscType;
+    string buttonName = ViewBag.ButtonName ?? "btnBack";
+    string buttonText = ViewBag.ButtonText ?? "Back";
+    string icon = ViewBag.Icon ?? "arrow-60-left";
+    string clickFunction = ViewBag.ClickFunction;
+    string backUrl = clickFunction == null ? Url.Action(indexAction, controller, new { area = area, miscType = miscType }) : null;
+}
+
+@{
+    var buttonBuilder = Html.Kendo().Button()
+        .Name(buttonName)
+        .Content(buttonText)
+        .ApplyStandardSettingsWithType(ButtonType.Info, icon, ComponentSize.Medium);
+    
+    if (!string.IsNullOrEmpty(clickFunction))
+    {
+        buttonBuilder = buttonBuilder.Events(e => e.Click(clickFunction));
+    }
+    else
+    {
+        buttonBuilder = buttonBuilder.HtmlAttributes(new { onclick = $"window.location.href='{backUrl}'; return false;" });
+    }
+}
+
+@buttonBuilder

@@ -7,6 +7,7 @@ using System.Web.Mvc;
 using Corno.Web.Areas.Kitchen.Dto.Label;
 using Corno.Web.Areas.Kitchen.Services.Interfaces;
 using Corno.Web.Controllers;
+using Corno.Web.Extensions;
 using Corno.Web.Globals;
 using Corno.Web.Models.Packing;
 using Corno.Web.Models.Plan;
@@ -79,57 +80,87 @@ public class SubAssemblyLabelController : SuperController
     {
         try
         {
-            try
-            {
-                Session[FieldConstants.Label] = null;
-                return View(new SubAssemblyCrudDto());
-            }
-            catch (Exception exception)
-            {
-                HandleControllerException(exception);
-            }
-            return View();
+            Session[FieldConstants.Label] = null;
+            return View(new SubAssemblyCrudDto());
         }
         catch (Exception exception)
         {
             HandleControllerException(exception);
+            return View();
         }
-        return View();
     }
 
     [HttpPost]
-    public async Task<ActionResult> Create(SubAssemblyCrudDto dto)
+    public async Task<ActionResult> Print(SubAssemblyCrudDto dto)
     {
         if (!ModelState.IsValid)
-            return View(dto);
+            return View(_createPath, dto);
+
         try
         {
             var oldStatus = new[] { StatusConstants.Bent, StatusConstants.Sorted };
             var labels = await _assemblyLabelService.GetAsync(p => p.Barcode == dto.Barcode1 &&
-                                             oldStatus.Contains(p.Status), p => p,
-                                             q => q.OrderByDescending(x => x.Id), true).ConfigureAwait(false);
+                                                 oldStatus.Contains(p.Status), p => p,
+                                                 q => q.OrderByDescending(x => x.Id), true).ConfigureAwait(false);
             var label1 = labels.FirstOrDefault();
-            if (string.IsNullOrEmpty(label1?.AssemblyCode) || label1?.AssemblyCode == FieldConstants.NA)
+            if (string.IsNullOrEmpty(label1?.AssemblyCode) || label1.AssemblyCode == FieldConstants.NA)
                 throw new Exception($"Invalid assembly code {label1?.AssemblyCode}");
 
             var plan = await GetPlanAsync(label1.WarehouseOrderNo).ConfigureAwait(false);
 
             // Create Labels
-            var createdLabels = await _assemblyLabelService.CreateLabelsAsync(dto, plan, label1).ConfigureAwait(false);
-            // Create Label Reports
-            Session[FieldConstants.Label] = await _assemblyLabelService.CreateLabelReportAsync(createdLabels, false).ConfigureAwait(false);
-            /*// Save in database
-            _assemblyLabelService.UpdateDatabase(labels, new Plan());*/
-            
+            var createdLabels = await _assemblyLabelService.CreateLabelsAsync(dto, plan, label1, true).ConfigureAwait(false);
+
+            /*// Persist changes only for Print
+            await _assemblyLabelService.UpdateDatabaseAsync(label1, createdLabels, plan).ConfigureAwait(false);*/
+
+            // Clear DTO for next input
             dto.Clear();
             ModelState.Clear();
-            dto.PrintToPrinter = true;
+
+            // Create Label Report and return as PDF (do not store in session)
+            var report = await _assemblyLabelService.CreateLabelReportAsync(createdLabels, false).ConfigureAwait(false);
+            return File(report.ToDocumentBytes(), "application/pdf");
         }
         catch (Exception exception)
         {
             HandleControllerException(exception);
+            return Json(new { Success = false, exception.GetBaseException().Message },
+                JsonRequestBehavior.AllowGet);
         }
-        return View(_createPath, dto);
+    }
+
+    [HttpPost]
+    public async Task<ActionResult> Preview(SubAssemblyCrudDto dto)
+    {
+        if (!ModelState.IsValid)
+            return View(_createPath, dto);
+
+        try
+        {
+            var oldStatus = new[] { StatusConstants.Bent, StatusConstants.Sorted };
+            var labels = await _assemblyLabelService.GetAsync(p => p.Barcode == dto.Barcode1 &&
+                                                 oldStatus.Contains(p.Status), p => p,
+                                                 q => q.OrderByDescending(x => x.Id), true).ConfigureAwait(false);
+            var label1 = labels.FirstOrDefault();
+            if (string.IsNullOrEmpty(label1?.AssemblyCode) || label1.AssemblyCode == FieldConstants.NA)
+                throw new Exception($"Invalid assembly code {label1?.AssemblyCode}");
+
+            var plan = await GetPlanAsync(label1.WarehouseOrderNo).ConfigureAwait(false);
+
+            // Create Labels
+            var createdLabels = await _assemblyLabelService.CreateLabelsAsync(dto, plan, label1, false).ConfigureAwait(false);
+
+            // Create Label Report for preview only (no DB update, no session)
+            var report = await _assemblyLabelService.CreateLabelReportAsync(createdLabels, false).ConfigureAwait(false);
+            return File(report.ToDocumentBytes(), "application/pdf");
+        }
+        catch (Exception exception)
+        {
+            HandleControllerException(exception);
+            return Json(new { Success = false, exception.GetBaseException().Message },
+                JsonRequestBehavior.AllowGet);
+        }
     }
 
     public async Task<ActionResult> View(int? id)
@@ -157,7 +188,7 @@ public class SubAssemblyLabelController : SuperController
         try
         {
             var query = _assemblyLabelService.GetQuery().AsNoTracking();
-            query = query?.Where(p => p.Status == StatusConstants.SubAssembled);
+            query = query.Where(p => p.Status == StatusConstants.SubAssembled);
             var data = from label in query
                 select new LabelIndexDto
                 {

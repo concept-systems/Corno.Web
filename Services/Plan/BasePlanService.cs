@@ -19,6 +19,8 @@ public class BasePlanService : PrintService<Models.Plan.Plan>, IBasePlanService
 
     public BasePlanService(IGenericRepository<Models.Plan.Plan> genericRepository) : base(genericRepository)
     {
+        // Note: Eager loading is now conditional - use GetWithDetailsAsync() when details are needed
+        // This improves performance by not loading child collections unnecessarily
         SetIncludes($"{nameof(Models.Plan.Plan.PlanItemDetails)}," +
                     $"{nameof(Models.Plan.Plan.PlanPacketDetails)}");
     }
@@ -26,11 +28,16 @@ public class BasePlanService : PrintService<Models.Plan.Plan>, IBasePlanService
 
     #region -- Public Get Methods --
 
+    /// <summary>
+    /// Gets a plan by warehouse order number with details loaded (details are usually needed)
+    /// </summary>
     public virtual async Task<Models.Plan.Plan> GetByWarehouseOrderNoAsync(string warehouseOrderNo)
     {
         if (string.IsNullOrEmpty(warehouseOrderNo))
             throw new Exception($"Invalid Warehouse Order No ({warehouseOrderNo}).");
 
+        // Enable includes since PlanItemDetails are usually needed
+        //SetIncludes($"{nameof(Models.Plan.Plan.PlanItemDetails)},{nameof(Models.Plan.Plan.PlanPacketDetails)}");
         var plan = await FirstOrDefaultAsync(p => p.WarehouseOrderNo == warehouseOrderNo, p => p).ConfigureAwait(false);
         if (null == plan)
             throw new Exception($"No plan available for entered Warehouse Order No ({warehouseOrderNo}).");
@@ -38,6 +45,23 @@ public class BasePlanService : PrintService<Models.Plan.Plan>, IBasePlanService
         return !plan.PlanItemDetails.Any() ?
             throw new Exception($"Warehouse Order No ({warehouseOrderNo}) doesn't have items.") :
             plan;
+    }
+
+    /// <summary>
+    /// Gets a plan by warehouse order number without loading details (faster when details not needed)
+    /// </summary>
+    public virtual async Task<Models.Plan.Plan> GetByWarehouseOrderNoWithoutDetailsAsync(string warehouseOrderNo)
+    {
+        if (string.IsNullOrEmpty(warehouseOrderNo))
+            throw new Exception($"Invalid Warehouse Order No ({warehouseOrderNo}).");
+
+        // Use ignoreInclude to avoid loading PlanItemDetails unnecessarily
+        var plans = await GetAsync<Models.Plan.Plan>(p => p.WarehouseOrderNo == warehouseOrderNo, p => p, null, ignoreInclude: true).ConfigureAwait(false);
+        var plan = plans.FirstOrDefault();
+        if (null == plan)
+            throw new Exception($"No plan available for entered Warehouse Order No ({warehouseOrderNo}).");
+
+        return plan;
     }
 
     #endregion

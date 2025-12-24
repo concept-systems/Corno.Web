@@ -44,7 +44,7 @@ public partial class LabelRpt : BaseReport
                 Weight = $"{itemPacketDetail?.Quantity} {packingType?.Name}",
                 Mrp = $"Rs. {rate}",
                 ManufacturingDate = l.GetProperty(FieldConstants.ManufacturingDate, DateTime.Now),
-                ExpiryDate = l.GetProperty("ExpiryDate", DateTime.Now),
+                ExpiryDate = l.GetProperty(FieldConstants.ExpiryDate, DateTime.Now),
                 l.Barcode,
             };
         }).ToList();

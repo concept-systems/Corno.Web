@@ -367,6 +367,7 @@ public static class FieldConstants
     public const string KittingRelease = "KittingRelease";
     public const string ManufacturingDueDate = "ManufacturingDueDate";
     public const string ManufacturingDate = "ManufacturingDate";
+    public const string ExpiryDate = "ExpiryDate";
     public const string PaintingRelease = "PaintingRelease";
     public const string PaintingDate = "PaintingDate";
     public const string Apo = "Apo";

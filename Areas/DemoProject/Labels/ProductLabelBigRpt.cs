@@ -34,19 +34,15 @@ public partial class ProductLabelBigRpt : BaseReport
 
         var miscMasterService = Bootstrapper.Get<IMiscMasterService>();
         var packingType = RunAsync(() => miscMasterService.GetByIdAsync(productPacketDetail?.PackingTypeId ?? 0));
-
-        DataSource = labels.Select(l =>
+        var mrp = productPacketDetail?.GetProperty(FieldConstants.Mrp, 0);
+        DataSource = labels.Select(l => new
         {
-            var mrp = productPacketDetail?.GetProperty("Mrp", 0);
-            return new
-            {
-                ItemName = product.Name,
-                Weight = $"{productPacketDetail?.Quantity} {packingType?.Name}",
-                Mrp = $"Rs. {mrp}",
-                ManufacturingDate = l.GetProperty(FieldConstants.ManufacturingDate, DateTime.Now),
-                ExpiryDate = l.GetProperty("ExpiryDate", DateTime.Now),
-                l.Barcode,
-            };
+            ItemName = product.Name,
+            Weight = $"{productPacketDetail?.Quantity} {packingType?.Name}",
+            Mrp = $"Rs. {mrp}",
+            ManufacturingDate = l.GetProperty(FieldConstants.ManufacturingDate, DateTime.Now),
+            ExpiryDate = l.GetProperty(FieldConstants.ExpiryDate, DateTime.Now),
+            l.Barcode,
         }).ToList();
     }
 }

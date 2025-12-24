@@ -26,7 +26,7 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
     {
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         _dbSet = _dbContext.Set<TEntity>();
-        _includeProperties = string.Empty;
+        //_includeProperties = string.Empty;
     }
 
     #endregion
@@ -36,7 +36,7 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
     private readonly BaseDbContext _dbContext;
     private readonly DbSet<TEntity> _dbSet;
 
-    private string _includeProperties;
+    //private string _includeProperties;
     private string[] _cachedIncludeProperties;
 
     // Cached reflection results for performance
@@ -52,16 +52,15 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
 
     public void SetIncludes(string includes)
     {
-        _includeProperties = includes;
-        _cachedIncludeProperties = string.IsNullOrEmpty(includes) 
-            ? Array.Empty<string>() 
-            : includes.Split([','], StringSplitOptions.RemoveEmptyEntries)
+        //_includeProperties = includes;
+        _cachedIncludeProperties = string.IsNullOrEmpty(includes) ? [] :
+            includes.Split([','], StringSplitOptions.RemoveEmptyEntries)
                       .Select(i => i.Trim())
                       .ToArray();
     }
 
     public IQueryable<TEntity> GetQuery() => _dbSet.AsQueryable().AsNoTracking();
-    
+
     /// <summary>
     /// Gets cached key properties for the entity type
     /// </summary>
@@ -73,10 +72,10 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
             keyProperties = entityType.GetProperties()
                 .Where(p => Attribute.IsDefined(p, typeof(KeyAttribute)))
                 .ToArray();
-            
+
             if (!keyProperties.Any())
                 throw new Exception($"GenericRepositoryCore : No [Key] attributes found on {entityType.Name}. Composite key support requires explicit [Key] attributes.");
-            
+
             KeyPropertiesCache[entityType] = keyProperties;
         }
         return keyProperties;
@@ -123,7 +122,7 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
             //if (false == (isUpdated ?? false))
             {
                 entityToUpdate.Adapt(attachedEntry.Entity);
-                
+
                 // Automatically sync all detail collections for any master-detail entity
                 await SyncDetailCollectionsAsync(attachedEntry.Entity, entityToUpdate, attachedEntry);
             }
@@ -142,7 +141,7 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
     private object[] ExtractKeyValues(TEntity entity, PropertyInfo[] keyProperties)
     {
         var entityType = typeof(TEntity);
-        
+
         // Try to get cached extractor
         if (!KeyValueExtractorsCache.TryGetValue(entityType, out var extractor))
         {
@@ -151,13 +150,13 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
             var propertyAccesses = keyProperties.Select(prop =>
                 Convert(Property(parameter, prop), typeof(object))
             ).ToArray();
-            
+
             var arrayInit = NewArrayInit(typeof(object), propertyAccesses);
             var lambda = Lambda<Func<TEntity, object[]>>(arrayInit, parameter);
             extractor = lambda.Compile();
             KeyValueExtractorsCache[entityType] = extractor;
         }
-        
+
         return extractor(entity);
     }
 
@@ -275,7 +274,7 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
         if (type.IsGenericType)
         {
             var genericTypeDef = type.GetGenericTypeDefinition();
-            if (genericTypeDef == typeof(ICollection<>) || 
+            if (genericTypeDef == typeof(ICollection<>) ||
                 genericTypeDef == typeof(List<>) ||
                 genericTypeDef == typeof(IList<>))
             {
@@ -290,7 +289,7 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
             // Try to get element type from IEnumerable<T>
             var enumerableInterface = type.GetInterfaces()
                 .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
-            
+
             if (enumerableInterface != null)
             {
                 elementType = enumerableInterface.GetGenericArguments()[0];

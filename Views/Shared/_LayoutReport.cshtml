@@ -9,16 +9,12 @@
     ViewBag.Details = "Details";
     ViewBag.Delete = "Delete";
 
-    ViewBag.ImportAction = "ImportMaster";
-}
-
-@{
-    string controllerName = ViewBag.Controller;
+    ViewBag.Controller = "Home";
 }
 
 @section sectionBaseHeader
 {
-    @Html.Partial("Partials/_BackButton")
+    @Html.Partial("Buttons/_BackButton")
 }
 
 @RenderBody()

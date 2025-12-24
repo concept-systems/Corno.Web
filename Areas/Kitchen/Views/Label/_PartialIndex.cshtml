@@ -1,0 +1,113 @@
+@using Corno.Web.Areas.Kitchen.Dto.Label
+@using Corno.Web.Globals
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+
+@(Html.Kendo().Grid<LabelIndexDto>()
+    .Name("grid")
+    .ApplyIndexSettings() // 👈 Apply index settings (full height, responsive)
+    .AddExportToolBar(enableExcel: true, enablePdf: true, enableSearch: true)
+    .Events(events => events.ApplyCommonEvents())
+        .Columns(columns =>
+        {
+            columns.Bound(m => m.LabelDate)
+                .Format("{0:dd/MM/yyyy hh:mm tt}")
+                .Title("Date");
+            columns.Bound(m => m.WarehouseOrderNo).Align(TextAlign.Left)
+                .Title("Warehouse <br/> Order");
+            columns.Bound(m => m.CarcassCode)
+                .Title("Carcass <Br/> Code");
+            columns.Bound(m => m.AssemblyCode)
+                .Title("Assembly <Br/> Code");
+            columns.Bound(m => m.Position);
+            columns.Bound(m => m.Barcode).Align(TextAlign.Left)
+                .ClientTemplate("<a href='" + Url.Action("View", "Label", new {area = "Kitchen"}) + "?id=#=Id#' class='text-primary text-decoration-underline'>#=Barcode#</a>");
+            columns.Bound(m => m.LotNo).Align(TextAlign.Left)
+                .Title("Lot <Br/> No");
+            columns.Bound(m => m.OrderQuantity)
+                .Title("Order <Br/> Quantity");
+            columns.Bound(m => m.Quantity);
+            columns.AddStatusColumn();
+        })
+        .DataSource(dataSource => dataSource
+            .ApplyCommonDataSourceSettings("GetAllLabelsIndexViewDto", "Label", "Kitchen")
+            .Sort(s => s.Add(FieldConstants.Id).Descending())
+            //.Group(group => { group.Add(g => g.WarehouseOrderNo); })
+        ))
+
+<script type="text/javascript">
+    function onViewClick(e) {
+        e.preventDefault();
+        var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+        var id = dataItem.Id; // Assuming 'Id' is the field name
+        window.location.href = '@Url.Action("View", "Label", new { area = "Kitchen" })' + '?id=' + id;
+    }
+
+    function sendData() {
+    }
+
+    // Calculate and adjust page size based on available grid height
+    function adjustGridPageSize() {
+        var grid = $("#grid").data("kendoGrid");
+        if (!grid) return;
+
+        try {
+            // Get grid container height
+            var gridElement = grid.element;
+            var gridHeight = gridElement.height();
+            
+            // Get heights of grid components
+            var toolbarHeight = gridElement.find(".k-grid-toolbar").outerHeight() || 0;
+            var headerHeight = gridElement.find(".k-grid-header").outerHeight() || 0;
+            var pagerHeight = gridElement.find(".k-pager-wrap").outerHeight() || 0;
+            var filterRowHeight = gridElement.find(".k-grid-header .k-filter-row").outerHeight() || 0;
+            
+            // Calculate available height for data rows
+            var availableHeight = gridHeight - toolbarHeight - headerHeight - pagerHeight - filterRowHeight - 10; // 10px buffer
+            
+            // Estimate row height (typically around 30-35px per row)
+            var estimatedRowHeight = 35;
+            
+            // Calculate optimal page size (ensure at least 1 row)
+            var optimalPageSize = Math.max(1, Math.floor(availableHeight / estimatedRowHeight));
+            
+            // Set reasonable limits
+            optimalPageSize = Math.min(optimalPageSize, 1000); // Max 1000 rows
+            optimalPageSize = Math.max(optimalPageSize, 5); // Min 5 rows
+            
+            // Update page size if different from current
+            var currentPageSize = grid.dataSource.pageSize();
+            if (currentPageSize !== optimalPageSize) {
+                grid.dataSource.pageSize(optimalPageSize);
+                grid.dataSource.page(1); // Reset to first page
+                grid.refresh();
+            }
+        } catch (e) {
+            console.log("Error adjusting grid page size:", e);
+        }
+    }
+
+    $(document).ready(function () {
+        // Adjust page size on load
+        setTimeout(function () {
+            adjustGridPageSize();
+        }, 500);
+
+        // Adjust page size on window resize
+        var resizeTimer;
+        $(window).on('resize', function () {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(function () {
+                adjustGridPageSize();
+            }, 250);
+        });
+
+        // Adjust page size after grid data is bound
+        $("#grid").on("dataBound", function () {
+            setTimeout(function () {
+                adjustGridPageSize();
+            }, 100);
+        });
+    });
+</script>
+

@@ -1,0 +1,213 @@
+@using Corno.Web.Globals
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@model Corno.Web.Areas.Kitchen.Dto.StiffenerLabel.StiffenerLabelCrudDto
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Delete = "Delete";
+    ViewBag.View = "View";
+}
+
+@{
+    var controllerName = "Label";
+    var action = "CreateStiffenerLabel";
+}
+
+@{
+    ViewBag.BoxTitle = "Stiffener Label";
+    ViewBag.MainMenu = "Transaction";
+    ViewBag.MainHeader = "Stiffener Label";
+    ViewBag.CurrentSitemap = "Stiffener Label";
+    ViewBag.Title = "Stiffener Label";
+}
+<div class=" k-content">
+    @using (Ajax.BeginForm(action, controllerName, new AjaxOptions { HttpMethod = "POST", OnComplete = "displayUploadMediaMsg" }, new { enctype = "multipart/form-data", id = "form" }))
+    {
+        @Html.AntiForgeryToken()
+        <div class="row">
+            <div class="col-6">
+                <!-- Placeholder for the partial view -->
+                <div id="partialViewContainer" style="height: 100%"></div>
+            </div>
+            <div class="col-6">
+                @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+                <div class="row">
+                    <div class="form-group required row">
+                        @Html.LabelFor(m => m.DueDate, "Due Date :",
+    new { @class = "col-3 col-form-label" })
+                        <div class="col-9">
+                            @(Html.Kendo().DatePickerFor(m => m.DueDate)
+                                .Format("yyyy-MM-dd")
+                                .Events(e => e.Change("onChange"))
+                                .HtmlAttributes(new { @class = "w-100" }))
+                        </div>
+                    </div>
+                    <div class="form-group required row">
+                        @Html.LabelFor(m => m.LotNo, "Lot No :", new { @class = "col-3 col-form-label" })
+                        <div class="col-9">
+                            @(Html.Kendo().MultiColumnComboBoxFor(m => m.LotNo)
+                                    .DataTextField(FieldConstants.LotNo)
+                                    .DataValueField(FieldConstants.LotNo)
+                                    .HtmlAttributes(new { @class = "w-100" })
+                                    .Filter("contains")
+                                    .Placeholder("Select ...")
+                                    .Suggest(true)
+                                    .Columns(columns => { columns.Add().Field(FieldConstants.LotNo).Title(FieldConstants.LotNo); })
+                                    .DataSource(dataSource => dataSource
+                                        .Read(read => { read.Action("GetStiffenerLabelLotNos", "Label").Data("getLotParameters"); })
+                                        .ServerFiltering(true)
+                                    )
+                                    .AutoBind(false)
+                                    .CascadeFrom(FieldConstants.DueDate))
+                            <script>
+                                function getLotParameters() {
+                                    return {
+                                        dueDate: $('#DueDate').val()
+                                    }
+                                }
+                            </script>
+                        </div>
+                    </div>
+                    <div class="form-group required row">
+                        @Html.LabelFor(m => m.DrawingNo, "Drawing No :", new { @class = "col-3 col-form-label" })
+                        <div class="col-9">
+                            @(Html.Kendo().MultiColumnComboBoxFor(m => m.DrawingNo)
+                                .DataTextField(FieldConstants.DrawingNo)
+                                .DataValueField(FieldConstants.DrawingNo)
+                                .HtmlAttributes(new { @class = "w-100" })
+                                .Filter("contains")
+                                .Placeholder("Select ...")
+                                .Suggest(true)
+                                .Columns(columns => { columns.Add().Field(FieldConstants.DrawingNo).Title(FieldConstants.DrawingNo); })
+                                .DataSource(dataSource => dataSource
+                                    .Read(read => { read.Action("GetStiffenerLabelDrawingNo", "Label").Data("getDrawingNoParameters"); })
+                                    .ServerFiltering(true)
+                                )
+                                .AutoBind(false)
+                                .CascadeFrom(FieldConstants.LotNo))
+                            <script>
+                                function getDrawingNoParameters() {
+                                    return {
+                                        lotNo: $('#LotNo').val()
+                                    }
+                                }
+                            </script>
+                        </div>
+                    </div>
+                    <div class="k-actions k-actions-horizontal k-actions-end">
+                        @(Html.Kendo().Button()
+                            .Name("print")
+                            .Content("Print")
+                            .ApplyStandardSettingsWithType(ButtonType.Primary, "print", ComponentSize.Medium)
+                            .HtmlAttributes(new
+                            {
+                                type = "submit",
+                                name = "action:Print",
+                                @class = ""
+                            }))
+                        @(Html.Kendo().Button()
+                            .Name("preview")
+                            .Content("Preview")
+                            .ApplyStandardSettingsWithType(ButtonType.Info, "preview", ComponentSize.Medium)
+                            .Events(e => e.Click("onPrintLabel"))
+                            .HtmlAttributes(new {
+                                type = "submit",
+                                name = "action:Preview"
+                            }))
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#form").kendoValidator({
+            rules: {
+                requiredMultiColumnComboBox: function (input) {
+                    if (input.is("[data-role=multicolumncombobox]")) {
+                        return input.val() !== "";
+                    }
+                    return true;
+                },
+                requiredDatePicker: function (input) {
+                    if (input.is("[data-role=datepicker]")) {
+                        var value = input.val();
+                        // Check if the value is a valid date
+                        return kendo.parseDate(value) !== null;
+                    }
+                    return true;
+                }
+            },
+            messages: {
+                requiredMultiColumnComboBox: function (input) {
+                    var comboBoxName = input.attr("name");
+                    switch (comboBoxName) {
+                        case "LotNo":
+                            return "Please select Lot No.";
+                        case "DrawingNo":
+                            return "Please select Drawing No.";
+                        // Add cases for other comboboxes as needed
+                        default:
+                         return "Please select a value for the ComboBox.";
+                    }
+                },
+                requiredDatePicker: "Please select due date."
+            }
+        });
+        LoadPartialView()
+    });
+
+    function LoadPartialView(toPrinter) {
+        $.ajax({
+            url: '/Label/LoadPartialView', // Replace with your actual controller and action
+            method: 'GET',
+            data: { 'partialViewName': 'Partials/ReportViewer_New' },
+                success: function (partialHtml) {
+                    $('#partialViewContainer').html(partialHtml, function () {
+                             // This code will execute after the HTML content has been loaded
+                             console.log("HTML content loaded successfully");
+                    });
+                     setTimeout(function () {
+                         // This code will execute after a short delay
+                         console.log("Timeout HTML content loaded successfully");
+                         if ('@Model.PrintToPrinter' === 'True' || toPrinter === true) {
+                             printToPrinter();
+                         }
+                     }, 2000);
+                },
+                error: function () {
+                   console.error('Failed to load the partial view.');
+                }
+        });
+    }
+
+    function onChange(e) {
+        var cmblotNo = $("#LotNo").data("kendoMultiColumnComboBox");
+        cmblotNo.value(null);
+        cmblotNo.text("");
+        cmblotNo.dataSource.read();
+    }
+
+    function onPrintLabel(e) {
+        $.ajax({
+            url: '/Label/PreviewStiffenerLabel', // Replace ControllerName with your actual controller name
+            type: 'POST',
+            data: { /* Pass any required data here */ },
+            success: function (response) {
+                // Handle the success response (e.g., update the view or show a message)
+                console.log("Preview successfully processed.");
+            },
+            error: function (xhr, status, error) {
+                // Handle the error response
+                console.error("Error occurred: ", error);
+            }
+        });
+    }
+
+</script>
+

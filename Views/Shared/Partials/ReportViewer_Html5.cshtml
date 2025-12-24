@@ -1,0 +1,114 @@
+﻿@{
+    // Optional model: HTML id for the report viewer container.
+    // If no id is supplied, fall back to a default.
+    var reportViewerId = (Model as string);
+    if (string.IsNullOrWhiteSpace(reportViewerId))
+    {
+        reportViewerId = "reportViewer";
+    }
+
+    // Get report type name from ViewBag (passed from controller)
+    // Controller should set: ViewBag.ReportTypeName = typeof(MyReport).FullName;
+    var reportTypeName = ViewBag.ReportTypeName as string;
+}
+
+<style>
+    /* The id is dynamic; keep styles generic via the default id
+       so existing pages continue to work when no explicit id is passed. */
+    #reportViewer {
+        position: absolute;
+        inset: 5px;
+        overflow: hidden;
+        font-family: Verdana, Arial;
+    }
+</style>
+
+@if (!string.IsNullOrEmpty(reportTypeName))
+{
+    <!-- HTML5 ReportViewer - using local files for version 18.3.24.1112 -->
+    <link href="@Url.Content("~/Content/kendo/ReportViewer/Html5/styles/telerikReportViewer-18.3.24.1112.min.css")" rel="stylesheet" />
+    <link href="@Url.Content("~/Content/kendo/ReportViewer/Html5/font/font-icons.css")" rel="stylesheet" />
+    <script src="@Url.Content("~/Content/kendo/ReportViewer/Html5/js/telerikReportViewer-18.3.24.1112.min.js")"></script>
+
+    <div id="@reportViewerId" style="width: 100%; height: 100%;">
+        <noscript>
+            <p>JavaScript is required to view reports.</p>
+        </noscript>
+    </div>
+
+    <script type="text/javascript">
+        (function ($) {
+            // Safely initialize the viewer only when the required scripts are present
+            $(function () {
+                // If the HTML5 ReportViewer script or global namespace is not loaded,
+                // silently skip initialization instead of throwing console errors.
+                if (!$.fn.telerik_ReportViewer || typeof telerikReportViewer === "undefined") {
+                    return;
+                }
+
+                var reportSource = {
+                    report: "@reportTypeName"
+                };
+
+                var $viewer = $("#@reportViewerId");
+
+                $viewer.telerik_ReportViewer({
+                    serviceUrl: "@Url.Content("~/api/reports")",
+                    reportSource: reportSource,
+                    viewMode: telerikReportViewer.ViewModes.PRINT_PREVIEW,
+                    scaleMode: telerikReportViewer.ScaleModes.SPECIFIC,
+                    documentMapVisible: false,
+                    parametersAreaPosition: telerikReportViewer.ParametersAreaPositions.TOP,
+                    scale: 1.0,
+                    enableAccessibility: false,
+                    sendEmail: { enabled: true },
+                    parameters: {
+                        editors: {
+                            singleSelect: telerikReportViewer.ParameterEditorTypes.DROPDOWNLIST,
+                            multiSelect: telerikReportViewer.ParameterEditorTypes.MULTISELECT
+                        }
+                    }
+                });
+
+                // Helper that removes "k-content" from all parameter action containers.
+                function cleanParameterActionContainers(root) {
+                    var context = root || document;
+                    var elements = context.querySelectorAll(".trv-parameter-actions.k-content");
+                    elements.forEach(function (el) {
+                        el.classList.remove("k-content");
+                    });
+                }
+
+                // Initial cleanup (for parameters rendered on first load).
+                cleanParameterActionContainers();
+
+                // Observe for dynamic changes (e.g. when LotNo / Family are reloaded
+                // after changing from / to dates) and re-apply the cleanup.
+                var observerTarget = $viewer.closest(".trv-report-viewer")[0] || document.body;
+                var observer = new MutationObserver(function (mutations) {
+                    mutations.forEach(function (mutation) {
+                        if (!mutation.addedNodes) return;
+                        mutation.addedNodes.forEach(function (node) {
+                            if (!(node instanceof HTMLElement)) return;
+
+                            if (node.matches(".trv-parameter-actions.k-content") ||
+                                node.querySelector(".trv-parameter-actions.k-content")) {
+                                cleanParameterActionContainers(node);
+                            }
+                        });
+                    });
+                });
+
+                observer.observe(observerTarget, {
+                    childList: true,
+                    subtree: true
+                });
+            });
+        })(jQuery);
+    </script>
+}
+else
+{
+    <p>No report available.</p>
+}
+

@@ -1,0 +1,49 @@
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@{
+    Layout = "~/Views/Shared/_AppLayout.cshtml";
+    ViewBag.BoxTitle = "Labels";
+}
+
+<div class="grid-container-full-height">
+    <!-- Label Type Buttons -->
+    <div class="mb-3 d-flex gap-2 flex-wrap" style="padding: 10px 0;">
+        @(Html.Kendo().Button()
+            .Name("btnPartLabel")
+            .Content("<span class='k-icon k-i-plus'></span> Part Label")
+            .ApplyStandardSettingsWithType(ButtonType.Primary, "plus", ComponentSize.Medium)
+            .HtmlAttributes(new { 
+                @class = "k-button-add-new-outlined",
+                onclick = $"window.location.href='{Url.Action("CreatePartLabel", "Label", new { area = "Kitchen" })}'; return false;"
+            }))
+        
+        @(Html.Kendo().Button()
+            .Name("btnStoreKhalapur")
+            .Content("<span class='k-icon k-i-plus'></span> Store Khalapur")
+            .ApplyStandardSettingsWithType(ButtonType.Primary, "plus", ComponentSize.Medium)
+            .HtmlAttributes(new { 
+                @class = "k-button-add-new-outlined",
+                onclick = $"window.location.href='{Url.Action("CreateStoreKhalapur", "Label", new { area = "Kitchen" })}'; return false;"
+            }))
+        
+        @(Html.Kendo().Button()
+            .Name("btnStoreShirwal")
+            .Content("<span class='k-icon k-i-plus'></span> Store Shirwal")
+            .ApplyStandardSettingsWithType(ButtonType.Primary, "plus", ComponentSize.Medium)
+            .HtmlAttributes(new { 
+                @class = "k-button-add-new-outlined",
+                onclick = $"window.location.href='{Url.Action("CreateStoreShirwal", "Label", new { area = "Kitchen" })}'; return false;"
+            }))
+        
+        @(Html.Kendo().Button()
+            .Name("btnStiffenerLabel")
+            .Content("<span class='k-icon k-i-plus'></span> Stiffener Label")
+            .ApplyStandardSettingsWithType(ButtonType.Primary, "plus", ComponentSize.Medium)
+            .HtmlAttributes(new { 
+                @class = "k-button-add-new-outlined",
+                onclick = $"window.location.href='{Url.Action("CreateStiffenerLabel", "Label", new { area = "Kitchen" })}'; return false;"
+            }))
+    </div>
+
+    @Html.Partial("_PartialIndex")
+</div>

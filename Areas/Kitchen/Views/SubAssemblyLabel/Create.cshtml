@@ -3,14 +3,14 @@
 @model Corno.Web.Areas.Kitchen.Dto.Label.SubAssemblyCrudDto
 
 @{
-    Layout = "~/Views/Shared/_LayoutCrud.cshtml";
+    Layout = "~/Views/Shared/_LayoutBase.cshtml";
 }
 
 @{
     ViewBag.BoxTitle = "Create New Sub Assembly";
     ViewBag.SubmitAction = "Create";
 }
-@section sectionCrudHeader
+@section sectionBaseHeader
 {
     <div class="k-card-actions k-card-actions-horizontal k-card-actions-end">
         @(Html.Kendo().Button()
@@ -83,15 +83,19 @@
                   </div>
             </div>
             <div class="k-card-actions k-card-actions-horizontal k-card-actions-end form-group">
-    @(Html.Kendo().Button()
-        .Name("preview")
-        .Content("Print")
-        .ApplyStandardSettingsWithType(ButtonType.Primary, "print", ComponentSize.Medium)
-        .HtmlAttributes(new
-        {
-            type = "submit",
-            //@class = "w-100"
-        }).ToClientTemplate())
+                @(Html.Kendo().Button()
+                    .Name("preview")
+                    .Content("Preview")
+                    .ApplyStandardSettingsWithType(ButtonType.Info, "preview", ComponentSize.Medium)
+                    .Events(e => e.Click("onPreview"))
+                    .ToClientTemplate())
+                @(Html.Kendo().Button()
+                    .Name("print")
+                    .Content("Print")
+                    .ApplyStandardSettingsWithType(ButtonType.Primary, "print", ComponentSize.Medium)
+                    .Events(e => e.Click("onPrint"))
+                    .ToClientTemplate())
+            </div>
 </script>
 <script id="template-items-Info" type="text/x-kendo-template">
           <div class="col-12">
@@ -105,35 +109,7 @@
     $(document).ready(function () {
         $("#form").kendoValidator({
         });
-        LoadPartialView()
     });
-
-    function LoadPartialView(toPrinter) {
-        $.ajax({
-            url: '/SubAssemblyLabel/LoadPartialView', // Replace with your actual controller and action
-            method: 'GET',
-            data: { 'partialViewName': 'Partials/ReportViewer_New' },
-            success: function (partialHtml) {
-                // Load HTML content into the element
-                $('#partialViewContainer').html(partialHtml, function () {
-                    // This code will execute after the HTML content has been loaded
-                    console.log("HTML content loaded successfully");
-
-                });
-                // Delay the execution of the next statement by a short duration
-                setTimeout(function () {
-                    // This code will execute after a short delay
-                    console.log("Timeout HTML content loaded successfully");
-                    if ('@Model.PrintToPrinter' === 'True' || toPrinter === true) {
-                        printToPrinter();
-                    }
-                }, 1500); // Adjust the delay duration as needed
-            },
-            error: function () {
-                console.error('Failed to load the partial view.');
-            }
-        });
-    }
 
     setTimeout(function () {
         document.getElementById("Barcode1").focus();
@@ -141,9 +117,6 @@
     }, 100); // Delay to ensure focus is set correctly
 
     $(document).ready(function () {
-        if ('@Model.PrintToPrinter' === 'True')
-            LoadPartialView()       
-
         // Handle Enter key press in Barcode1
         var isChecked = localStorage.getItem("directSubAssembly") === "true";
         $("#Barcode1").on("keypress", function (e) {
@@ -151,8 +124,8 @@
                 e.preventDefault();
 
                 if ($("#directSubAssembly").is(":checked")) {
-                    // If checkbox is checked, submit the form
-                    $("form").submit();
+                    // If checkbox is checked, trigger print
+                    $("#print").click();
                 } else {
                     // If checkbox is unchecked, move focus to Barcode2
                     $("#Barcode2").data("kendoTextBox").focus();
@@ -186,7 +159,7 @@
             if (e.which === 13) { // Enter key pressed
                 e.preventDefault();
 
-                $("form").submit();
+                $("#print").click();
             }
         });
     });
@@ -198,5 +171,47 @@
 
     function onBack() {
         window.location.href = '@Url.Action("Index", "SubAssemblyLabel", new { area = "Kitchen" })';
+    }
+
+    // Build FormData from current form, including all barcode fields explicitly
+    function buildSubAssemblyFormData() {
+        const form = $("form")[0];
+        const formData = new FormData(form);
+
+        // Ensure all barcode values are present in FormData
+        formData.set("Barcode1", $("#Barcode1").val());
+        formData.set("Barcode2", $("#Barcode2").val());
+        formData.set("Barcode3", $("#Barcode3").val());
+        formData.set("Barcode4", $("#Barcode4").val());
+
+        return formData;
+    }
+
+    function onPrint(e) {
+        e.preventDefault();
+        const formData = buildSubAssemblyFormData();
+        fetchAndPrint('/SubAssemblyLabel/Print', formData, function () {
+            console.log('SubAssembly print success.');
+
+            // Clear barcode fields after successful print
+            $("#Barcode1").val("");
+            $("#Barcode2").val("");
+            $("#Barcode3").val("");
+            $("#Barcode4").val("");
+
+            // Reset focus to first barcode for next scan
+            var barcode1 = $("#Barcode1").data("kendoTextBox");
+            if (barcode1) {
+                barcode1.focus();
+            } else {
+                $("#Barcode1").focus();
+            }
+        });
+    }
+
+    function onPreview(e) {
+        e.preventDefault();
+        const formData = buildSubAssemblyFormData();
+        fetchAndPreviewPdf('/SubAssemblyLabel/Preview', formData, "Sub Assembly Label");
     }
 </script>

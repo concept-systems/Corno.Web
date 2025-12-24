@@ -3,12 +3,15 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Web.Mvc;
 using Corno.Web.Areas.Admin.Services.Interfaces;
+using Corno.Web.Globals;
 using Corno.Web.Helper;
 using Corno.Web.Models;
 using Corno.Web.Models.Masters;
 using Corno.Web.Services.Interfaces;
 using Corno.Web.Services.Masters.Interfaces;
 using Kendo.Mvc.UI;
+using MoreLinq;
+using Volo.Abp.Data;
 
 namespace Corno.Web.Controllers;
 
@@ -148,18 +151,21 @@ public class DataController : SuperController
         {
             var product = await _productService.GetByIdAsync(productId);
             // Optimize: Get packing type IDs in one query
-            var packingTypeIds = product.ProductPacketDetails.Select(x => x.PackingTypeId).ToList();
+            var packingTypeIds = product.ProductPacketDetails.Select(x => x.PackingTypeId)
+                .Distinct().ToList();
             // Optimize: Single ToList() call, already optimized in GetViewModelList
             var packingTypes = await _miscMasterService.GetViewModelListAsync(p => packingTypeIds.Contains(p.Id));
             var result = product.ProductPacketDetails.Select(d =>
             {
                 var packingType = packingTypes.FirstOrDefault(p => p.Id == d.PackingTypeId);
+                var mrp = d.GetProperty(FieldConstants.Mrp, 0);
                 return new
                 {
                     packingType?.Id,
                     packingType?.Name,
-                    NameWithCode = $"{packingType?.NameWithCode} (Qty : {d.Quantity})",
-                    d.Quantity
+                    NameWithCode = $"{packingType?.NameWithCode} (MRP:{mrp}, Weight:{d.Quantity})",
+                    Weight = d.Quantity,
+                    MRP = mrp
                 };
             });
             return Json(result, JsonRequestBehavior.AllowGet);

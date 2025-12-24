@@ -65,11 +65,16 @@ public class LabelService : BaseService<Label>, ILabelService
                 : new List<AspNetUser>();
 
             // Get carton information using label barcode and warehouseOrderNo
+            // Optimized: Use ignoreInclude to avoid loading all CartonDetails
+            // The .Any() will be translated to SQL EXISTS subquery which is efficient with proper indexes
             var cartonService = Bootstrapper.Get<ICartonService>();
-            var carton = await cartonService.FirstOrDefaultAsync(
+            var cartons = await cartonService.GetAsync(
                 c => c.WarehouseOrderNo == label.WarehouseOrderNo && 
                      c.CartonDetails.Any(d => d.Barcode == label.Barcode), 
-                c => c).ConfigureAwait(false);
+                c => c,
+                null,
+                ignoreInclude: true).ConfigureAwait(false);
+            var carton = cartons.FirstOrDefault();
 
             // Perform the mapping using existing configuration
             var dto = label.Adapt<LabelViewDto>();

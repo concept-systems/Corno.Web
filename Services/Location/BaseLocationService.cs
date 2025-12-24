@@ -22,6 +22,7 @@ public class BaseLocationService : MasterService<Models.Location.Location>, IBas
         /*IncludeProperties = $"{nameof(Location.LocationItemDetails)}," +
                             $"{nameof(Location.LocationStockDetails)}," +
                             $"{nameof(Location.LocationUserDetails)}";*/
+        // Do not enable includes globally; use explicit methods when details are needed.
         SetIncludes($"{nameof(Models.Location.Location.LocationItemDetails)}," +
                     $"{nameof(Models.Location.Location.LocationStockDetails)}," +
                     $"{nameof(Models.Location.Location.LocationUserDetails)}");
@@ -67,7 +68,7 @@ public class BaseLocationService : MasterService<Models.Location.Location>, IBas
 
     public async Task AddStockAsync(Models.Packing.Label label, string locationCode, double quantity, DateTime? grnDate)
     {
-        var location = await GetByCodeAsync(locationCode).ConfigureAwait(false);
+        var location = await GetByCodeWithDetailsAsync(locationCode).ConfigureAwait(false);
         if (null == location)
             throw new Exception($"Location '{locationCode}' not found.");
         var existingQuantity = location.LocationStockDetails.Where(d =>
@@ -93,7 +94,7 @@ public class BaseLocationService : MasterService<Models.Location.Location>, IBas
 
     public async Task RemoveStockAsync(Models.Packing.Label label, string locationCode, double quantity)
     {
-        var location = await GetByCodeAsync(locationCode).ConfigureAwait(false);
+        var location = await GetByCodeWithDetailsAsync(locationCode).ConfigureAwait(false);
         if (null == location)
             throw new Exception($"Location '{locationCode}' not found.");
         var locationStockDetail = location.LocationStockDetails.
@@ -115,7 +116,7 @@ public class BaseLocationService : MasterService<Models.Location.Location>, IBas
     public async Task ValidateItemAndUserAsync(string locationCode, string itemBarcode,
         string userName, ICollection<string> oldStatus)
     {
-        var location = await GetByCodeAsync(locationCode).ConfigureAwait(false);
+        var location = await GetByCodeWithDetailsAsync(locationCode).ConfigureAwait(false);
         if (null == location)
             throw new Exception($"Invalid location {locationCode}");
         var user = await _userService.GetByUserNameAsync(userName).ConfigureAwait(false);
@@ -128,6 +129,19 @@ public class BaseLocationService : MasterService<Models.Location.Location>, IBas
         var barcodeLabel = await _labelService.GetByBarcodeAsync(itemBarcode, oldStatus).ConfigureAwait(false);
         if (!location.IsItemAvailable(barcodeLabel.ItemId ?? 0))
             throw new Exception($"Scanned Item is not assigned to location {location.Code}");
+    }
+
+    /// <summary>
+    /// Get location by code with stock/item/user details loaded.
+    /// </summary>
+    public async Task<Models.Location.Location> GetByCodeWithDetailsAsync(string code)
+    {
+        /*SetIncludes($"{nameof(Models.Location.Location.LocationItemDetails)}," +
+                    $"{nameof(Models.Location.Location.LocationStockDetails)}," +
+                    $"{nameof(Models.Location.Location.LocationUserDetails)}");*/
+        var list = await GetAsync<Models.Location.Location>(l => l.Code == code, l => l, null, ignoreInclude: false)
+            .ConfigureAwait(false);
+        return list.FirstOrDefault();
     }
 
     public double GetAvailableQuantity(int id)

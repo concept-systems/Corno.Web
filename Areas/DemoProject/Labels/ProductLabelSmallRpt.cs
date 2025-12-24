@@ -41,6 +41,7 @@ public partial class ProductLabelSmallRpt : BaseReport
         var groupedRows = new List<object>();
         var rowCount = (int)Math.Ceiling(labels.Count / 3.0); // 5/3 = 2 rows
 
+        var mrp = productPacketDetail?.GetProperty(FieldConstants.Mrp, 0);
         for (var i = 0; i < rowCount; i++)
         {
             var startIndex = i * 3;
@@ -48,7 +49,6 @@ public partial class ProductLabelSmallRpt : BaseReport
             var label2 = startIndex + 1 < labels.Count ? labels[startIndex + 1] : null;
             var label3 = startIndex + 2 < labels.Count ? labels[startIndex + 2] : null;
 
-            var mrp = productPacketDetail?.GetProperty("Mrp", 0);
             groupedRows.Add(new
             {
                 Barcode = label1?.Barcode ?? "",
@@ -58,10 +58,22 @@ public partial class ProductLabelSmallRpt : BaseReport
                 Weight = $"{productPacketDetail?.Quantity} {packingType?.Name}",
                 Mrp = $"Rs. {mrp}",
                 ManufacturingDate = label1?.GetProperty(FieldConstants.ManufacturingDate, DateTime.Now) ?? DateTime.Now,
-                ExpiryDate = label1?.GetProperty("ExpiryDate", DateTime.Now) ?? DateTime.Now
+                ExpiryDate = label1?.GetProperty(FieldConstants.ExpiryDate, DateTime.Now) ?? DateTime.Now
             });
         }
 
         DataSource = groupedRows;
+
+        // Hide second group (panel2) when there is no second label (Barcode1 empty)
+        panel2.Visible = true;
+        panel2.Bindings.Add(new Telerik.Reporting.Binding(
+            "Visible",
+            "= IIF( IsNull(Fields.Barcode1, \"\") = \"\", False, True )"));
+
+        // Hide third group (panel3) when there is no third label (Barcode2 empty)
+        panel3.Visible = true;
+        panel3.Bindings.Add(new Telerik.Reporting.Binding(
+            "Visible",
+            "= IIF( IsNull(Fields.Barcode2, \"\") = \"\", False, True )"));
     }
 }

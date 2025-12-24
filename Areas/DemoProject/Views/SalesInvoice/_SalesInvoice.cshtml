@@ -1,0 +1,650 @@
+@using Corno.Web.Globals
+@using Kendo.Mvc.UI
+@model Corno.Web.Areas.DemoProject.Dtos.SalesInvoiceDto
+
+@{
+    ViewBag.BoxTitle = "_SalesInvoice";
+    ViewBag.MainMenu = "Transaction";
+    ViewBag.MainHeader = "Sales Invoice";
+    ViewBag.CurrentSitemap = "Sales Invoice";
+    ViewBag.Title = "Sales Invoice";
+}
+
+@Html.HiddenFor(m => m.Id)
+@Html.HiddenFor(m => m.Code)
+
+<!-- Toggle button visible on mobile to open the responsive panel -->
+<button id="salesInvoicePanelToggle" class="k-button k-button-md k-rounded-md k-button-solid k-button-solid-primary rp-toggle" type="button">
+    <span class="k-icon k-i-menu"></span>
+    Show Details
+</button>
+
+@(Html.Kendo().ResponsivePanel()
+    .Name("salesInvoicePanel")
+    .Orientation(ResponsivePanelOrientation.Top)
+    .Breakpoint(100)
+    .ToggleButton("#salesInvoicePanelToggle")
+    .HtmlAttributes(new { style = "margin-bottom: 20px;" })
+    .Content(@<text>
+        <div class="responsive-panel-container container-fluid">
+            <div class="row">
+                <div class="col-12 col-lg-6 mb-4 order-2 order-lg-1">
+                    <div class="k-widget k-panel h-100">
+                        <h3 class="k-panel-title">Preview</h3>
+                        <div class="k-panel-content" style="height: 100%;">
+                            <iframe id="salesInvoicePreviewFrame"
+                                    style="width: 100%; height: 100%; border: none; min-height: 400px;"
+                                    title="Sales Invoice Preview">
+                            </iframe>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-lg-6 mb-4 order-1 order-lg-2">
+                    <div class="k-widget k-panel h-100">
+                        <h3 class="k-panel-title">Invoice Details : @Model.Code</h3>
+                        <div class="k-panel-content">
+                            <div class="row">
+                                <div class="col-12 sales-invoice-form">
+                                    <div class="form-group required row align-items-center">
+                                        @Html.LabelFor(m => m.MobileNo, "Mobile :", new { @class = "col-4 col-sm-3 col-md-3 col-form-label" })
+                                        <div class="col-8 col-sm-9 col-md-9">
+                                            @(Html.Kendo().MaskedTextBoxFor(m => m.MobileNo)
+                                                .HtmlAttributes(new { required = "required", @class = "w-100" })
+                                                .Mask("0000000000")
+                                                .PromptChar(" "))
+                                        </div>
+                                    </div>
+                                    <div class="form-group required row align-items-center">
+                                        @Html.LabelFor(m => m.CustomerName, "Customer :", new { @class = "col-4 col-sm-3 col-md-3 col-form-label" })
+                                        <div class="col-8 col-sm-9 col-md-9">
+                                            @(Html.Kendo().TextBoxFor(m => m.CustomerName)
+                                                .HtmlAttributes(new { required = "required", @class = "w-100" })
+                                                .Placeholder("Enter customer name"))
+                                        </div>
+                                    </div>
+                                    <div class="form-group required row align-items-center">
+                                        @Html.LabelFor(m => m.InvoiceDate, "Date :", new { @class = "col-4 col-sm-3 col-md-3 col-form-label" })
+                                        <div class="col-8 col-sm-9 col-md-9">
+                                            @(Html.Kendo().DatePickerFor(m => m.InvoiceDate)
+                                                .HtmlAttributes(new { required = "required", @class = "w-100" }))
+                                        </div>
+                                    </div>
+                                    <div class="form-group row align-items-center">
+                                        @Html.LabelFor(m => m.PaymentMode, "Payment Mode :", new { @class = "col-4 col-sm-3 col-md-3 col-form-label" })
+                                        <div class="col-8 col-sm-9 col-md-9">
+                                            @(Html.Kendo().ComboBoxFor(m => m.PaymentMode)
+                                                .BindTo(new[] { "Cash", "UPI", "Card", "Online", "Cheque" })
+                                                .Suggest(true)
+                                                .Placeholder("Select payment mode")
+                                                .HtmlAttributes(new { @class = "w-100" }))
+                                        </div>
+                                    </div>
+                                    <div class="form-group row align-items-center">
+                                        @Html.LabelFor(m => m.PaidAmount, "Paid Amount :", new { @class = "col-4 col-sm-3 col-md-3 col-form-label" })
+                                        <div class="col-8 col-sm-9 col-md-9">
+                                            @(Html.Kendo().NumericTextBoxFor(m => m.PaidAmount)
+                                                .HtmlAttributes(new { @class = "w-100" })
+                                                .Format("N2")
+                                                .Min(0)
+                                                .Decimals(2))
+                                        </div>
+                                    </div>
+                                    <hr />
+                                    <div class="form-group required row align-items-center">
+                                        @Html.Label("Barcode :", new { @class = "col-4 col-sm-3 col-md-3 col-form-label" })
+                                        <div class="col-8 col-sm-9 col-md-9">
+                                            @(Html.Kendo().TextBox()
+                                                .Name("Barcode")
+                                                .HtmlAttributes(new
+                                                {
+                                                    @class = "w-100",
+                                                    placeholder = "Scan barcode here...",
+                                                    autocomplete = "off",
+                                                    //onkeydown = "if(event.key==='Enter'){event.preventDefault(); return false;}"
+                                                }))
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-12">
+                                            @(Html.Kendo().Grid(Model.SalesInvoiceDetailDtos)
+                                                .Name("grid")
+                                                .Columns(columns =>
+                                                {
+                                                    columns.Bound(m => m.Id)
+                                                        .ClientTemplate("<input type='hidden' name='SalesInvoiceDetailDtos[#= index(data)#].Id' value='#= Id #' />")
+                                                        .Hidden();
+                                                    columns.Bound(m => m.ProductId)
+                                                        .ClientTemplate("#= ProductName #" + "<input type='hidden' name='SalesInvoiceDetailDtos[#= index(data)#].ProductId' value='#= ProductId #' />")
+                                                        .HtmlAttributes(new { style = "text-align: left" })
+                                                        .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                                                        .FooterHtmlAttributes(new { style = "text-align: left; white-space: nowrap; font-weight: bold;" })
+                                                        .ClientFooterTemplate("Items: #= count #")
+                                                        .Title("Product");
+
+                                                    columns.Bound(m => m.Mrp)
+                                                        .ClientTemplate("#= Mrp #" + "<input type='hidden' name='SalesInvoiceDetailDtos[#= index(data)#].Mrp' value='#= Mrp #' />")
+                                                        .HtmlAttributes(new { style = "text-align: right" })
+                                                        .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                                                        .FooterHtmlAttributes(new { style = "text-align: right; white-space: nowrap; font-weight: bold;" })
+                                                        .ClientFooterTemplate("Total: #= kendo.toString(sum, 'n2') #");
+
+                                                    columns.Bound(m => m.NetWeight)
+                                                        .Title("Weight")
+                                                        .ClientTemplate(
+                                                            "#= NetWeight # #= PackingTypeShortName #" +
+                                                            "<input type='hidden' name='SalesInvoiceDetailDtos[#= index(data)#].NetWeight' value='#= NetWeight #' />" +
+                                                            "<input type='hidden' name='SalesInvoiceDetailDtos[#= index(data)#].PackingTypeId' value='#= PackingTypeId #' />" +
+                                                            "<input type='hidden' name='SalesInvoiceDetailDtos[#= index(data)#].PackingTypeShortName' value='#= PackingTypeShortName #' />" +
+                                                            "<input type='hidden' name='SalesInvoiceDetailDtos[#= index(data)#].Quantity' value='#= Quantity #' />" +
+                                                            "<input type='hidden' name='SalesInvoiceDetailDtos[#= index(data)#].Amount' value='#= Amount #' />"
+                                                        )
+                                                        .HtmlAttributes(new { style = "text-align: right" })
+                                                        .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                                                        .FooterHtmlAttributes(new { style = "display: none;" });
+
+                                                    columns.Bound(m => m.Barcode)
+                                                        .ClientTemplate("#= Barcode #" + "<input type='hidden' name='SalesInvoiceDetailDtos[#= index(data)#].Barcode' value='#= Barcode #' />")
+                                                        .HtmlAttributes(new { style = "text-align: left" })
+                                                        .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                                                        .FooterHtmlAttributes(new { style = "display: none;" });
+                                                })
+                                                .Sortable()
+                                                .Scrollable()
+                                                .DataSource(dataSource => dataSource
+                                                    .Ajax()
+                                                    .ServerOperation(false)
+                                                    .Aggregates(aggregates =>
+                                                    {
+                                                        aggregates.Add(m => m.ProductId).Count();
+                                                        aggregates.Add(m => m.Mrp).Sum();
+                                                    })
+                                                )
+                                                .Events(e =>
+                                                {
+                                                    // Use global grid.js handler so columns auto-fit like index grids
+                                                    e.DataBound("onGridDataBound");
+                                                })
+                                                .Resizable(resize => resize.Columns(true))
+                                                .Reorderable(reorder => reorder.Columns(true)))
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </text>
+    )
+)
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        // Function to handle barcode scanning
+        function handleBarcodeScan(barcode) {
+            if (true === ValidateBarcodes(barcode)) {
+                $.ajax({
+                    url: '/DemoProject/SalesInvoice/ValidateBarcode',
+                    type: 'GET',
+                    dataType: 'json',
+                    data: { barcode: barcode },
+                    success: function (response) {
+                        console.log("Data received:", response);
+                        if (response.Success) {
+                            var detail =
+                                response.Detail ||
+                                response.SalesInvoiceDetailDto ||
+                                response.Data ||
+                                {
+                                    Id: response.Id,
+                                    Barcode: response.Barcode,
+                                    ProductId: response.ProductId,
+                                    ProductName: response.ProductName,
+                                    PackingTypeId: response.PackingTypeId,
+                                    PackingTypeShortName: response.PackingTypeShortName,
+                                    Quantity: response.Quantity,
+                                    Mrp: response.Mrp,
+                                    NetWeight: response.NetWeight,
+                                    Amount: response.Amount
+                                };
+
+                            AddNewRowInGrid(detail);
+
+                            var barcodeTextBox = $('#Barcode').data('kendoTextBox');
+                            if (barcodeTextBox) {
+                                barcodeTextBox.value('');
+                                setTimeout(function () {
+                                    barcodeTextBox.element.focus();
+                                }, 100);
+                            }
+                        } else {
+                            ShowError(response.Message);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.log("xhr : " + xhr + ", status : " + status + ", error : " + error);
+                        console.log("Error fetching data: " + xhr.status + " - " + xhr.statusText);
+                        alert("Error fetching data : " + xhr.status + ", text : " + xhr.responseText);
+                    }
+                });
+            }
+        }
+
+        // Wait for Kendo widgets to initialize, then bind to the actual input element
+        setTimeout(function () {
+            var barcodeTextBox = $('#Barcode').data('kendoTextBox');
+            if (barcodeTextBox) {
+                var inputElement = barcodeTextBox.element;
+
+                // Remove any existing handlers and bind new ones
+                $(inputElement).off('keydown keypress keyup').on('keydown', function (e) {
+                    if (e.key === 'Enter' || e.which === 13 || e.keyCode === 13) {
+                        // Prevent all default behaviors and propagation
+                        e.preventDefault();
+                        e.stopPropagation();
+                        e.stopImmediatePropagation();
+
+                        var barcode = $(this).val();
+                        handleBarcodeScan(barcode);
+
+                        return false;
+                    }
+                }).on('keypress', function (e) {
+                    if (e.key === 'Enter' || e.which === 13 || e.keyCode === 13) {
+                        // Double prevention on keypress
+                        e.preventDefault();
+                        e.stopPropagation();
+                        e.stopImmediatePropagation();
+                        return false;
+                    }
+                });
+            }
+        }, 500);
+
+        // Prevent form submission at the form level when Enter is pressed in Barcode field
+        $('#form').on('keydown', function (e) {
+            if (e.key === 'Enter' || e.which === 13 || e.keyCode === 13) {
+                var barcodeTextBox = $('#Barcode').data('kendoTextBox');
+                if (barcodeTextBox && barcodeTextBox.element.is(':focus')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    return false;
+                }
+            }
+        });
+
+        // Function to handle barcode scanning
+    });
+
+    // Prevent form submit when Enter is pressed in Barcode field (additional safety)
+    $(document).on('submit', '#form', function (e) {
+        var barcodeTextBox = $('#Barcode').data('kendoTextBox');
+        if (barcodeTextBox && barcodeTextBox.element.is(':focus')) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            return false;
+        }
+    });
+
+    function ShowError(message) {
+        bootbox.alert({
+            title: "Error",
+            message: message,
+            centerVertical: true,
+        });
+    }
+
+    function ValidateBarcodes(barcode) {
+        if (!barcode) {
+            ShowError("Please, Scan customer barcode");
+            return false;
+        }
+        return true;
+    }
+
+    function IsBarcodeAvailableInGrid(grid, barcode) {
+        var existingRecords = grid.dataSource.data();
+        var barcodeExists = existingRecords.some(function (record) {
+            return record.Barcode === barcode;
+        });
+
+        return barcodeExists;
+    }
+
+    function AddNewRowInGrid(detailDto) {
+        var grid = $("#grid").data("kendoGrid");
+        if (!detailDto) {
+            ShowError("Invalid product detail received.");
+            return;
+        }
+
+        if (IsBarcodeAvailableInGrid(grid, detailDto.Barcode) === true) {
+            ShowError("Barcode already scanned");
+            return;
+        }
+
+        grid.dataSource.add({
+            Id: detailDto.Id,
+            ProductId: detailDto.ProductId,
+            ProductName: detailDto.ProductName,
+            PackingTypeId: detailDto.PackingTypeId,
+            PackingTypeShortName: detailDto.PackingTypeShortName,
+            Barcode: detailDto.Barcode,
+            Quantity: detailDto.Quantity,
+            Mrp: detailDto.Mrp,
+            NetWeight: detailDto.NetWeight,
+            Amount: detailDto.Amount
+        });
+
+        // Refresh grid - this will trigger dataBound and our footer logic
+        grid.refresh();
+    }
+
+    // 🔁 Reusable helper to build FormData for Save / Preview / Save & Print
+    function buildFormData() {
+        const formData = new FormData();
+        var invoiceId = $("#Id").val();
+        if (invoiceId) {
+            formData.append("Id", invoiceId);
+            formData.append("Code", $("#Code").val());
+        }
+        formData.append("MobileNo", $("#MobileNo").val());
+        formData.append("CustomerName", $("#CustomerName").val());
+        formData.append("InvoiceDate", $("#InvoiceDate").val());
+        formData.append("PaymentMode", $("#PaymentMode").val());
+        formData.append("PaidAmount", $("#PaidAmount").val());
+
+        // Add grid data
+        var grid = $("#grid").data("kendoGrid");
+        if (grid) {
+            var dataItems = grid.dataSource.data();
+            for (var i = 0; i < dataItems.length; i++) {
+                var item = dataItems[i];
+                formData.append("SalesInvoiceDetailDtos[" + i + "].Id", item.Id || "");
+                formData.append("SalesInvoiceDetailDtos[" + i + "].ProductId", item.ProductId || "");
+                formData.append("SalesInvoiceDetailDtos[" + i + "].ProductName", item.ProductName || "");
+                formData.append("SalesInvoiceDetailDtos[" + i + "].PackingTypeId", item.PackingTypeId || "");
+                formData.append("SalesInvoiceDetailDtos[" + i + "].PackingTypeShortName", item.PackingTypeShortName || "");
+                formData.append("SalesInvoiceDetailDtos[" + i + "].Barcode", item.Barcode || "");
+                formData.append("SalesInvoiceDetailDtos[" + i + "].Quantity", item.Quantity || "");
+                formData.append("SalesInvoiceDetailDtos[" + i + "].Mrp", item.Mrp || "");
+                formData.append("SalesInvoiceDetailDtos[" + i + "].NetWeight", item.NetWeight || "");
+                formData.append("SalesInvoiceDetailDtos[" + i + "].Amount", item.Amount || "");
+            }
+        }
+
+        return formData;
+    }
+
+    // Fetch PDF and load it into the side-by-side preview panel iframe.
+    function fetchPdfToPreviewPanel(url, formData, onLoaded) {
+        fetch(url, {
+            method: 'POST',
+            body: formData
+        })
+            .then(async response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch PDF');
+                }
+
+                const contentType = response.headers.get('Content-Type');
+                if (contentType && contentType.includes('application/json')) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.Message || 'Unknown error occurred');
+                }
+
+                const blob = await response.blob();
+                const pdfUrl = URL.createObjectURL(blob);
+
+                const iframe = document.getElementById('salesInvoicePreviewFrame');
+                if (iframe) {
+                    iframe.src = pdfUrl;
+                }
+
+                if (typeof onLoaded === 'function') {
+                    onLoaded();
+                }
+            })
+            .catch(error => {
+                if (typeof showErrorMessage === 'function') {
+                    showErrorMessage(error.message);
+                } else {
+                    console.error(error.message);
+                    alert('Error: ' + error.message);
+                }
+            });
+    }
+
+    // ✅ Common: Save invoice (no print), used by both Create & Edit
+    function onSave(e) {
+        if (e) e.preventDefault();
+
+        const formData = buildFormData();
+
+        fetch('/DemoProject/SalesInvoice/Save', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (!data || data.Success !== true) {
+                    const message = (data && data.Message) ? data.Message : 'Failed to save invoice.';
+                    if (typeof showErrorMessage === 'function') {
+                        showErrorMessage(message);
+                    } else {
+                        alert(message);
+                    }
+                    return;
+                }
+
+                // Update hidden fields with latest values
+                if (data.Id) {
+                    $('#Id').val(data.Id);
+                }
+                if (data.Code) {
+                    $('#Code').val(data.Code);
+                    // Update header title text if present
+                    $('.k-panel-title').filter(function () {
+                        return $(this).text().trim().startsWith('Invoice Details');
+                    }).each(function () {
+                        $(this).text('Invoice Details : ' + data.Code);
+                    });
+                }
+
+                if (typeof onSaveSuccess === 'function') {
+                    onSaveSuccess(data);
+                }
+            })
+            .catch(error => {
+                if (typeof showErrorMessage === 'function') {
+                    showErrorMessage(error.message || 'Error while saving invoice.');
+                } else {
+                    console.error(error);
+                    alert('Error while saving invoice: ' + error.message);
+                }
+            });
+    }
+
+    // Hook for Create page to override if needed
+    function onSaveSuccess(result) {
+        console.log('Save success.', result);
+    }
+
+    // Preview function - loads PDF into preview panel (no save)
+    function onPreview(e) {
+        if (e) e.preventDefault();
+        const formData = buildFormData();
+        fetchPdfToPreviewPanel('/DemoProject/SalesInvoice/Preview', formData);
+    }
+
+    // Save & Print function - saves and then prints PDF directly
+    function onPrint(e) {
+        if (e) e.preventDefault();
+        const formData = buildFormData();
+        if (typeof fetchAndPrint === 'function') {
+            fetchAndPrint('/DemoProject/SalesInvoice/Print', formData, onPrintSuccess);
+        } else {
+            // Fallback: open in new window for printing
+            fetch('/DemoProject/SalesInvoice/Print', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.blob())
+                .then(blob => {
+                    const url = URL.createObjectURL(blob);
+                    const printWindow = window.open(url);
+                    if (printWindow) {
+                        printWindow.onload = function () {
+                            printWindow.print();
+                        };
+                    }
+                    onPrintSuccess();
+                })
+                .catch(error => {
+                    console.error('Print error:', error);
+                    alert('Error printing: ' + error.message);
+                });
+        }
+    }
+
+    // Print success callback
+    function onPrintSuccess() {
+        console.log('Print success.');
+        // Don't clear form on print - let user decide
+    }
+</script>
+
+<style>
+    /* Override global CSS to keep labels and controls on same line on all devices */
+    .sales-invoice-form .form-group.row {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+    }
+    
+    .sales-invoice-form .form-group.row > .col-4,
+    .sales-invoice-form .form-group.row > .col-8,
+    .sales-invoice-form .form-group.row > .col-3,
+    .sales-invoice-form .form-group.row > .col-9 {
+        flex: 0 0 auto !important;
+        max-width: none !important;
+        width: auto !important;
+        display: block !important;
+        float: none !important;
+    }
+    
+    .sales-invoice-form .form-group.row .col-4 {
+        flex: 0 0 33.333333% !important;
+        max-width: 33.333333% !important;
+    }
+    
+    .sales-invoice-form .form-group.row .col-8 {
+        flex: 0 0 66.666667% !important;
+        max-width: 66.666667% !important;
+    }
+    
+    .sales-invoice-form .form-group.row .col-3 {
+        flex: 0 0 25% !important;
+        max-width: 25% !important;
+    }
+    
+    .sales-invoice-form .form-group.row .col-9 {
+        flex: 0 0 75% !important;
+        max-width: 75% !important;
+    }
+    
+    .sales-invoice-form .form-group.row .col-form-label {
+        display: block !important;
+        width: auto !important;
+        margin-bottom: 0 !important;
+    }
+    
+    @@media (max-width: 576px) {
+        .sales-invoice-form .form-group.row {
+            display: flex !important;
+            flex-wrap: nowrap !important;
+            margin-bottom: 0.5rem !important; /* Reduced from default 1rem */
+        }
+        
+        .sales-invoice-form .form-group.row > .col-4,
+        .sales-invoice-form .form-group.row > .col-8,
+        .sales-invoice-form .form-group.row > .col-3,
+        .sales-invoice-form .form-group.row > .col-9 {
+            flex: 0 0 auto !important;
+            max-width: none !important;
+            width: auto !important;
+            display: block !important;
+            float: none !important;
+        }
+        
+        .sales-invoice-form .form-group.row .col-4 {
+            flex: 0 0 33.333333% !important;
+            max-width: 33.333333% !important;
+        }
+        
+        .sales-invoice-form .form-group.row .col-8 {
+            flex: 0 0 66.666667% !important;
+            max-width: 66.666667% !important;
+        }
+        
+        .sales-invoice-form .form-group.row .col-3 {
+            flex: 0 0 25% !important;
+            max-width: 25% !important;
+        }
+        
+        .sales-invoice-form .form-group.row .col-9 {
+            flex: 0 0 75% !important;
+            max-width: 75% !important;
+        }
+        
+        .sales-invoice-form .form-group.row .col-form-label {
+            display: block !important;
+            width: auto !important;
+            margin-bottom: 0 !important;
+            padding-top: 0.25rem !important; /* Reduced padding */
+            padding-bottom: 0.25rem !important;
+        }
+        
+        .sales-invoice-form .form-group.row > div[class*="col-"] {
+            padding-left: 0.5rem !important; /* Reduced horizontal padding */
+            padding-right: 0.5rem !important;
+        }
+        
+        /* Ensure grid footer displays on single line on mobile */
+        .sales-invoice-form #grid .k-grid-footer td {
+            white-space: nowrap !important;
+            overflow: visible !important;
+        }
+        
+        .sales-invoice-form #grid .k-grid-footer {
+            white-space: nowrap !important;
+        }
+    }
+    
+    /* Grid footer styling for all devices */
+    .sales-invoice-form #grid .k-grid-footer {
+        white-space: nowrap !important;
+    }
+    
+    .sales-invoice-form #grid .k-grid-footer td {
+        white-space: nowrap !important;
+        font-size: 0.9rem;
+        font-weight: bold;
+    }
+    
+    .sales-invoice-form #grid .k-grid-footer td:first-child {
+        text-align: right !important;
+        padding-right: 15px !important;
+    }
+    
+    .sales-invoice-form #grid .k-grid-footer {
+        text-align: right !important;
+    }
+    
+    .sales-invoice-form #grid .k-grid-footer tr {
+        text-align: right !important;
+    }
+</style>
+

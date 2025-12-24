@@ -27,7 +27,6 @@ namespace Corno.Web.Areas.Kitchen.Reports
             Telerik.Reporting.Group group1 = new Telerik.Reporting.Group();
             Telerik.Reporting.ReportParameter reportParameter1 = new Telerik.Reporting.ReportParameter();
             Telerik.Reporting.ReportParameter reportParameter2 = new Telerik.Reporting.ReportParameter();
-            Telerik.Reporting.ReportParameter reportParameter3 = new Telerik.Reporting.ReportParameter();
             this.textBox10 = new Telerik.Reporting.TextBox();
             this.textBox14 = new Telerik.Reporting.TextBox();
             this.textBox6 = new Telerik.Reporting.TextBox();
@@ -531,7 +530,8 @@ namespace Corno.Web.Areas.Kitchen.Reports
             this.textBox39.Style.TextAlign = Telerik.Reporting.Drawing.HorizontalAlign.Center;
             this.textBox39.Style.VerticalAlign = Telerik.Reporting.Drawing.VerticalAlign.Middle;
             this.textBox39.StyleName = "";
-            this.textBox39.Value = "=CountDistinct(IIf(Fields.CartonNo = Null OR Fields.CartonNo = \"\", Null, Fields.CartonNo))";
+            this.textBox39.Value = "=CountDistinct(IIf(Fields.CartonNo = Null OR Fields.CartonNo = \"\", Null, Fields.C" +
+    "artonNo))";
             // 
             // textBox40
             // 
@@ -765,16 +765,15 @@ namespace Corno.Web.Areas.Kitchen.Reports
             reportParameter1.Text = "Warehouse Order";
             reportParameter1.Value = "";
             reportParameter1.Visible = true;
+            reportParameter2.AvailableValues.DisplayMember = "= Fields.Name";
+            reportParameter2.AvailableValues.ValueMember = "= Fields.Id";
             reportParameter2.Name = "Location";
+            reportParameter2.Text = "Location";
+            reportParameter2.Type = Telerik.Reporting.ReportParameterType.Integer;
+            reportParameter2.Value = "= 0";
             reportParameter2.Visible = true;
-            reportParameter3.Name = "UpdateQuantities";
-            reportParameter3.Text = "Validate Data";
-            reportParameter3.Type = Telerik.Reporting.ReportParameterType.Boolean;
-            reportParameter3.Value = "= False";
-            reportParameter3.Visible = true;
             this.ReportParameters.Add(reportParameter1);
             this.ReportParameters.Add(reportParameter2);
-            this.ReportParameters.Add(reportParameter3);
             this.Style.Font.Name = "Segoe UI";
             this.Style.Font.Size = Telerik.Reporting.Drawing.Unit.Point(8.25D);
             this.Width = Telerik.Reporting.Drawing.Unit.Inch(11.3D);

@@ -10,7 +10,6 @@ using Corno.Web.Globals;
 using Corno.Web.Models.Masters;
 using Corno.Web.Services.Interfaces;
 using Corno.Web.Services.Masters.Interfaces;
-using Corno.Web.Services.Progress.Interfaces;
 using Kendo.Mvc.Extensions;
 using Kendo.Mvc.UI;
 using Mapster;
@@ -22,8 +21,7 @@ namespace Corno.Web.Areas.Masters.Controllers;
 public class ItemController : SuperController
 {
     #region -- Constructors --
-    public ItemController(IBaseItemService itemService, IMiscMasterService miscMasterService,
-        IWebProgressService progressService, ILocationService locationService)
+    public ItemController(IBaseItemService itemService, IMiscMasterService miscMasterService, ILocationService locationService)
     {
         _itemService = itemService;
         _miscMasterService = miscMasterService;
@@ -100,7 +98,7 @@ public class ItemController : SuperController
     //POST: /Product/Create
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async System.Threading.Tasks.Task<ActionResult> Create(ItemDto dto)
+    public async Task<ActionResult> Create(ItemDto dto)
     {
         if (!ModelState.IsValid)
             return View(_createPath, dto);
@@ -127,7 +125,7 @@ public class ItemController : SuperController
         return View(dto);
     }
 
-    public async System.Threading.Tasks.Task<ActionResult> Edit(int? id)
+    public async Task<ActionResult> Edit(int? id)
     {
         var item = await _itemService.GetByIdAsync(id).ConfigureAwait(false);
         var dto = item.Adapt<ItemDto>();
@@ -149,7 +147,7 @@ public class ItemController : SuperController
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async System.Threading.Tasks.Task<ActionResult> Edit(ItemDto dto)
+    public async Task<ActionResult> Edit(ItemDto dto)
     {
         if (!ModelState.IsValid)
         {
@@ -179,7 +177,7 @@ public class ItemController : SuperController
         return View(_editPath, dto);
     }
 
-    public async System.Threading.Tasks.Task<ActionResult> Delete(int? id)
+    public async Task<ActionResult> Delete(int? id)
     {
         var item = await _itemService.GetByIdAsync(id ?? 0).ConfigureAwait(false);
 
@@ -195,7 +193,7 @@ public class ItemController : SuperController
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async System.Threading.Tasks.Task<ActionResult> Delete(ItemDto dto)
+    public async Task<ActionResult> Delete(ItemDto dto)
     {
         if (!ModelState.IsValid)
         {
@@ -237,7 +235,7 @@ public class ItemController : SuperController
         return View();
     }
 
-    public async System.Threading.Tasks.Task<ActionResult> GetIndexViewModels([DataSourceRequest] DataSourceRequest request)
+    public async Task<ActionResult> GetIndexViewModels([DataSourceRequest] DataSourceRequest request)
     {
         try
         {

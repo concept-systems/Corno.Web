@@ -80,7 +80,21 @@ public class ReportService : BaseReportService, IReportService
 
     public void FillLocationParameter(ReportParameter parameter)
     {
-        if (parameter == null)
+        if (parameter == null) return;
+
+        // Static list - NO expressions needed for ValueMember/DisplayMember
+        parameter.AvailableValues.DataSource = new object[]
+        {
+            new { Id = 0, Name = "All" },
+            new { Id = 1, Name = "Shirwal" },
+            new { Id = 2, Name = "Khalapur" }
+        };
+
+        // Use property names directly (no "=Fields.*" expressions)
+        parameter.AvailableValues.ValueMember = "Id";      // Property name
+        parameter.AvailableValues.DisplayMember = "Name";  // Property name
+
+        /*if (parameter == null)
             return;
         parameter.AvailableValues.ValueMember = "=Fields.Id";
         parameter.AvailableValues.DisplayMember = "=Fields.Name";
@@ -89,7 +103,7 @@ public class ReportService : BaseReportService, IReportService
             new() {Id = 0, Name = "All"},
             new() {Id = 1, Name = "Shirwal"},
             new() {Id = 2, Name = "Khalapur"},
-        };
+        };*/
     }
 
     [DataObjectMethod(DataObjectMethodType.Select)]

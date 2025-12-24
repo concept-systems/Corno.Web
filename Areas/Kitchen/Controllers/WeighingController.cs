@@ -290,6 +290,9 @@ public class WeighingController : SuperController
             var cartonLabelReport = new CartonLabelRpt(operationRequest, true);
             Session[FieldConstants.Label] = cartonLabelReport;
 
+            // Also expose label as Base64 so View can inline preview similar to PartLabel
+            viewModel.Base64 = cartonLabelReport.ToBase64();
+
             return View(viewModel);
         }
         catch (Exception exception)

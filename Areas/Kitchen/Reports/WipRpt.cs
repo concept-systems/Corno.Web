@@ -1,37 +1,20 @@
 using System;
-using System.Data.Entity;
-using System.Linq;
 using Corno.Web.Areas.Kitchen.Services.Interfaces;
 using Corno.Web.Globals;
-using Corno.Web.Models.Packing;
-using Corno.Web.Models.Plan;
 using Corno.Web.Reports;
 using Corno.Web.Services.Interfaces;
 using Corno.Web.Windsor;
-using Telerik.ReportViewer.Common;
 
 namespace Corno.Web.Areas.Kitchen.Reports;
 
 public partial class WipRpt : BaseReport
 {
     #region -- Constructors --
-    public WipRpt(IPlanService planService, ICartonService cartonService)
+    public WipRpt()
     {
         // Required for telerik Reporting designer support
         InitializeComponent();
-
-        _planService = planService;
-        _cartonService = cartonService;
-        _miscMasterService = Bootstrapper.Get<IMiscMasterService>();
     }
-    #endregion
-
-    #region -- Data Members --
-
-    private readonly IPlanService _planService;
-    private readonly ICartonService _cartonService;
-    private readonly IMiscMasterService _miscMasterService;
-    
     #endregion
 
     #region -- Events --
@@ -44,7 +27,8 @@ public partial class WipRpt : BaseReport
 
         // Use stored procedure for better performance, especially for large date ranges
         // Use RunAsync helper method to avoid deadlocks by executing async code on thread pool thread
-        var dataSource = RunAsync(() => _planService.ExecuteStoredProcedureAsync<WipReportDto>(
+        var planService = Bootstrapper.Get<IPlanService>();
+        var dataSource = RunAsync(() => planService.ExecuteStoredProcedureAsync<WipReportDto>(
             "GetWipReport", fromDate, toDate));
 
         table1.DataSource = dataSource is { Count: > 0 } ? dataSource : null;
@@ -93,7 +77,7 @@ public partial class WipRpt : BaseReport
     //    table1.DataSource = dataSource;
     //}
 
-    public override void OnActionExecuting(object sender, InteractiveActionCancelEventArgs args)
+    /*public override void OnActionExecuting(object sender, InteractiveActionCancelEventArgs args)
     {
         var navigateAction = args.Action as Telerik.Reporting.Processing.NavigateToReportAction;
         if (navigateAction?.ReportSource == null) return;
@@ -106,7 +90,7 @@ public partial class WipRpt : BaseReport
         plan.PlanItemDetails.ForEach(b => b.Status = StatusConstants.Printed);
 
         _planService.UpdateAndSaveAsync(plan).GetAwaiter().GetResult();
-    }
+    }*/
 
     #endregion
 }

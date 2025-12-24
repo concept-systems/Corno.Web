@@ -8,8 +8,8 @@
 }
 
 @{
-    ViewBag.Title = "New Bill";
-    ViewBag.BoxTitle = "Pack";
+    ViewBag.Title = "New Sales Invoice";
+    ViewBag.BoxTitle = "Create New Sales Invoice";
     ViewBag.SubmitAction = "Create";
 }
 
@@ -24,47 +24,38 @@
 
 @section sectionBaseHeader
 {
-    <div class="k-actions k-actions-horizontal k-actions-end">
-        @(Html.Kendo().Button()
-            .Name("btnBack")
-            .Content("Back")
-            .ApplyStandardSettingsWithType(ButtonType.Info, "arrow-60-left", ComponentSize.Medium)
-            .HtmlAttributes(new { onclick = $"window.location.href='{Url.Action("Index", "SalesInvoice", new { area = "DemoProject" })}'; return false;" }))
+    <div class="k-card-actions k-actions-horizontal k-actions-end">
+        @Html.Partial("~/Areas/DemoProject/Views/SalesInvoice/_SalesInvoiceHeaderButtons.cshtml")
     </div>
 }
 
-@using (Html.BeginForm("Create", "SalesInvoice", new { area = "DemoProject" }, FormMethod.Post, new { id = "salesInvoiceForm" }))
-{
-    @Html.AntiForgeryToken()
-    @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+@Html.Partial(@"~\Areas\DemoProject\Views\SalesInvoice\_SalesInvoice.cshtml", Model)
 
-    <div class="row">
-        <div class="col-12 col-md-6 mb-3 mb-md-0">
-            @Html.Partial("_ReportViewer", Model)
-        </div>
-        <div class="col-12 col-md-6">
-            @Html.Partial("_UserEntry", Model)
-        </div>
-    </div>
-}
+<script>
+    // Preview and Print functions are defined in _SalesInvoice.cshtml
+    // Override onPrintSuccess for Create page to clear form after print
+    var originalOnPrintSuccess = onPrintSuccess;
+    onPrintSuccess = function () {
+        originalOnPrintSuccess();
 
-@section sectionBaseFooter
-{
-    <div class="k-actions k-actions-horizontal k-actions-end">
-        @(Html.Kendo().Button()
-            .Name("btnCreate")
-            .Content("Save")
-            .ApplyStandardSettingsWithType(ButtonType.Save, "save", ComponentSize.Medium)
-            .HtmlAttributes(new
-            {
-                type = "button",
-                onclick = "document.getElementById('salesInvoiceForm').submit();"
-            }))
-    </div>
-}
+        // Clear form fields after successful print
+        $("#MobileNo").data("kendoMaskedTextBox").value("");
+        $("#CustomerName").data("kendoTextBox").value("");
+        $("#InvoiceDate").data("kendoDatePicker").value(null);
+        $("#PaymentMode").data("kendoComboBox").value("");
+        $("#PaidAmount").data("kendoNumericTextBox").value(null);
 
-<script type="text/javascript">
-    $(document).ready(function () {
-        LoadPartialView()
-    });
+        // Clear grid
+        var grid = $("#grid").data("kendoGrid");
+        if (grid) {
+            grid.dataSource.data([]);
+        }
+
+        // Clear barcode field
+        var barcodeTextBox = $('#Barcode').data('kendoTextBox');
+        if (barcodeTextBox) {
+            barcodeTextBox.value("");
+        }
+    };
 </script>
+

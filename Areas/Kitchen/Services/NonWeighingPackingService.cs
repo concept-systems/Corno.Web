@@ -285,6 +285,9 @@ public class NonWeighingPackingService : CartonService, INonWeighingPackingServi
             ReportBook = await CreateLabelReport(carton, plan, false).ConfigureAwait(false) // Make sure this method is accessible
         };
 
+        // Convert report to Base64 for inline preview similar to PartLabel
+        dto.Base64 = dto.ReportBook?.ToBase64();
+
         return dto;
     }
 

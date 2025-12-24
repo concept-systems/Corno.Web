@@ -7,15 +7,15 @@
         .Columns(columns =>
         {
             columns.Bound(p => p.Id)
-                .ClientTemplate("<input type='hidden' name='ItemPacketDetails[#= index(data)#].Id' value='#= Id #' />")
+                .ClientTemplate("<input type='hidden' name='ItemPacketDto[#= index(data)#].Id' value='#= Id #' />")
                 .Hidden();
             columns.Bound(p => p.PackingTypeId)
                 .ClientTemplate("#= PackingTypeName  #" +
-                                "<input type='hidden' name='ItemPacketDetails[#= index(data)#].PackingTypeId' value='#= PackingTypeId #' />")
+                                "<input type='hidden' name='ItemPacketDto[#= index(data)#].PackingTypeId' value='#= PackingTypeId #' />")
                 .Width(180);
             columns.Bound(p => p.Quantity).Title("Quantity")
                 .ClientTemplate("#= Quantity #" +
-                                "<input type='hidden' name='ItemPacketDetails[#= index(data)#].Quantity' value='#= Quantity #'   />")
+                                "<input type='hidden' name='ItemPacketDto[#= index(data)#].Quantity' value='#= Quantity #'   />")
                 .Width(50);
             columns.Command(command =>
             {

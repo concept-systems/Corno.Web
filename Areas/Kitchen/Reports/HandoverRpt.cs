@@ -8,8 +8,11 @@ using Corno.Web.Services.Masters.Interfaces;
 using Corno.Web.Windsor;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
+using Corno.Web.Dtos;
 using MoreLinq;
+using Telerik.Reporting;
 
 namespace Corno.Web.Areas.Kitchen.Reports;
 
@@ -26,10 +29,8 @@ public partial class HandoverRpt : BaseReport
     #endregion
 
     #region -- Private Methods --
-    private IEnumerable GetDataSource(string warehouseOrderNo, int locationId, bool bUpdateQuantity)
+    private IEnumerable GetDataSource(string warehouseOrderNo, int locationId)
     {
-        //Bootstrapper.StaticContainer.BeginLifetimeScope();
-
         var planService = Bootstrapper.Get<IPlanService>();
         var miscMasterService = Bootstrapper.Get<IMiscMasterService>();
         var itemService = Bootstrapper.Get<IBaseItemService>();
@@ -39,8 +40,7 @@ public partial class HandoverRpt : BaseReport
             return null;
 
         var plan = RunAsync(() => planService.GetByWarehouseOrderNoAsync(warehouseOrderNo));
-        /*if (bUpdateQuantity)
-            RunAsync(() => planService.UpdatePackQuantitiesAsync(plan));*/
+        planService.UpdateQuantitiesAsync(plan).ConfigureAwait(false).GetAwaiter().GetResult();
 
         var families = RunAsync(() => planService.GetFamiliesAsync(locationId, plan));
         var planItemDetails = plan.PlanItemDetails.Where(d => families.Contains(d.Group)).ToList();
@@ -52,13 +52,26 @@ public partial class HandoverRpt : BaseReport
             .ToList();
         var cartons = RunAsync(() => cartonService.GetAsync(c => c.WarehouseOrderNo == warehouseOrderNo,
                 c => new { c.Id, c.PackingDate, c.WarehouseOrderNo, c.CartonNo, c.CartonDetails })).ToList();
-        var cartonDetails = cartons.SelectMany(p => p.CartonDetails, (p, d) => new
-        {
-            p.CartonNo,
-            p.PackingDate,
-            d.Position,
-            Quantity = d.Quantity ?? 0
-        }).ToList();
+
+        // Aggregate quantities per (CartonNo, Position) so PackQuantity reflects
+        // the sum of quantities for every position in that carton
+        var cartonDetails = cartons
+            .SelectMany(p => p.CartonDetails, (p, d) => new
+            {
+                p.CartonNo,
+                p.PackingDate,
+                d.Position,
+                Quantity = d.Quantity ?? 0
+            })
+            .GroupBy(cd => new { cd.CartonNo, cd.PackingDate, cd.Position })
+            .Select(g => new
+            {
+                g.Key.CartonNo,
+                g.Key.PackingDate,
+                g.Key.Position,
+                Quantity = g.Sum(x => x.Quantity)
+            })
+            .ToList();
         var dataSource = (from planItemDetail in planItemDetails
                           join parentItem in parentItems
                               on planItemDetail?.ParentItemId equals parentItem?.Id into defaultParentItem
@@ -121,68 +134,8 @@ public partial class HandoverRpt : BaseReport
             }).ToList();
 
         dataSource.AddRange(unpackedRows);
-        return !dataSource.Any() ? null : 
+        return !dataSource.Any() ? null :
             dataSource.DistinctBy(d => new { d.CartonNo, d.Position });
-        //var packedItems = cartons.SelectMany(cd =>
-        //        cd.CartonDetails, (carton, cartonDetail) =>
-        //        {
-        //            var planItemDetail = planItemDetails.FirstOrDefault(x => x.Position == cartonDetail?.Position);
-        //            if (null == planItemDetail) return null;
-        //            var parentItem = parentItems.FirstOrDefault(x => x.Id == planItemDetail?.ParentItemId);
-        //            return new
-        //            {
-        //                OneLineItemCode = plan.System,
-        //                plan.WarehouseOrderNo,
-        //                plan.SoNo,
-        //                BranchName = warehouse?.Name,
-        //                Family = planItemDetail.Group,
-
-        //                planItemDetail.WarehousePosition,
-        //                planItemDetail.Position,
-
-        //                CartonNo = $"C{carton.CartonNo.ToString().PadLeft(3, '0')}" as object,
-
-        //                ParentItemCode = parentItem?.Code,
-        //                planItemDetail.ItemCode,
-        //                ItemName = planItemDetail.Description,
-        //                planItemDetail.DrawingNo,
-
-        //                PackDate = carton.PackingDate?.ToString("dd/MM/yyyy"),
-        //                planItemDetail.OrderQuantity,
-        //                PackQuantity = cartonDetail?.Quantity ?? 0
-        //            };
-        //        })
-        //    .Where(d => null != d).ToList();
-
-        //var unpackedItems = (from planItemDetail in planItemDetails.Where(d =>
-        //        (d.OrderQuantity ?? 0) > (d.PackQuantity ?? 0))
-        //                     join parentItem in parentItems on planItemDetail?.ParentItemId equals parentItem?.Id into defaultParentItem
-        //                     from parentItem in defaultParentItem.DefaultIfEmpty()
-        //                     select new
-        //                     {
-        //                         OneLineItemCode = plan.System,
-        //                         plan.WarehouseOrderNo,
-        //                         plan.SoNo,
-        //                         BranchName = warehouse?.Name,
-        //                         Family = planItemDetail?.Group,
-
-        //                         planItemDetail?.WarehousePosition,
-        //                         planItemDetail?.Position,
-
-        //                         CartonNo = null as object,
-
-        //                         ParentItemCode = parentItem?.Code,
-        //                         planItemDetail?.ItemCode,
-        //                         ItemName = planItemDetail?.Description,
-        //                         planItemDetail?.DrawingNo,
-
-        //                         PackDate = string.Empty,
-        //                         planItemDetail?.OrderQuantity,
-        //                         PackQuantity = (double)0
-        //                     }).ToList();
-
-        /*var dataSource = packedItems.Concat(unpackedItems).ToList();
-        return dataSource;*/
     }
 
     private void HandleNeedDataSource(object sender)
@@ -191,12 +144,12 @@ public partial class HandoverRpt : BaseReport
         var warehouseOrderNo = report.Parameters[FieldConstants.WarehouseOrderNo]
             .Value.ToString();
         var locationId = report.Parameters[FieldConstants.Location].Value.ToString().ToInt();
-        var bUpdateQuantity = report.Parameters["UpdateQuantities"].Value.ToBoolean();
+        //var bUpdateQuantity = report.Parameters["UpdateQuantities"].Value.ToBoolean();
 
-        var dataSource = GetDataSource(warehouseOrderNo, locationId, bUpdateQuantity);
+        var dataSource = GetDataSource(warehouseOrderNo, locationId);
         if (dataSource == null)
             return;
-        
+
         var dataList = dataSource.Cast<object>().ToList();
         report.DataSource = dataList.Count > 0 ? dataList : null;
     }

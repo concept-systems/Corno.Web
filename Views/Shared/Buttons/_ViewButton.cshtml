@@ -1,0 +1,21 @@
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@{
+    string viewAction = ViewBag.ViewAction ?? "View";
+    string controller = ViewBag.Controller;
+    string area = ViewBag.Area;
+    object id = ViewBag.Id;
+    object miscType = ViewBag.MiscType;
+    string buttonName = ViewBag.ButtonName ?? "btnView";
+    string buttonText = ViewBag.ButtonText ?? "View";
+    string viewUrl = id != null
+        ? Url.Action(viewAction, controller, new { area = area, id = id, miscType = miscType })
+        : Url.Action(viewAction, controller, new { area = area, miscType = miscType });
+}
+
+@(Html.Kendo().Button()
+    .Name(buttonName)
+    .Content(buttonText)
+    .ApplyStandardSettingsWithType(ButtonType.View, "preview", ComponentSize.Medium)
+    .HtmlAttributes(new { onclick = $"window.location.href='{viewUrl}'; return false;" }))
+

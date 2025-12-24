@@ -154,19 +154,13 @@ public class PartLabelController : SuperController
             // If CreateViewDto has an async version, use that:
             var dto = await _partLabelService.CreateViewDtoAsync(id);
 
-            // Otherwise, wrap in Task.Run for async behavior:
-            //var dto = await Task.Run(() => _partLabelService.CreateViewDtoAsync(id));
-
-            //Session[FieldConstants.Label] = dto.LabelReport;
-
             return View(dto);
         }
         catch (Exception exception)
         {
             HandleControllerException(exception);
+            throw;
         }
-
-        return RedirectToAction("Index");
     }
 
     public async Task<ActionResult> GetItems([DataSourceRequest] DataSourceRequest request, string warehouseOrderNo)

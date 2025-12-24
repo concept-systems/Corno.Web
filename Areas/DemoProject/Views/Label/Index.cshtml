@@ -1,4 +1,5 @@
 ﻿@using Corno.Web.Areas.DemoProject.Dtos
+@using Corno.Web.Globals
 @using Kendo.Mvc.UI
 @using Corno.Web.Helper
 
@@ -9,7 +10,7 @@
 }
 
 <div class="grid-container-full-height">
-    @(Html.Kendo().Grid<LabelDto>()
+    @(Html.Kendo().Grid<LabelCrudDto>()
         .Name("grid")
         .ApplyIndexSettings(customToolbar: toolbar =>
         {
@@ -39,7 +40,7 @@
         columns.Bound(m => m.Weight)
             .HtmlAttributes(new { style = "text-align: center" })
             .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" });
-        columns.Bound(m => m.Rate)
+        columns.Bound(m => m.Mrp)
             .HtmlAttributes(new { style = "text-align: center" })
             .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
             .Title("MRP");

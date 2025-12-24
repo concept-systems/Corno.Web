@@ -157,19 +157,19 @@ public class BaseService<TEntity> : CornoService<TEntity>, IBaseService<TEntity>
 
     public async Task<int> GetNextIdAsync()
     {
-        var max = await MaxAsync(null, g => g.Id).ConfigureAwait(false);
+        var max = await MaxAsync(g => g.Id > 0, g => g.Id).ConfigureAwait(false);
         return max + 1;
     }
 
     public async Task<int> GetNextSerialNoAsync()
     {
-        var maxSerialNo = await MaxAsync(null, g => g.SerialNo ?? 0).ConfigureAwait(false);
+        var maxSerialNo = await MaxAsync(g => g.Id > 0, g => g.SerialNo ?? 0).ConfigureAwait(false);
         return maxSerialNo + 1;
     }
 
     public async Task<int> GetNextSerialNoAsync(int companyId)
     {
-        var max = await MaxAsync(null, g => g.SerialNo).ConfigureAwait(false);
+        var max = await MaxAsync(g => g.Id > 0, g => g.SerialNo).ConfigureAwait(false);
         return max + 1;
     }
 

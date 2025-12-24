@@ -9,7 +9,7 @@ namespace Corno.Web.Areas.Kitchen.Services.Interfaces;
 
 public interface IAssemblyLabelService : ILabelService
 {
-    Task<List<Label>> CreateLabelsAsync(SubAssemblyCrudDto dto, Plan plan, Label label1);
+    Task<List<Label>> CreateLabelsAsync(SubAssemblyCrudDto dto, Plan plan, Label label1, bool bUpdateDatabase);
     Task<BaseReport> CreateLabelReportAsync(IEnumerable<Label> labels, bool bDuplicate);
     Task UpdateDatabaseAsync(Label assemblyLabel, List<Label> labels, Plan plan);
     Task<LabelViewDto> CreateViewDtoAsync(int? id);

@@ -64,7 +64,12 @@ public class SuperController : Controller
     // Action to load the partial view
     public async Task<ActionResult> LoadPartialView(string partialViewName)
     {
-        //return PartialView("Partials/ReportViewer_New");
+        // Redirect old WebForms ReportViewer to HTML5 viewer
+        if (partialViewName is "Partials/ReportViewer_New" or "Partials/ReportViewer")
+        {
+            partialViewName = "Partials/ReportViewer_Html5";
+        }
+        
         return await Task.FromResult(PartialView(partialViewName)).ConfigureAwait(false);
     }
 

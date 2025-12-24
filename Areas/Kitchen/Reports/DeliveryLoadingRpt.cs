@@ -77,7 +77,11 @@ public partial class DeliveryLoadingRpt : BaseReport
             };
         });
 
-        report.DataSource = dataSource.ToList();
+        var enumerable = dataSource.ToList();
+        if (!enumerable.ToList().Any())
+            return;
+
+        report.DataSource = enumerable;
     }
 
     /*private void DeliveryLoadingRpt_NeedDataSource(object sender, EventArgs e)

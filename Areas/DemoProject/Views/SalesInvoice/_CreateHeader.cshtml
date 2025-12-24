@@ -29,9 +29,11 @@
 <div class="form-group row">
     @Html.LabelFor(m => m.PaymentMode, "Payment Mode :", new { @class = "col-12 col-sm-4 col-md-4 col-form-label" })
     <div class="col-12 col-sm-8 col-md-8">
-        @(Html.Kendo().TextBoxFor(m => m.PaymentMode)
-             .HtmlAttributes(new { @class = "w-100" })
-             .Placeholder("Enter payment mode"))
+        @(Html.Kendo().ComboBoxFor(m => m.PaymentMode)
+            .BindTo(new[] { "Cash", "UPI", "Card", "Online", "Cheque" })
+            .Suggest(true)
+            .Placeholder("Select payment mode")
+            .HtmlAttributes(new { @class = "w-100" }))
     </div>
 </div>
 <div class="form-group row">

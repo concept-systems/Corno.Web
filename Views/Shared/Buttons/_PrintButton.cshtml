@@ -1,0 +1,16 @@
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@{
+    string buttonName = ViewBag.ButtonName ?? "print";
+    string buttonText = ViewBag.ButtonText ?? "Print";
+    string clickFunction = ViewBag.ClickFunction ?? "onPrint";
+    ButtonType buttonType = ViewBag.ButtonType ?? ButtonType.Primary;
+    string icon = ViewBag.Icon ?? "print";
+}
+
+@(Html.Kendo().Button()
+    .Name(buttonName)
+    .Content(buttonText)
+    .ApplyStandardSettingsWithType(buttonType, icon, ComponentSize.Medium)
+    .Events(e => e.Click(clickFunction)))
+

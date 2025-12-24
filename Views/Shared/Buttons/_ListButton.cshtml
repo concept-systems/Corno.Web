@@ -1,0 +1,18 @@
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@{
+    string indexAction = ViewBag.IndexAction ?? "Index";
+    string controller = ViewBag.Controller;
+    string area = ViewBag.Area;
+    object miscType = ViewBag.MiscType;
+    string buttonName = ViewBag.ButtonName ?? "btnList";
+    string buttonText = ViewBag.ButtonText ?? "List";
+    string listUrl = Url.Action(indexAction, controller, new { area = area, miscType = miscType });
+}
+
+@(Html.Kendo().Button()
+    .Name(buttonName)
+    .Content(buttonText)
+    .ApplyStandardSettingsWithType(ButtonType.Info, "list", ComponentSize.Medium)
+    .HtmlAttributes(new { onclick = $"window.location.href='{listUrl}'; return false;" }))
+

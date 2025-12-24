@@ -1,7 +1,4 @@
 ﻿@using Corno.Web.Globals
-@using Kendo.Mvc.UI
-@using Kendo.Mvc
-@using Microsoft.AspNet.Identity
 @using Corno.Web.Helpers
 @using SiteMapNode = Kendo.Mvc.SiteMapNode
 @{
@@ -14,7 +11,30 @@
     var rootNodes = siteMapRoot?.ChildNodes?.Where(n => n.RouteValues.ContainsKey("web") && n.RouteValues["web"]?.ToString() == "true").ToList() ?? new List<SiteMapNode>();
 }
 
-<div class="home-menu-container k-animation-container">
+<div class="">
+    <div class="home-menu-toolbar mt-2">
+        <div class="home-menu-search-wrapper k-textbox k-input k-input-solid k-input-md">
+            <span class="k-input-prefix">
+                <span class="k-icon k-i-search"></span>
+            </span>
+            <input id="homeMenuSearch"
+                   type="text"
+                   class="home-menu-search-input k-input-inner"
+                   placeholder="Search menu by name or group..." 
+                   autocomplete="off" />
+            <button type="button"
+                    id="homeMenuSearchClear"
+                    class="home-menu-search-clear k-button k-button-md k-button-rectangle k-rounded-md k-button-flat k-button-flat-base"
+                    title="Clear search">
+                <span class="k-icon k-i-close"></span>
+            </button>
+        </div>
+        <div class="home-menu-search-hint">
+            Start typing to quickly find any menu. Matching groups and tiles will be highlighted automatically.
+        </div>
+    </div>
+
+    <div class="home-menu-container k-animation-container">
     @foreach (var groupNode in rootNodes)
     {
         var menuItems = groupNode.ChildNodes?.Where(n => n.RouteValues.ContainsKey("web") && n.RouteValues["web"]?.ToString() == "true").ToList() ?? new List<SiteMapNode>();
@@ -59,13 +79,97 @@
             </div>
         }
     }
-</div>
 
+        <div id="homeMenuNoResults" class="home-menu-no-results" style="display: none;">
+            <div class="home-menu-no-results-icon">
+                <span class="k-icon k-i-search"></span>
+            </div>
+            <div class="home-menu-no-results-text">
+                No menus match your search. Try a different keyword or clear the search filter.
+            </div>
+        </div>
+    </div> <!-- /.home-menu-container -->
+</div> <!-- /.home-menu-page -->
 <style>
-    .home-menu-container {
-        padding: 20px;
+    .home-menu-page {
         max-width: 1400px;
         margin: 0 auto;
+        padding: 16px 20px 24px;
+    }
+
+    .home-menu-toolbar {
+        position: sticky;
+        top: 56px; /* below Kendo AppBar */
+        z-index: 5;
+        background: #f5f5f5;
+        padding: 12px 12px 14px;
+        margin: -16px -20px 12px;
+        border-bottom: 1px solid #e0e0e0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .home-menu-search-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        max-width: 560px;
+        width: 100%;
+        background-color: #ffffff;
+        border-radius: 999px;
+        padding-left: 12px;
+        padding-right: 4px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+        margin: 0 auto;
+    }
+
+    .home-menu-search-wrapper .k-icon {
+        color: #757575;
+        font-size: 16px;
+    }
+
+    .home-menu-search-input {
+        border: none !important;
+        box-shadow: none !important;
+        outline: none !important;
+        width: 100%;
+        background: transparent;
+        font-size: 14px;
+        padding: 8px 4px;
+    }
+
+    .home-menu-search-input::placeholder {
+        color: #9e9e9e;
+    }
+
+    .home-menu-search-clear {
+        border: none;
+        box-shadow: none;
+        min-width: 32px;
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .home-menu-search-clear .k-icon {
+        font-size: 14px;
+    }
+
+    .home-menu-search-hint {
+        margin-top: 6px;
+        font-size: 12px;
+        color: #757575;
+        text-align: center;
+    }
+
+    .home-menu-container {
+        padding-top: 12px;
     }
 
     .menu-group-section {
@@ -165,6 +269,29 @@
         opacity: 1;
     }
 
+    .home-menu-no-results {
+        margin-top: 32px;
+        padding: 32px 24px;
+        border-radius: 8px;
+        border: 1px dashed #cfcfcf;
+        background: #fafafa;
+        text-align: center;
+        color: #757575;
+    }
+
+    .home-menu-no-results-icon {
+        margin-bottom: 8px;
+    }
+
+    .home-menu-no-results-icon .k-icon {
+        font-size: 28px;
+        color: #bdbdbd;
+    }
+
+    .home-menu-no-results-text {
+        font-size: 14px;
+    }
+
     /* Responsive design - Multiple columns for optimal screen space usage */
     @@media (min-width: 1600px) {
         .menu-cards-container {
@@ -192,8 +319,18 @@
     }
 
     @@media (max-width: 768px) {
-        .home-menu-container {
-            padding: 15px;
+        .home-menu-page {
+            padding: 12px 12px 20px;
+        }
+
+        .home-menu-toolbar {
+            top: 48px;
+            padding: 10px 10px 12px;
+            margin: -12px -12px 10px;
+        }
+
+        .home-menu-search-wrapper {
+            max-width: 100%;
         }
 
         .menu-cards-container {
@@ -230,3 +367,81 @@
         }
     }
 </style>
+
+    <script>
+        (function ($) {
+            function debounce(fn, delay) {
+                var timeout;
+                return function () {
+                    var context = this;
+                    var args = arguments;
+                    clearTimeout(timeout);
+                    timeout = setTimeout(function () {
+                        fn.apply(context, args);
+                    }, delay);
+                };
+            }
+
+            function applyHomeMenuFilter() {
+                var query = $.trim($("#homeMenuSearch").val() || "").toLowerCase();
+                var hasQuery = query.length > 0;
+                var anyVisible = false;
+
+                // Toggle clear button
+                if (hasQuery) {
+                    $("#homeMenuSearchClear").css("display", "flex");
+                } else {
+                    $("#homeMenuSearchClear").hide();
+                }
+
+                $(".menu-group-section").each(function () {
+                    var $group = $(this);
+                    var groupTitle = ($group.find(".menu-group-title").first().text() || "").toLowerCase();
+                    var groupMatches = hasQuery && groupTitle.indexOf(query) !== -1;
+                    var visibleCardsInGroup = 0;
+
+                    $group.find(".menu-card-wrapper").each(function () {
+                        var $cardWrapper = $(this);
+                        var titleText = ($cardWrapper.find(".menu-card-title").first().text() || "").toLowerCase();
+                        var cardMatches = !hasQuery || titleText.indexOf(query) !== -1 || groupMatches;
+
+                        if (cardMatches) {
+                            $cardWrapper.show();
+                            visibleCardsInGroup++;
+                        } else {
+                            $cardWrapper.hide();
+                        }
+                    });
+
+                    if (visibleCardsInGroup > 0) {
+                        $group.show();
+                        anyVisible = true;
+                    } else {
+                        $group.hide();
+                    }
+                });
+
+                // No results message
+                if (!anyVisible && hasQuery) {
+                    $("#homeMenuNoResults").show();
+                } else {
+                    $("#homeMenuNoResults").hide();
+                }
+            }
+
+            $(document).ready(function () {
+                var debouncedFilter = debounce(applyHomeMenuFilter, 150);
+
+                $("#homeMenuSearch").on("input", debouncedFilter);
+
+                $("#homeMenuSearchClear").on("click", function () {
+                    $("#homeMenuSearch").val("");
+                    applyHomeMenuFilter();
+                    $("#homeMenuSearch").focus();
+                });
+
+                // Initial layout state
+                applyHomeMenuFilter();
+            });
+        })(jQuery);
+    </script>

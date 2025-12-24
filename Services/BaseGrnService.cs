@@ -19,6 +19,7 @@ public class BaseGrnService : TransactionService<Grn>, IBaseGrnService
     {
         _itemService = itemService;
 
+        // Do not enable includes globally; use explicit methods when details are needed.
         SetIncludes(nameof(Grn.GrnDetails));
     }
     #endregion
@@ -44,21 +45,36 @@ public class BaseGrnService : TransactionService<Grn>, IBaseGrnService
 
     public async System.Threading.Tasks.Task<IEnumerable<Grn>> GetListByDateAsync(DateTime fromDate, DateTime toDate)
     {
+        // Read-only; do not load GrnDetails by default
         return await GetAsync<Grn>(p => DbFunctions.TruncateTime(p.GrnDate) >=
                              DbFunctions.TruncateTime(fromDate) &&
                              DbFunctions.TruncateTime(p.GrnDate) <=
-                             DbFunctions.TruncateTime(toDate), p => p).ConfigureAwait(false);
+                             DbFunctions.TruncateTime(toDate), p => p, null, ignoreInclude: true)
+            .ConfigureAwait(false);
     }
 
     public async System.Threading.Tasks.Task<Grn> GetByInvoiceNoAsync(string invoiceNo)
     {
-        var list = await GetAsync<Grn>(p => p.InvoiceNo.Trim() == invoiceNo.Trim(), p => p).ConfigureAwait(false);
+        var list = await GetAsync<Grn>(p => p.InvoiceNo.Trim() == invoiceNo.Trim(), p => p, null, ignoreInclude: true)
+            .ConfigureAwait(false);
         return list.FirstOrDefault();
     }
 
     public async System.Threading.Tasks.Task<Grn> GetByReceiptNoAsync(string receiptNo)
     {
-        var list = await GetAsync<Grn>(p => p.Code.Trim() == receiptNo.Trim(), p => p).ConfigureAwait(false);
+        var list = await GetAsync<Grn>(p => p.Code.Trim() == receiptNo.Trim(), p => p, null, ignoreInclude: true)
+            .ConfigureAwait(false);
+        return list.FirstOrDefault();
+    }
+
+    /// <summary>
+    /// Get GRN with details when required by caller.
+    /// </summary>
+    public async System.Threading.Tasks.Task<Grn> GetByIdWithDetailsAsync(int id)
+    {
+        //SetIncludes(nameof(Grn.GrnDetails));
+        var list = await GetAsync<Grn>(g => g.Id == id, g => g, null, ignoreInclude: false)
+            .ConfigureAwait(false);
         return list.FirstOrDefault();
     }
     #endregion

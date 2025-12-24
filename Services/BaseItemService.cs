@@ -26,6 +26,7 @@ public class BaseItemService : MasterService<Item>, IBaseItemService
         _processService = processService;
         _miscMasterService = miscMasterService;
 
+        // Do not enable includes globally; use explicit methods when details are needed.
         SetIncludes($"{nameof(Item.ItemProcessDetails)}," +
                     $"{nameof(Item.ItemMachineDetails)}," +
                     $"{nameof(Item.ItemPacketDetails)}");
@@ -164,7 +165,26 @@ public class BaseItemService : MasterService<Item>, IBaseItemService
 
     public async Task<Item> GetItemAsync(int itemId)
     {
-        var item = await GetByIdAsync(itemId).ConfigureAwait(false);
+        // Fast path: no includes
+        var items = await GetAsync<Item>(i => i.Id == itemId, i => i, null, ignoreInclude: true)
+            .ConfigureAwait(false);
+        var item = items.FirstOrDefault();
+        if (null == item)
+            throw new Exception($"Invalid Item ({itemId})!");
+        return item;
+    }
+
+    /// <summary>
+    /// Get item with process/machine/packet details loaded
+    /// </summary>
+    public async Task<Item> GetItemWithDetailsAsync(int itemId)
+    {
+        /*SetIncludes($"{nameof(Item.ItemProcessDetails)}," +
+                    $"{nameof(Item.ItemMachineDetails)}," +
+                    $"{nameof(Item.ItemPacketDetails)}");*/
+        var items = await GetAsync<Item>(i => i.Id == itemId, i => i, null, ignoreInclude: false)
+            .ConfigureAwait(false);
+        var item = items.FirstOrDefault();
         if (null == item)
             throw new Exception($"Invalid Item ({itemId})!");
         return item;
@@ -292,7 +312,7 @@ public class BaseItemService : MasterService<Item>, IBaseItemService
     #region -- Process Methods --
     public virtual async Task<Process> GetNextProcessAsync(int itemId, string processCode)
     {
-        var item = await GetByIdAsync(itemId).ConfigureAwait(false);
+        var item = await GetItemWithDetailsAsync(itemId).ConfigureAwait(false);
         if (null == item)
             throw new Exception($"Item ({itemId}) not found.");
 
@@ -316,7 +336,7 @@ public class BaseItemService : MasterService<Item>, IBaseItemService
 
     public async Task<Process> GetNextProcessWithNullReturnAsync(int itemId, string processCode)
     {
-        var item = await GetByIdAsync(itemId).ConfigureAwait(false);
+        var item = await GetItemWithDetailsAsync(itemId).ConfigureAwait(false);
         if (null == item)
             return null;
 
@@ -339,7 +359,7 @@ public class BaseItemService : MasterService<Item>, IBaseItemService
 
     public async Task<string> GetNextProcessStatusAsync(int itemId, string processCode)
     {
-        var item = await GetByIdAsync(itemId).ConfigureAwait(false);
+        var item = await GetItemWithDetailsAsync(itemId).ConfigureAwait(false);
         if (null == item)
             throw new Exception($"Item ({itemId}) not found.");
 
@@ -365,7 +385,7 @@ public class BaseItemService : MasterService<Item>, IBaseItemService
 
     public async Task<List<string>> GetPreviousProcessStatusAsync(int itemId, string processCode)
     {
-        var item = await GetByIdAsync(itemId).ConfigureAwait(false);
+        var item = await GetItemWithDetailsAsync(itemId).ConfigureAwait(false);
         if (null == item)
             throw new Exception($"Item ({itemId}) not found.");
 

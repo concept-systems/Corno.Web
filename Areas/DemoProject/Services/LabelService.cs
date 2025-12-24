@@ -108,7 +108,7 @@ public sealed class LabelService : BaseService<Label>, ILabelService
 
             label.SetProperty(FieldConstants.ManufacturingDate, dto.ManufacturingDate);
             label.SetProperty("ExpiryDate", dto.ExpiryDate);
-            label.SetProperty(FieldConstants.Rate, dto.Rate);
+            label.SetProperty(FieldConstants.Rate, dto.Mrp);
 
             labels.Add(label);
         }

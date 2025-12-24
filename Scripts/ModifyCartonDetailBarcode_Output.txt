@@ -1,0 +1,13 @@
+Changed database context to 'Godrej.New.Kitchen'.
+========================================
+Starting CartonDetail.Barcode modification...
+========================================
+Current Barcode column type: nvarchar(MAX)
+Msg 147, Level 15, State 1, Server CONCEPT-LPT007, Line 10
+An aggregate may not appear in the WHERE clause unless it is in a subquery contained in a HAVING clause or a select list, and the column being aggregated is an outer reference.
+Successfully altered CartonDetail.Barcode to NVARCHAR(200)
+Successfully created index: IX_CartonDetail_Barcode
+Updated statistics for CartonDetail table
+========================================
+CartonDetail.Barcode modification completed!
+========================================

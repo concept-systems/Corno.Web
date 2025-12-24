@@ -1,0 +1,21 @@
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@{
+    string editAction = ViewBag.EditAction ?? "Edit";
+    string controller = ViewBag.Controller;
+    string area = ViewBag.Area;
+    object id = ViewBag.Id;
+    object miscType = ViewBag.MiscType;
+    string buttonName = ViewBag.ButtonName ?? "btnEdit";
+    string buttonText = ViewBag.ButtonText ?? "Edit";
+    string editUrl = id != null
+        ? Url.Action(editAction, controller, new { area = area, id = id, miscType = miscType })
+        : Url.Action(editAction, controller, new { area = area, miscType = miscType });
+}
+
+@(Html.Kendo().Button()
+    .Name(buttonName)
+    .Content(buttonText)
+    .ApplyStandardSettingsWithType(ButtonType.Edit, "edit", ComponentSize.Medium)
+    .HtmlAttributes(new { onclick = $"window.location.href='{editUrl}'; return false;" }))
+
