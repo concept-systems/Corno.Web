@@ -229,6 +229,19 @@ public class PlanService : BasePlanService, IPlanService
         // Calculate quantities based on updated label statuses
         CalculateQuantities(plan, labels);
 
+        // Remove extra Active labels if label quantity sum > order quantity for each position
+        var labelsToDelete = RemoveExtraActiveLabels(plan, labels);
+        if (labelsToDelete.Any())
+        {
+            await labelService.DeleteRangeAsync(labelsToDelete).ConfigureAwait(false);
+            await labelService.SaveAsync().ConfigureAwait(false);
+            
+            // Remove deleted labels from the local list and recalculate quantities
+            var deletedLabelIds = new HashSet<int>(labelsToDelete.Select(l => l.Id));
+            labels.RemoveAll(l => deletedLabelIds.Contains(l.Id));
+            CalculateQuantities(plan, labels);
+        }
+
         if (modifiedLabels.Any())
         {
             var labelServiceTemp = Bootstrapper.Get<ILabelService>();
@@ -839,6 +852,61 @@ public class PlanService : BasePlanService, IPlanService
         planItemDetail.PackQuantity = 0;
     }
 
+    private List<Label> RemoveExtraActiveLabels(Plan plan, List<Label> labels)
+    {
+        var labelsToDelete = new List<Label>();
+        
+        // Group labels by position for efficient lookup
+        var labelsByPosition = labels.GroupBy(l => l.Position)
+            .ToDictionary(g => g.Key, g => g.ToList(), StringComparer.OrdinalIgnoreCase);
+
+        foreach (var planItemDetail in plan.PlanItemDetails)
+        {
+            if (!labelsByPosition.TryGetValue(planItemDetail.Position, out var positionLabels))
+                continue;
+
+            var orderQuantity = planItemDetail.OrderQuantity ?? 0;
+            if (orderQuantity <= 0)
+                continue;
+
+            // Calculate sum of all label quantities for this position
+            var totalLabelQuantity = positionLabels.Sum(l => l.Quantity ?? 0);
+
+            // If sum > order quantity, remove extra Active labels
+            if (totalLabelQuantity > orderQuantity)
+            {
+                // Get Active labels for this position, ordered by some criteria (e.g., by ID or date)
+                var activeLabels = positionLabels
+                    .Where(l => l.Status == StatusConstants.Active)
+                    .OrderBy(l => l.Id) // Order to ensure consistent deletion
+                    .ToList();
+
+                if (!activeLabels.Any())
+                    continue;
+
+                // Calculate how much quantity we need to remove
+                var quantityToRemove = totalLabelQuantity - orderQuantity;
+                var labelsToRemoveForPosition = new List<Label>();
+                var removedQuantity = 0.0;
+
+                // Remove labels until we've removed enough quantity
+                foreach (var label in activeLabels)
+                {
+                    if (removedQuantity >= quantityToRemove)
+                        break;
+
+                    var labelQuantity = label.Quantity ?? 0;
+                    labelsToRemoveForPosition.Add(label);
+                    removedQuantity += labelQuantity;
+                }
+
+                labelsToDelete.AddRange(labelsToRemoveForPosition);
+            }
+        }
+
+        return labelsToDelete;
+    }
+
     #endregion
 
     #region -- View Model Methods --
@@ -1048,25 +1116,37 @@ public class PlanService : BasePlanService, IPlanService
 
     public async Task<DataSourceResult> GetIndexViewDtoAsync(DataSourceRequest request)
     {
-        // Step 1: Get paged Plans (only IDs and basic fields)
+        // Step 1: Get paged Plans (only IDs and basic fields) - no includes needed for pagination
         var baseQuery = GetQuery();
         var pagedPlans = await baseQuery.ToDataSourceResultAsync(request).ConfigureAwait(false);
 
         // Step 2: Get aggregates for those IDs
+        // Optimized: The Sum() aggregations in the projection will be translated to SQL GROUP BY
+        // EF will generate efficient SQL even without explicit includes when using projections
         var planIds = (pagedPlans.Data as List<Plan>)?.Select(x => x.Id).ToList();
+        if (planIds == null || !planIds.Any())
+        {
+            pagedPlans.Data = new List<PlanIndexDto>();
+            return pagedPlans;
+        }
+
+        // Enable includes for PlanItemDetails since we need them for aggregation
+        // However, with projection, EF should optimize this to use SQL GROUP BY
+        SetIncludes($"{nameof(Plan.PlanItemDetails)}");
         var result = await GetAsync(p => planIds.Contains(p.Id), p => new PlanIndexDto
             {
                 Id = p.Id,
                 WarehouseOrderNo = p.WarehouseOrderNo,
                 LotNo = p.LotNo,
                 DueDate = p.DueDate,
+                // These Sum() operations will be translated to SQL GROUP BY aggregations
                 OrderQuantity = p.PlanItemDetails.Sum(d => d.OrderQuantity ?? 0),
                 PrintQuantity = p.PlanItemDetails.Sum(d => d.PrintQuantity ?? 0),
                 BendQuantity = p.PlanItemDetails.Sum(d => d.BendQuantity ?? 0),
                 SortQuantity = p.PlanItemDetails.Sum(d => d.SortQuantity ?? 0),
                 SubAssemblyQuantity = p.PlanItemDetails.Sum(d => d.SubAssemblyQuantity ?? 0),
                 PackedQuantity = p.PlanItemDetails.Sum(d => d.PackQuantity ?? 0)
-            }).ConfigureAwait(false);
+            }, ignoreInclude: false).ConfigureAwait(false);
 
         pagedPlans.Data = result;
         return pagedPlans;
