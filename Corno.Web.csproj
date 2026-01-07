@@ -2745,6 +2745,7 @@
     <Content Include="Areas\Euro\Views\Carton\View.cshtml" />
     <Content Include="Areas\Euro\Views\Carton\_PartialIndex.cshtml" />
     <Content Include="Areas\Euro\Views\web.config" />
+    <Content Include="Areas\Kitchen\Views\Shared\_PartLabel.cshtml" />
     <None Include="Dockerfile" />
     <None Include=".dockerignore">
       <DependentUpon>Dockerfile</DependentUpon>
