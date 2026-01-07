@@ -4,7 +4,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Corno.Web.Dtos;
-using Corno.Web.Services.Progress.Interfaces;
 
 namespace Corno.Web.Services.Interfaces;
 
@@ -38,7 +37,7 @@ public interface IMasterService<TEntity> : IBaseService<TEntity>
     Task<TEntity> GetOrCreateAsync(string code, string name, bool bSave = true);
     Task<TEntity> GetOrCreateByNameAsync(string name);
 
-    Task ExportAsync(string filePath, IBaseProgressService progressService);
+    Task ExportAsync(string filePath);
 
     #endregion
 }

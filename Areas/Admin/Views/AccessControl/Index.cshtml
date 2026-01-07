@@ -1,0 +1,286 @@
+@using Kendo.Mvc.UI
+
+@{
+    Layout = "~/Views/Shared/_AppLayout.cshtml";
+    ViewBag.BoxTitle = "Access Rules Management";
+}
+
+<div class="access-control-container" style="padding: 20px;">
+    <div class="k-card">
+        <div class="k-card-header">
+            <h3 class="k-card-title">Access Control</h3>
+        </div>
+        <div class="k-card-body">
+            <div class="k-hstack k-gap-4" style="margin-bottom: 20px;">
+                <div class="k-form-field" style="flex: 1;">
+                    <label class="k-form-label">Assign To:</label>
+                    <select id="assignToType" class="k-dropdown k-input-md" style="width: 150px;">
+                        <option value="role">Role</option>
+                        <option value="user">User</option>
+                    </select>
+                </div>
+                <div class="k-form-field" style="flex: 2;">
+                    <label class="k-form-label" id="assignToLabel">Select Role:</label>
+                    <select id="assignToId" class="k-dropdown k-input-md" style="width: 100%;"></select>
+                </div>
+                <div class="k-form-field">
+                    <button type="button" id="btnLoadPermissions" class="k-button k-button-md k-button-solid k-button-primary">
+                        <span class="k-icon k-i-refresh"></span>
+                        <span>Load Permissions</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="k-hstack k-gap-4" style="align-items: flex-start;">
+                <!-- Menu Tree -->
+                <div class="k-card" style="flex: 1; min-width: 300px;">
+                    <div class="k-card-header">
+                        <h4 class="k-card-title">Menu Tree</h4>
+                    </div>
+                    <div class="k-card-body">
+                        <div id="menuTree" style="height: 500px; overflow: auto;"></div>
+                    </div>
+                </div>
+
+                <!-- Permissions Grid -->
+                <div class="k-card" style="flex: 2;">
+                    <div class="k-card-header">
+                        <h4 class="k-card-title">Permissions</h4>
+                    </div>
+                    <div class="k-card-body">
+                        <div class="k-tabstrip">
+                            <ul>
+                                <li class="k-active">Menu Permissions</li>
+                                <li>Page Permissions</li>
+                                <li>Control Permissions</li>
+                            </ul>
+                            <div>
+                                <div id="menuPermissionsGrid"></div>
+                            </div>
+                            <div>
+                                <div id="pagePermissionsGrid"></div>
+                            </div>
+                            <div>
+                                <div id="controlPermissionsGrid"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="k-hstack k-gap-2" style="margin-top: 20px;">
+                <button type="button" id="btnSavePermissions" class="k-button k-button-md k-button-solid k-button-primary">
+                    <span class="k-icon k-i-save"></span>
+                    <span>Save Permissions</span>
+                </button>
+                <button type="button" id="btnReset" class="k-button k-button-md k-button-solid-base">
+                    <span class="k-icon k-i-refresh"></span>
+                    <span>Reset</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var selectedMenuId = null;
+    var selectedUserId = null;
+    var selectedRoleId = null;
+
+    $(document).ready(function() {
+        loadMenuTree();
+        loadRoles();
+        loadUsers();
+
+        $("#assignToType").on("change", function() {
+            var type = $(this).val();
+            $("#assignToLabel").text(type === "role" ? "Select Role:" : "Select User:");
+            $("#assignToId").kendoDropDownList("destroy");
+            if (type === "role") {
+                loadRoles();
+            } else {
+                loadUsers();
+            }
+        });
+
+        $("#btnLoadPermissions").on("click", function() {
+            var type = $("#assignToType").val();
+            var id = $("#assignToId").val();
+            
+            if (!id) {
+                alert("Please select a " + (type === "role" ? "role" : "user"));
+                return;
+            }
+
+            if (type === "role") {
+                selectedRoleId = id;
+                selectedUserId = null;
+            } else {
+                selectedUserId = id;
+                selectedRoleId = null;
+            }
+
+            loadPermissions();
+        });
+
+        $("#btnSavePermissions").on("click", function() {
+            savePermissions();
+        });
+
+        $("#btnReset").on("click", function() {
+            loadPermissions();
+        });
+    });
+
+    function loadMenuTree() {
+        $.ajax({
+            url: '@Url.Action("GetMenuTree", "AccessControl", new { area = "Admin" })',
+            type: "POST",
+            success: function(data) {
+                var treeData = buildTreeData(data);
+                $("#menuTree").kendoTreeView({
+                    dataSource: treeData,
+                    template: "#= item.DisplayName #",
+                    dataTextField: "DisplayName",
+                    select: function(e) {
+                        var dataItem = this.dataItem(e.node);
+                        selectedMenuId = dataItem ? dataItem.Id : null;
+                        if (selectedMenuId && (selectedUserId || selectedRoleId)) {
+                            loadPagePermissions(selectedMenuId);
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    function buildTreeData(menus) {
+        var map = {};
+        var roots = [];
+
+        menus.forEach(function(menu) {
+            map[menu.Id] = {
+                id: menu.Id,
+                DisplayName: menu.DisplayName,
+                items: []
+            };
+        });
+
+        menus.forEach(function(menu) {
+            var node = map[menu.Id];
+            if (menu.ParentMenuId == null) {
+                roots.push(node);
+            } else {
+                var parent = map[menu.ParentMenuId];
+                if (parent) {
+                    parent.items.push(node);
+                } else {
+                    roots.push(node);
+                }
+            }
+        });
+
+        return roots;
+    }
+
+    function loadRoles() {
+        $.ajax({
+            url: '@Url.Action("GetRoles", "AccessControl", new { area = "Admin" })',
+            type: "POST",
+            success: function(data) {
+                $("#assignToId").kendoDropDownList({
+                    dataSource: data,
+                    dataTextField: "Name",
+                    dataValueField: "Id",
+                    optionLabel: "-- Select Role --"
+                });
+            }
+        });
+    }
+
+    function loadUsers() {
+        $.ajax({
+            url: '@Url.Action("GetUsers", "AccessControl", new { area = "Admin" })',
+            type: "POST",
+            success: function(data) {
+                $("#assignToId").kendoDropDownList({
+                    dataSource: data,
+                    dataTextField: "UserName",
+                    dataValueField: "Id",
+                    optionLabel: "-- Select User --"
+                });
+            }
+        });
+    }
+
+    function loadPermissions() {
+        if (!selectedUserId && !selectedRoleId) {
+            alert("Please select a role or user first");
+            return;
+        }
+
+        // Load menu permissions
+        $.ajax({
+            url: '@Url.Action("GetMenuPermissions", "AccessControl", new { area = "Admin" })',
+            type: "POST",
+            data: { userId: selectedUserId, roleId: selectedRoleId },
+            success: function(data) {
+                $("#menuPermissionsGrid").kendoGrid({
+                    dataSource: {
+                        data: data,
+                        schema: {
+                            model: {
+                                id: "MenuId",
+                                fields: {
+                                    MenuId: { type: "number" },
+                                    MenuName: { type: "string" },
+                                    IsAllowed: { type: "boolean" }
+                                }
+                            }
+                        }
+                    },
+                    columns: [
+                        { field: "MenuName", title: "Menu Name" },
+                        { 
+                            field: "IsAllowed", 
+                            title: "Allowed",
+                            template: "<input type='checkbox' #= IsAllowed ? 'checked' : '' # data-menu-id='#= MenuId #' class='menu-permission-checkbox' />"
+                        }
+                    ],
+                    height: 400
+                });
+            }
+        });
+    }
+
+    function loadPagePermissions(menuId) {
+        // Load page permissions for selected menu
+        // Implementation similar to menu permissions
+    }
+
+    function savePermissions() {
+        var permissions = {};
+        $(".menu-permission-checkbox").each(function() {
+            var menuId = $(this).data("menu-id");
+            var isAllowed = $(this).is(":checked");
+            permissions[menuId] = isAllowed;
+        });
+
+        $.ajax({
+            url: '@Url.Action("SaveMenuPermissions", "AccessControl", new { area = "Admin" })',
+            type: "POST",
+            data: {
+                userId: selectedUserId,
+                roleId: selectedRoleId,
+                permissions: permissions
+            },
+            success: function() {
+                alert("Permissions saved successfully");
+            },
+            error: function() {
+                alert("Failed to save permissions");
+            }
+        });
+    }
+</script>
+

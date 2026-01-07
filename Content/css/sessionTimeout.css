@@ -1,0 +1,125 @@
+/**
+ * Session Timeout Display Styles
+ * Professional styling for session timeout countdown display
+ */
+
+/* Session timeout display container */
+.session-timeout-display {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #424242;
+    margin-left: 12px;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+/* Session timeout container in AppBar - positioned right before user menu */
+#session-timeout-container {
+    display: flex;
+    align-items: center;
+    margin-right: 8px;
+}
+
+/* Ensure session timeout and user menu appear side by side */
+#session-timeout-container + [data-role="appbar-item"] {
+    margin-left: 0;
+}
+
+.session-timeout-display .k-icon {
+    font-size: 16px;
+    color: #757575;
+}
+
+.session-timeout-text {
+    font-size: 13px;
+    color: #424242;
+}
+
+.session-timeout-text strong {
+    font-weight: 600;
+    font-family: 'Courier New', monospace;
+    color: #2D73F5;
+    min-width: 45px;
+    display: inline-block;
+}
+
+/* Warning state (2 minutes remaining) */
+.session-timeout-display.session-warning {
+    background-color: #fff3cd;
+    border: 1px solid #ffc107;
+}
+
+.session-timeout-display.session-warning .k-icon {
+    color: #ff9800;
+}
+
+.session-timeout-display.session-warning .session-timeout-text strong {
+    color: #ff9800;
+}
+
+/* Critical state (1 minute remaining) */
+.session-timeout-display.session-critical {
+    background-color: #ffebee;
+    border: 1px solid #f44336;
+    animation: pulse 1s infinite;
+}
+
+.session-timeout-display.session-critical .k-icon {
+    color: #f44336;
+}
+
+.session-timeout-display.session-critical .session-timeout-text strong {
+    color: #f44336;
+}
+
+/* Pulse animation for critical state */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.8;
+    }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .session-timeout-display {
+        font-size: 11px;
+        padding: 4px 8px;
+        margin-left: 8px;
+    }
+
+    .session-timeout-text {
+        font-size: 11px;
+    }
+
+    .session-timeout-text strong {
+        min-width: 40px;
+    }
+
+    /* Hide on very small screens if needed */
+    @media (max-width: 480px) {
+        .session-timeout-display {
+            display: none;
+        }
+    }
+}
+
+/* AppBar integration */
+#appBar .session-timeout-display {
+    height: 36px;
+    margin: 0 8px;
+}
+
+/* Ensure proper alignment in AppBar */
+.k-appbar-items {
+    display: flex;
+    align-items: center;
+}
+

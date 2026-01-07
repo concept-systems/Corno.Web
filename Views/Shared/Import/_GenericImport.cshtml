@@ -11,6 +11,7 @@
     var maxFileSize = ViewBag.MaxFileSizeBytes as int? ?? 10 * 1024 * 1024;
     var maxFileSizeText = ViewBag.MaxFileSizeText as string ?? "10 MB";
     var hasGrid = ViewBag.HasGrid as bool? ?? true;
+    var newStatus = ViewBag.NewStatus as string; // For Label imports (Sorting/Kitting)
 }
 
 <style>
@@ -154,6 +155,10 @@
 
         <div class="row mt-3">
             <div class="col-12">
+                @if (!string.IsNullOrEmpty(newStatus))
+                {
+                    @Html.Hidden("newStatus", newStatus)
+                }
                 @(Html.Kendo().Upload()
                     .Name("files")
                     .HtmlAttributes(new { aria_label = "file", style = "position: absolute; opacity: 0; width: 0; height: 0; overflow: hidden; z-index: -1;" })
@@ -168,14 +173,19 @@
                         .InvalidFileExtension("Invalid file extension.")
                         .InvalidMaxFileSize("File size exceeds the maximum allowed size.")
                     )
-                    .Async(a => a
-                        .Save("Import", controller, new { area })
-                        .AutoUpload(false)
-                    )
+                    .Async(a =>
+                    {
+                        var asyncConfig = a.Save("Import", controller, new { area, newStatus })
+                                         .AutoUpload(false);
+                        /*if(!string.IsNullOrEmpty(newStatus))
+                        {
+                            asyncConfig.SaveField("newStatus");
+                        }*/
+                    })
                     .Events(e =>
                     {
                         e.Select("commonImport.onFileSelect");
-                        e.Upload("commonImport.onUploadStart");
+                        e.Upload("commonImport.onUpload");
                         e.Success("commonImport.onUploadSuccess");
                         e.Error("commonImport.onUploadError");
                     }))
@@ -268,7 +278,8 @@
     window.commonImport = (function () {
         var config = {
             area: '@area',
-            controller: '@controller'
+            controller: '@controller',
+            newStatus: '@(newStatus ?? "")'
         };
 
         var currentSessionId = null;
@@ -362,7 +373,16 @@
             }
         }
 
-        function onUploadStart(e) {
+        function onUpload(e) {
+            // Ensure newStatus is sent if it exists
+            // SaveField should handle this, but we ensure the hidden field value is correct
+            if (config.newStatus && config.newStatus !== '') {
+                var hiddenField = $('input[name="newStatus"]');
+                if (hiddenField.length > 0) {
+                    hiddenField.val(config.newStatus);
+                }
+            }
+            
             $('#btnStartImport').hide();
             $('#btnCancel').show();
             $('#progressContainer').addClass('show');
@@ -721,7 +741,7 @@
 
         return {
             onFileSelect: onFileSelect,
-            onUploadStart: onUploadStart,
+            onUpload: onUpload,
             onUploadSuccess: onUploadSuccess,
             onUploadError: onUploadError
         };

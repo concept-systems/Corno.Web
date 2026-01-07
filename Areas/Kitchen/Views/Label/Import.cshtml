@@ -1,0 +1,18 @@
+@using Corno.Web.Helper
+
+@{
+    Layout = "~/Views/Shared/_LayoutDetails.cshtml";
+    ViewBag.Title = "Import Label";
+    ViewBag.BoxTitle = "Import Label";
+    ViewBag.Area = "Kitchen";
+    ViewBag.Controller = "LabelImport";
+    ViewBag.Description = "Upload an Excel file (.xls, .xlsx) to import label data.";
+    ViewBag.AllowedExtensions = new[] { ".xls", ".xlsx" };
+    ViewBag.MaxFileSizeBytes = 10 * 1024 * 1024;
+    ViewBag.MaxFileSizeText = "10 MB";
+    ViewBag.HasGrid = true;
+    ViewBag.NewStatus = ViewBag.NewStatus ?? Request.QueryString["newStatus"]; // Get newStatus from ViewBag or query string
+}
+
+@Html.Partial("~/Views/Shared/Import/_GenericImport.cshtml")
+

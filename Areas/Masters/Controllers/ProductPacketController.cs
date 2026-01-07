@@ -10,7 +10,7 @@ namespace Corno.Web.Areas.Masters.Controllers
     public sealed class ProductPacketController : MasterController<Product>
     {
         #region -- Constructors --
-        public ProductPacketController(IProductService productService) : base(productService, null)
+        public ProductPacketController(IProductService productService) : base(productService)
         {
         }
         #endregion

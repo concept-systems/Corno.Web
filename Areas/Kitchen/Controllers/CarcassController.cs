@@ -191,20 +191,20 @@ public class CarcassController : SuperController
         }
     }
 
-    //public ActionResult View(int? id)
-    //{
-    //    try
-    //    {
-    //        var dto = _carcassPackingService.View(id);
-    //        Session[FieldConstants.Label] = dto.ReportBook;
-    //        return View(dto);
-    //    }
-    //    catch (Exception exception)
-    //    {
-    //        HandleControllerException(exception);
-    //    }
-    //    return View(new CartonViewDto());
-    //}
+    public async Task<ActionResult> View(int? id)
+    {
+        try
+        {
+            var dto = await _carcassPackingService.ViewAsync(id).ConfigureAwait(false);
+            //Session[FieldConstants.Label] = dto.ReportBook;
+            return View(dto);
+        }
+        catch (Exception exception)
+        {
+            HandleControllerException(exception);
+        }
+        return View(new CartonViewDto());
+    }
 
 
     public async Task<ActionResult> GetIndexViewDto([DataSourceRequest] DataSourceRequest request)
@@ -221,7 +221,7 @@ public class CarcassController : SuperController
                 carton.Status
             };
         var result = await query.ToDataSourceResultAsync(request);*/
-        var result = _carcassPackingService.GetIndexDataSource(request);
+        var result = await _carcassPackingService.GetIndexDataSourceAsync(request);
         return Json(result, JsonRequestBehavior.AllowGet);
     }
 

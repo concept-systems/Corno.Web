@@ -1,58 +1,30 @@
-﻿using Corno.Web.Areas.Kitchen.Dto.Label;
-using Corno.Web.Areas.Kitchen.Services.Interfaces;
-using Corno.Web.Controllers;
+using Corno.Web.Areas.Kitchen.Dto.Label;
 using Corno.Web.Globals;
 using Corno.Web.Logger;
-using Corno.Web.Models.Packing;
 using Corno.Web.Models.Plan;
 using Kendo.Mvc.UI;
-using Mapster;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web.Mvc;
 using Corno.Web.Extensions;
+using Corno.Web.Globals.Enums;
 using Kendo.Mvc.Extensions;
 
 namespace Corno.Web.Areas.Kitchen.Controllers;
 
-public class PartLabelController : SuperController
+public class PartLabelController : LabelController
 {
     #region -- Constructors --
-    public PartLabelController(IPartLabelService partLabelService, IPlanService planService)
+    public PartLabelController()
     {
-        _partLabelService = partLabelService;
-        _planService = planService;
-
-         const string viewPath = "~/Areas/Kitchen/Views/PartLabel";
+        const string viewPath = "~/Areas/Kitchen/Views/PartLabel";
         _createPath = $"{viewPath}/Create.cshtml";
-
-        TypeAdapterConfig<LabelViewDto, Label>
-            .NewConfig()
-            .Map(dest => dest.LabelDetails, src => src.LabelViewDetailDto.Adapt<List<LabelDetail>>())
-            .AfterMapping((src, dest) =>
-            {
-                dest.Id = src.Id;
-                for (var index = 0; index < src.LabelViewDetailDto.Count; index++)
-                    dest.LabelDetails[index].Id = src.LabelViewDetailDto[index].Id;
-            });
-        TypeAdapterConfig<Label, LabelViewDto>
-            .NewConfig()
-            .Map(dest => dest.LabelViewDetailDto, src => src.LabelDetails.Adapt<List<LabelViewDetailDto>>())
-            .AfterMapping((src, dest) =>
-            {
-                dest.Id = src.Id;
-                for (var index = 0; index < src.LabelDetails.Count; index++)
-                    dest.LabelViewDetailDto[index].Id = src.LabelDetails[index].Id;
-            });
     }
     #endregion
 
-    #region -- Data Mambers --
+    #region -- Data Members --
     private readonly string _createPath;
-    private readonly IPartLabelService _partLabelService;
-    private readonly IPlanService _planService;
     #endregion
 
     #region -- Private Methods --
@@ -62,7 +34,7 @@ public class PartLabelController : SuperController
             plan.WarehouseOrderNo.Equals(warehouseOrderNo)) 
             return plan;
 
-        plan = await _planService.GetByWarehouseOrderNoAsync(warehouseOrderNo).ConfigureAwait(false);
+        plan = await PlanService.GetByWarehouseOrderNoAsync(warehouseOrderNo).ConfigureAwait(false);
         Session[FieldConstants.Plan] = plan ?? throw new Exception($"Warehouse order {warehouseOrderNo} not found");
 
         return plan;
@@ -70,10 +42,7 @@ public class PartLabelController : SuperController
     #endregion
 
     #region -- Actions --
-    public ActionResult Index()
-    {
-        return View(new LabelViewDto());
-    }
+    // Index and View actions are inherited from LabelController
 
     public Task<ActionResult> Create(string warehouseOrderNo)
     {
@@ -94,16 +63,10 @@ public class PartLabelController : SuperController
             // Get Plan
             var plan = await GetPlanAsync(dto.WarehouseOrderNo).ConfigureAwait(false);
             // Create Labels
-            var labels = await _partLabelService.CreateLabelsAsync(dto, plan).ConfigureAwait(false);
-            // Create Label Reports
-            Session[FieldConstants.Label] = await _partLabelService.CreateLabelReportAsync(labels, false).ConfigureAwait(false);
+            var labels = await PartLabelService.CreateLabelsAsync(dto, plan).ConfigureAwait(false);
             // Save in database
-            await _partLabelService.UpdateDatabaseAsync(labels, plan).ConfigureAwait(false);
-            //dto.PrintToPrinter = true;
-            dto.Clear();
-            ModelState.Clear();
-
-            var report = await _partLabelService.CreateLabelReportAsync(labels, false).ConfigureAwait(false);
+            await PartLabelService.UpdateDatabaseAsync(labels, plan).ConfigureAwait(false);
+            var report = await PartLabelService.CreateLabelReportAsync(labels, false, LabelType.Part).ConfigureAwait(false);
             return File(report.ToDocumentBytes(), "application/pdf");
         }
         catch (Exception exception)
@@ -128,10 +91,10 @@ public class PartLabelController : SuperController
             // Get Plan
             var plan = await GetPlanAsync(dto.WarehouseOrderNo).ConfigureAwait(false);
             // Create Labels
-            var labels = await _partLabelService.CreateLabelsAsync(dto, plan).ConfigureAwait(false);
+            var labels = await PartLabelService.CreateLabelsAsync(dto, plan).ConfigureAwait(false);
             // Create Label Reports
             //Session[FieldConstants.Label] = _partLabelService.CreateLabelReport(labels, false);
-            var report = await _partLabelService.CreateLabelReportAsync(labels, false).ConfigureAwait(false);
+            var report = await PartLabelService.CreateLabelReportAsync(labels, false, LabelType.Part).ConfigureAwait(false);
             return File(report.ToDocumentBytes(), "application/pdf");
         }
         catch (Exception exception)
@@ -144,25 +107,6 @@ public class PartLabelController : SuperController
         //return View(_createPath, dto);
     }
 
-    public async Task<ActionResult> View(int? id)
-    {
-        try
-        {
-            if (id == null)
-                throw new Exception("Invalid Id");
-
-            // If CreateViewDto has an async version, use that:
-            var dto = await _partLabelService.CreateViewDtoAsync(id);
-
-            return View(dto);
-        }
-        catch (Exception exception)
-        {
-            HandleControllerException(exception);
-            throw;
-        }
-    }
-
     public async Task<ActionResult> GetItems([DataSourceRequest] DataSourceRequest request, string warehouseOrderNo)
     {
         try
@@ -171,7 +115,7 @@ public class PartLabelController : SuperController
                 return Json(null, JsonRequestBehavior.AllowGet);
 
             var plan = await GetPlanAsync(warehouseOrderNo).ConfigureAwait(false);
-            var pendingItems = await _partLabelService.GetPendingItemsAsync(plan).ConfigureAwait(false);
+            var pendingItems = await PartLabelService.GetPendingItemsAsync(plan).ConfigureAwait(false);
             
             // Convert to list, then to queryable for proper filtering
             var itemsList = pendingItems.Cast<object>().ToList();
@@ -183,7 +127,7 @@ public class PartLabelController : SuperController
             
             // Apply filter, sorting, and paging from DataSourceRequest
             // MultiColumnComboBox expects just the Data array, not the full DataSourceResult
-            var result = queryableItems.ToDataSourceResult(request);
+            var result = await queryableItems.ToDataSourceResultAsync(request);
             return Json(result.Data, JsonRequestBehavior.AllowGet);
         }
         catch (Exception exception)
@@ -191,20 +135,6 @@ public class PartLabelController : SuperController
             return GetComboBoxErrorResult(exception);
         }
     }
-
-    public async Task<ActionResult> GetIndexViewDto([DataSourceRequest] DataSourceRequest request)
-    {
-        try
-        {
-            var result = await Task.Run(() => _partLabelService.GetIndexDataSource(request)).ConfigureAwait(false);
-            return Json(result, JsonRequestBehavior.AllowGet);
-        }
-        catch (Exception exception)
-        {
-            HandleControllerException(exception);
-            ModelState.AddModelError("Error", exception.Message);
-            return Json(new DataSourceResult { Errors = ModelState });
-        }
-    }
+    // GetIndexViewDto is inherited from LabelController
     #endregion
 }

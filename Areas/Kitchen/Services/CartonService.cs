@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Corno.Web.Extensions;
 using Telerik.Reporting;
 
 namespace Corno.Web.Areas.Kitchen.Services;
@@ -143,9 +144,7 @@ public class CartonService : BaseCartonService, ICartonService
                     q => q.OrderBy(x => x.LabelDate), true).ConfigureAwait(false);
         var list = labels.DistinctBy(l => l.Position).ToList();
 
-        if (list.Count <= 1)
-            throw new Exception($"No other sub-assembly labels found for warehouse order '{warehouseOrderNo}' and assembly code '{assemblyCode}'.");
-        return list;
+        return list.Count <= 1 ? throw new Exception($"No other sub-assembly labels found for warehouse order '{warehouseOrderNo}' and assembly code '{assemblyCode}'.") : list;
     }
 
     protected async Task ValidateLabelForAlreadyPacked(string warehouseOrderNo, string barcode, string position)
@@ -174,9 +173,9 @@ public class CartonService : BaseCartonService, ICartonService
         return reportBook;
     }
 
-    protected string GetCartonNo(int? cartonNo)
+    protected async Task<string> GetCartonNoAsync(int? cartonNo)
     {
-        return $"C{cartonNo.ToString().PadLeft(3, '0')}";
+        return await Task.FromResult($"C{cartonNo.ToString().PadLeft(3, '0')}").ConfigureAwait(false);
     }
 
     protected async Task<int> GetNextCartonNoAsync(string warehouseOrderNo)
@@ -191,16 +190,15 @@ public class CartonService : BaseCartonService, ICartonService
             .Min();
     }
 
-    protected string GetCartonBarcode(string warehouseOrderNo, int cartonNo)
+    protected async Task<string> GetCartonBarcodeAsync(string warehouseOrderNo, int cartonNo)
     {
-        return $"WP{warehouseOrderNo}" +
-               $"{cartonNo.ToString().PadLeft(3, '0')}";
+        return await Task.FromResult($"WP{warehouseOrderNo}{cartonNo.ToString().PadLeft(3, '0')}").ConfigureAwait(false);
     }
 
     #endregion
 
     #region -- Public Methods --
-    public DataSourceResult GetIndexDataSource(DataSourceRequest request)
+    /*public DataSourceResult GetIndexDataSource(DataSourceRequest request)
     {
 
         TypeAdapterConfig<Carton, CartonIndexDto>
@@ -222,8 +220,8 @@ public class CartonService : BaseCartonService, ICartonService
         return result;
 
         /*return GetQuery().ProjectToType<CartonIndexDto>()
-            .ToDataSourceResult(request); // Paging in SQL*/
-    }
+            .ToDataSourceResult(request); // Paging in SQL#1#
+    }*/
 
     public async Task<DataSourceResult> GetIndexDataSourceAsync(DataSourceRequest request)
     {
@@ -240,6 +238,62 @@ public class CartonService : BaseCartonService, ICartonService
 
         result.Data = data;
         return result;
+    }
+
+    public async Task<CartonViewDto> ViewAsync(int? id)
+    {
+        var carton = await GetByIdAsync(id).ConfigureAwait(false);
+        if (null == carton)
+            throw new Exception($"Label with Id '{id}' not found.");
+
+        var planService = Bootstrapper.Get<IPlanService>();
+        var plan = await planService.GetByWarehouseOrderNoAsync(carton.WarehouseOrderNo).ConfigureAwait(false);
+
+        var dto = new CartonViewDto
+        {
+            Id = carton.Id,
+            WarehouseOrderNo = carton.WarehouseOrderNo,
+            SoNo = carton.SoNo,
+            LotNo = plan?.LotNo,
+            DueDate = plan?.DueDate,
+            OrderQuantity = plan?.OrderQuantity,
+            PrintQuantity = plan?.PrintQuantity,
+
+            CartonDetailsDtos = carton.CartonDetails.Select(d =>
+            {
+                var planItemDetail = plan?.PlanItemDetails.FirstOrDefault(x => x.Position == d.Position);
+                return new CartonDetailsDto
+                {
+                    Id = d.Id,
+                    Position = d.Position,
+                    WarehousePosition = d.WarehousePosition,
+                    AssemblyCode = planItemDetail?.AssemblyCode,
+                    CarcassCode = planItemDetail?.CarcassCode,
+                    ItemCode = planItemDetail?.ItemCode,
+                    Description = planItemDetail?.Description,
+                    Quantity = d.Quantity,
+                    OrderQuantity = d.OrderQuantity ?? 0,
+                    NetWeight = d.NetWeight,
+                    SystemWeight = d.SystemWeight,
+                    Tolerance = d.Tolerance,
+                    Barcode = d.Barcode
+                };
+            }).ToList(),
+
+            CartonRackingDetailDtos = carton.CartonRackingDetails.Select(d => new CartonRackingDetailDto
+            {
+                ScanDate = d.ScanDate,
+                PalletNo = d.PalletNo,
+                RackNo = d.RackNo,
+                Status = d.Status
+            }).ToList(),
+        };
+
+        var reportBook = await CreateLabelReport(carton, plan, false).ConfigureAwait(false);
+        // Convert report to Base64 for inline preview similar to PartLabel
+        dto.Base64 = reportBook?.ToBase64();
+
+        return dto;
     }
     #endregion
 }

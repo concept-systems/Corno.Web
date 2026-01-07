@@ -98,42 +98,44 @@ public class CartonController : SuperController
     {
         try
         {
-            // Get data from both services and combine
+            /*// Get data from both services and combine
             var carcassQuery = _carcassPackingService.GetQuery();
             var nonWeighingQuery = _nonWeighingPackingService.GetQuery();
 
             var carcassData = from carton in carcassQuery
-                select new CartonIndexDto
-                {
-                    Id = carton.Id,
-                    CartonNo = carton.CartonNo.ToString(),
-                    PackingDate = carton.PackingDate,
-                    SoNo = carton.SoNo,
-                    WarehouseOrderNo = carton.WarehouseOrderNo,
-                    CartonBarcode = carton.CartonBarcode,
-                    Status = carton.Status,
-                    /*LotNo = carton.LotNo,
-                    DueDate = carton.DueDate,
-                    OneLineItemCode = carton.OneLineItemCode*/
-                };
+                              select new CartonIndexDto
+                              {
+                                  Id = carton.Id,
+                                  CartonNo = carton.CartonNo.ToString(),
+                                  PackingDate = carton.PackingDate,
+                                  SoNo = carton.SoNo,
+                                  WarehouseOrderNo = carton.WarehouseOrderNo,
+                                  CartonBarcode = carton.CartonBarcode,
+                                  Status = carton.Status,
+                                  /*LotNo = carton.LotNo,
+                                  DueDate = carton.DueDate,
+                                  OneLineItemCode = carton.OneLineItemCode#1#
+                              };
 
             var nonWeighingData = from carton in nonWeighingQuery
-                select new CartonIndexDto
-                {
-                    Id = carton.Id,
-                    CartonNo = carton.CartonNo.ToString(),
-                    PackingDate = carton.PackingDate,
-                    SoNo = carton.SoNo,
-                    WarehouseOrderNo = carton.WarehouseOrderNo,
-                    CartonBarcode = carton.CartonBarcode,
-                    Status = carton.Status,
-                    /*LotNo = carton.LotNo,
-                    DueDate = carton.DueDate,
-                    OneLineItemCode = carton.OneLineItemCode*/
-                };
+                                  select new CartonIndexDto
+                                  {
+                                      Id = carton.Id,
+                                      CartonNo = carton.CartonNo.ToString(),
+                                      PackingDate = carton.PackingDate,
+                                      SoNo = carton.SoNo,
+                                      WarehouseOrderNo = carton.WarehouseOrderNo,
+                                      CartonBarcode = carton.CartonBarcode,
+                                      Status = carton.Status,
+                                      /*LotNo = carton.LotNo,
+                                      DueDate = carton.DueDate,
+                                      OneLineItemCode = carton.OneLineItemCode#1#
+                                  };
 
             var combinedData = carcassData.Union(nonWeighingData);
-            var result = await combinedData.ToDataSourceResultAsync(request).ConfigureAwait(false);
+            var result = await combinedData.ToDataSourceResultAsync(request).ConfigureAwait(false);*/
+
+            var result = await _carcassPackingService.GetIndexDataSourceAsync(request);
             return Json(result, JsonRequestBehavior.AllowGet);
         }
         catch (Exception exception)
@@ -151,34 +153,9 @@ public class CartonController : SuperController
             if (id == null)
                 throw new Exception("Invalid Id");
 
-            CartonViewDto dto;
-            if (cartonType == "Carcass" || string.IsNullOrEmpty(cartonType))
-            {
-                // Try Carcass first if type is Carcass or not specified
-                try
-                {
-                    var carcassDto = await _carcassPackingService.View(id).ConfigureAwait(false);
-                    if (carcassDto != null)
-                    {
-                        Session[FieldConstants.Label] = carcassDto.ReportBook;
-                        return View(carcassDto);
-                    }
-                }
-                catch
-                {
-                    // If not found, fall back to NonWeighingPacking
-                }
-            }
-
-            // Try NonWeighingPacking
-            dto = await _nonWeighingPackingService.View(id).ConfigureAwait(false);
-            if (dto != null)
-            {
-                Session[FieldConstants.Label] = dto.ReportBook;
-                return View(dto);
-            }
-
-            throw new Exception("Carton not found");
+            var dto = await _carcassPackingService.ViewAsync(id).ConfigureAwait(false);
+            //Session[FieldConstants.Label] = carcassDto.ReportBook;
+            return View(dto);
         }
         catch (Exception exception)
         {

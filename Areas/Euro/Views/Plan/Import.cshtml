@@ -1,0 +1,17 @@
+﻿@using System.Web.Mvc.Html
+@inherits System.Web.Mvc.WebViewPage<dynamic>
+
+@{
+    Layout = "~/Views/Shared/_LayoutDetails.cshtml";
+    ViewBag.Title = "Import Plan";
+    ViewBag.BoxTitle = "Import Plan";
+    ViewBag.Area = "Euro";
+    ViewBag.Controller = "Plan";
+    ViewBag.Description = "Upload an Csv file (.csv) to import plan data.";
+    ViewBag.AllowedExtensions = new[] { ".csv"};
+    ViewBag.MaxFileSizeBytes = 10 * 1024 * 1024;
+    ViewBag.MaxFileSizeText = "10 MB";
+    ViewBag.HasGrid = true;
+}
+
+@Html.Partial("~/Views/Shared/Import/_GenericImport.cshtml")

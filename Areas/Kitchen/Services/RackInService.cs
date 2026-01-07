@@ -11,6 +11,7 @@ using Microsoft.AspNet.Identity;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Transactions;
 using System.Web;
 
 namespace Corno.Web.Areas.Kitchen.Services;
@@ -45,6 +46,10 @@ public sealed class RackInService : LabelService, IRackInService
     {
         const string newStatus = StatusConstants.RackIn;
         var oldStatus = new[] { StatusConstants.RackIn, StatusConstants.RackIn };
+        using var scope = new TransactionScope(TransactionScopeOption.Required,
+            new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted },
+            TransactionScopeAsyncFlowOption.Enabled);
+
         var label = await _labelService.FirstOrDefaultAsync(d => d.Barcode == dto.CartonBarcode, d => d).ConfigureAwait(false);
         if (!oldStatus.Contains(label.Status))
             throw new Exception($"Required Rack In. Current Status {label.Status}.");
@@ -72,6 +77,9 @@ public sealed class RackInService : LabelService, IRackInService
 
         await planService.UpdateAsync(plan).ConfigureAwait(false);
         await _labelService.UpdateAndSaveAsync(label).ConfigureAwait(false);
+
+        scope.Complete();
+
         // Update view data
         dto.RackInDetails.Add(new CartonRackInViewDto()
         {

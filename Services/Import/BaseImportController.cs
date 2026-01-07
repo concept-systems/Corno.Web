@@ -6,11 +6,10 @@ using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
 using Autofac;
-using Corno.Web.Areas.Kitchen.Models;
-using Corno.Web.Areas.Kitchen.Services;
 using Corno.Web.Controllers;
+using Corno.Web.Services.Import;
 using Corno.Web.Services.Import.Interfaces;
-using Corno.Web.Services.Progress.Interfaces;
+using Corno.Web.Services.Import.Models;
 using Corno.Web.Windsor;
 using Microsoft.AspNet.Identity;
 
@@ -23,15 +22,12 @@ namespace Corno.Web.Services.Import
     public abstract class BaseImportController<TDto> : SuperController where TDto : class
     {
         protected readonly IFileImportService<TDto> ImportService;
-        protected readonly IWebProgressService ProgressService;
         protected readonly ImportSessionService SessionService;
 
-        protected BaseImportController(IFileImportService<TDto> importService, IWebProgressService progressService)
+        protected BaseImportController(IFileImportService<TDto> importService)
         {
             ImportService = importService;
-            ProgressService = progressService;
             SessionService = new ImportSessionService();
-            ProgressService.SetWebProgress();
         }
 
         /// <summary>
@@ -141,25 +137,23 @@ namespace Corno.Web.Services.Import
                 file.InputStream.Read(fileBytes, 0, (int)file.InputStream.Length);
                 var fileName = file.FileName;
 
+                // Capture the ImportService instance from the controller (already resolved correctly via DI)
+                var importService = ImportService;
+
                 // Start import in background task (fire and forget)
                 // Use Task.Run instead of QueueUserWorkItem to properly handle async operations
                 _ = Task.Run(async () =>
                 {
-                    // Create a new lifetime scope for this background operation
-                    await using var scope = Bootstrapper.StaticContainer.BeginLifetimeScope();
                     try
                     {
-                        var importService = scope.Resolve<IFileImportService<TDto>>();
-                        var progressService = scope.Resolve<IWebProgressService>();
-                        var sessionService = new ImportSessionService();
-
+                        // Use the ImportService instance that was already resolved with the correct TDto type
+                        // This avoids re-resolving from the container and ensures consistency
                         using var stream = new MemoryStream(fileBytes);
-                        progressService.SetWebProgress();
-                        var importModels = await importService.ImportAsync(stream, fileName, progressService,
-                            userId, session.SessionId, sessionService).ConfigureAwait(false);
+                        var importModels = await importService.ImportAsync(stream, fileName,
+                            userId, session.SessionId).ConfigureAwait(false);
 
                         // Store results in session
-                        sessionService.UpdateSession(session.SessionId, s =>
+                        SessionService.UpdateSession(session.SessionId, s =>
                         {
                             s.ImportResults = importModels.Count > 1000
                                 ? importModels.Take(1000).ToList()
@@ -167,16 +161,15 @@ namespace Corno.Web.Services.Import
                         });
 
                         // Get updated session for summary
-                        var updatedSession = sessionService.GetSession(session.SessionId);
+                        var updatedSession = SessionService.GetSession(session.SessionId);
 
                         // Create summary
                         var summary = CreateImportSummary(updatedSession, fileName);
-                        sessionService.CompleteSession(session.SessionId, summary);
+                        SessionService.CompleteSession(session.SessionId, summary);
                     }
                     catch (OperationCanceledException)
                     {
-                        var sessionService = new ImportSessionService();
-                        sessionService.UpdateSession(session.SessionId, s =>
+                        SessionService.UpdateSession(session.SessionId, s =>
                         {
                             s.Status = ImportStatus.Cancelled;
                             s.CurrentMessage = "Import was cancelled";
@@ -185,15 +178,13 @@ namespace Corno.Web.Services.Import
                     }
                     catch (Exception ex)
                     {
-                        var sessionService = new ImportSessionService();
                         var errorMessage = ex.Message;
                         if (ex.InnerException != null)
                         {
                             errorMessage += " " + ex.InnerException.Message;
                         }
-                        sessionService.FailSession(session.SessionId, errorMessage);
+                        SessionService.FailSession(session.SessionId, errorMessage);
                     }
-                    // Scope will be disposed here after all async operations complete
                 });
 
                 return Task.FromResult<ActionResult>(Json(new { success = true, sessionId = session.SessionId }, JsonRequestBehavior.AllowGet));
@@ -341,7 +332,6 @@ namespace Corno.Web.Services.Import
                 var userId = User.Identity.GetUserId();
                 if (SessionService.CancelSession(sessionId, userId))
                 {
-                    ProgressService.CancelRequested();
                     return Json(new { success = true, message = "Import cancelled successfully" }, JsonRequestBehavior.AllowGet);
                 }
                 return Json(new { success = false, message = "Failed to cancel import or session not found" }, JsonRequestBehavior.AllowGet);

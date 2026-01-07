@@ -9,6 +9,7 @@ using Corno.Web.Areas.Kitchen.Services.Interfaces;
 using Corno.Web.Controllers;
 using Corno.Web.Extensions;
 using Corno.Web.Globals;
+using Corno.Web.Globals.Enums;
 using Corno.Web.Models.Packing;
 using Corno.Web.Models.Plan;
 using Kendo.Mvc.Extensions;
@@ -119,7 +120,7 @@ public class SubAssemblyLabelController : SuperController
             ModelState.Clear();
 
             // Create Label Report and return as PDF (do not store in session)
-            var report = await _assemblyLabelService.CreateLabelReportAsync(createdLabels, false).ConfigureAwait(false);
+            var report = await _assemblyLabelService.CreateLabelReportAsync(createdLabels, false, LabelType.SubAssembly).ConfigureAwait(false);
             return File(report.ToDocumentBytes(), "application/pdf");
         }
         catch (Exception exception)
@@ -152,7 +153,7 @@ public class SubAssemblyLabelController : SuperController
             var createdLabels = await _assemblyLabelService.CreateLabelsAsync(dto, plan, label1, false).ConfigureAwait(false);
 
             // Create Label Report for preview only (no DB update, no session)
-            var report = await _assemblyLabelService.CreateLabelReportAsync(createdLabels, false).ConfigureAwait(false);
+            var report = await _assemblyLabelService.CreateLabelReportAsync(createdLabels, false, LabelType.SubAssembly).ConfigureAwait(false);
             return File(report.ToDocumentBytes(), "application/pdf");
         }
         catch (Exception exception)

@@ -2,7 +2,6 @@
 @using Corno.Web.Globals
 @using Corno.Web.Helper
 @using Kendo.Mvc.UI
-@model IEnumerable<Corno.Web.Dtos.MasterDto>
 
 @{
     Layout = "~/Views/Shared/_AppLayout.cshtml";
@@ -56,31 +55,35 @@
         })
         .DataSource(dataSource => dataSource
             .ApplyCommonDataSourceSettings("GetIndexViewModels", "MiscMaster", "Masters")
-            .Read(read => read.Action("GetIndexViewModels", "MiscMaster", new { miscType = @ViewBag.MiscType })
-                .Data("filterMiscMasters"))
+            //.Read(read => read.Action("GetIndexViewModels", "MiscMaster", new { miscType = @ViewBag.MiscType })
+            //    .Data("filterMiscMasters"))
             .Sort(s => s.Add(FieldConstants.Id).Descending())
         ))
 </div>
 
 <script type="text/javascript">
-    function filterMiscMasters() {
+    @*function filterMiscMasters() {
+        return {
+            miscType: '@ViewBag.MiscType'
+        };
+    }*@
+
+    function sendData() {
+        console.log("MiscType : " + '@ViewBag.MiscType')
         return {
             miscType: '@ViewBag.MiscType'
         };
     }
 
-    function sendData() {
-    }
+function onEditClick(e) {
+    e.preventDefault();
+    var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+    window.location.href = '@Url.Action("Edit", "MiscMaster")' + '/' + dataItem.Id;
+}
 
-             function onEditClick(e) {
-                 e.preventDefault();
-                 var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
-                 window.location.href = '@Url.Action("Edit", "MiscMaster")' + '/' + dataItem.Id;
-             }
-
-         function onDeleteClick(e) {
-             e.preventDefault();
-             var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
-             window.location.href = '@Url.Action("Delete", "MiscMaster")' + '/' + dataItem.Id;
-         }
+function onDeleteClick(e) {
+    e.preventDefault();
+    var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+    window.location.href = '@Url.Action("Delete", "MiscMaster")' + '/' + dataItem.Id;
+}
 </script>

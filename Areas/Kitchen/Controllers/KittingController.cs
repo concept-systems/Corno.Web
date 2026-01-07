@@ -10,7 +10,6 @@ using Corno.Web.Controllers;
 using Corno.Web.Globals;
 using Corno.Web.Hubs;
 using Corno.Web.Models;
-using Corno.Web.Services.Progress.Interfaces;
 using Kendo.Mvc.Extensions;
 using Kendo.Mvc.UI;
 using Microsoft.AspNet.Identity;
@@ -25,20 +24,15 @@ public class KittingController : SuperController
     #region -- Constructors --
     public KittingController(
         ILabelService labelService,
-        IBaseProgressService progressService, IPlanService planService)
+        IPlanService planService)
     {
         _labelService = labelService;
-        _progressService = progressService;
         _planService = planService;
-
-        //progressService.SetWebProgress();
-        progressService.OnProgressChanged += OnProgressChanged;
     }
     #endregion
 
     #region -- Data Members --
     private readonly ILabelService _labelService;
-    private readonly IBaseProgressService _progressService;
     private readonly IPlanService _planService;
 
     #endregion
@@ -82,7 +76,7 @@ public class KittingController : SuperController
 
         try
         {
-            await _labelService.PerformKitting(dto, User.Identity.GetUserId()).ConfigureAwait(false);
+            await _labelService.PerformKittingAsync(dto, User.Identity.GetUserId()).ConfigureAwait(false);
         }
         catch (Exception exception)
         {
@@ -168,13 +162,6 @@ public class KittingController : SuperController
     }
 
 
-    private void OnProgressChanged(object sender, ProgressModel progressModel)
-    {
-        /*if (progressModel.MessageType != MessageType.Info && progressModel.Maximum <= 0)
-            return;*/
-        var context = GlobalHost.ConnectionManager.GetHubContext<ProgressHub>();
-        context.Clients.All.receiveProgress(progressModel);
-    }
 
 
     #endregion

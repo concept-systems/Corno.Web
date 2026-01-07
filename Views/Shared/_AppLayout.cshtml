@@ -54,18 +54,19 @@
                              .PositionMode(AppBarPositionMode.Sticky)
                              .ThemeColor(AppBarThemeColor.Light)
                              .HtmlAttributes(new { style = "height: 48px" })
-                             .Items(items =>
-                             {
-                                 items.Add().Template("<a id='menuIcon' class='k-button k-button-md k-button-rectangle k-rounded-md k-button-solid k-button-solid-base' style='border:0px; background:\\#FFFFFF;' href='\\#'><span class='k-icon k-i-menu'></span></a>").Type(AppBarItemType.ContentItem);
-                                 items.Add().Template("<a href='" + Url.Action("Index", "Home", new {area = ""}) + "' class='k-button k-button-md k-button-rectangle k-rounded-md k-button-solid k-button-solid-base home-button' style='border:0px; background:\\#FFFFFF;' title='Home'><span class='k-icon k-i-home'></span></a>").Type(AppBarItemType.ContentItem);
-                                 items.Add().Template("<div class='title'>" + ViewBag.BoxTitle + "</div>").Type(AppBarItemType.ContentItem);
-                                 // Spacer to push the user info to the right
-                                 items.Add().Type(AppBarItemType.Spacer);
-
-                                 // User avatar, name and dropdown menu
-                                 items.Add().TemplateId("appBar-user-menu-template")
-                                     .Type(AppBarItemType.ContentItem);
-                             }))
+                            .Items(items =>
+                            {
+                                items.Add().Template("<a id='menuIcon' class='k-button k-button-md k-button-rectangle k-rounded-md k-button-solid k-button-solid-base' style='border:0px; background:\\#FFFFFF;' href='\\#'><span class='k-icon k-i-menu'></span></a>").Type(AppBarItemType.ContentItem);
+                                items.Add().Template("<a href='" + Url.Action("Index", "Home", new {area = ""}) + "' class='k-button k-button-md k-button-rectangle k-rounded-md k-button-solid k-button-solid-base home-button' style='border:0px; background:\\#FFFFFF;' title='Home'><span class='k-icon k-i-home'></span></a>").Type(AppBarItemType.ContentItem);
+                                items.Add().Template("<div class='title'>" + ViewBag.BoxTitle + "</div>").Type(AppBarItemType.ContentItem);
+                                // Spacer to push the user info to the right
+                                items.Add().Type(AppBarItemType.Spacer);
+                                // Session timeout display placeholder (will be populated by JavaScript) - placed right before user menu
+                                items.Add().Template("<div id='session-timeout-container'></div>").Type(AppBarItemType.ContentItem);
+                                // User avatar, name and dropdown menu
+                                items.Add().TemplateId("appBar-user-menu-template")
+                                    .Type(AppBarItemType.ContentItem);
+                            }))
 
                          @RenderBody()
                      </main>
@@ -90,8 +91,8 @@
 
                 // Assign icons to TreeView items using the same logic as Home index menu
                 var title = value.Title;
-                var iconAttr = value.Attributes.ContainsKey("icon") ? value.Attributes["icon"]?.ToString() : null;
-                var nameAttr = value.Attributes.ContainsKey("name") ? value.Attributes["name"]?.ToString() : null;
+                var iconAttr = value.Attributes.TryGetValue("icon", out var attribute) ? attribute?.ToString() : null;
+                var nameAttr = value.Attributes.TryGetValue("name", out var arg2Attribute) ? arg2Attribute?.ToString() : null;
                 var iconClass = Corno.Web.Helpers.MenuIconHelper.GetIconClass(title, nameAttr, iconAttr);
                 // TreeView sprites expect full icon CSS classes; include k-icon + specific icon
                 item.SpriteCssClasses = $"k-icon {iconClass}";

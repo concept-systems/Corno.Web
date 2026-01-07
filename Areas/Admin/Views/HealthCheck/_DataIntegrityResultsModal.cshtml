@@ -1,0 +1,226 @@
+@using Corno.Web.Areas.Admin.Dto.HealthCheck
+
+@model DataIntegrityResultsModalDto
+
+<div class="k-card" style="margin: 0; height: 100%; display: flex; flex-direction: column;">
+    <div class="k-card-header" style="background: #f5f5f5; padding: 15px; border-bottom: 2px solid #0078d4; flex-shrink: 0;">
+        <h3 class="k-card-title" style="margin: 0; color: #0078d4;">
+            <span class="k-icon k-i-info-circle"></span>
+            Data Integrity Check Results: @(Model?.WarehouseOrderNo ?? "N/A")
+        </h3>
+    </div>
+    <div class="k-card-body" style="padding: 20px; flex: 1; min-height: 0;">
+        
+        <!-- Summary Section -->
+        <div class="k-card" style="margin-bottom: 20px; border: 2px solid #0078d4;">
+            <div class="k-card-header" style="background: #e3f2fd; padding: 10px;">
+                <h4 style="margin: 0;"><span class="k-icon k-i-summary"></span> Summary</h4>
+            </div>
+            <div class="k-card-body" style="padding: 15px;">
+                <div class="k-hstack k-gap-4" style="flex-wrap: wrap;">
+                    <div class="k-badge k-badge-primary" style="font-size: 14px; padding: 8px 12px;">Total Issues: <strong>@(Model?.TotalIssues ?? 0)</strong></div>
+                    <div class="k-badge k-badge-danger" style="font-size: 14px; padding: 8px 12px;">Critical: <strong>@(Model?.CriticalIssues ?? 0)</strong></div>
+                    <div class="k-badge k-badge-warning" style="font-size: 14px; padding: 8px 12px;">Warnings: <strong>@(Model?.WarningIssues ?? 0)</strong></div>
+                    <div class="k-badge k-badge-success" style="font-size: 14px; padding: 8px 12px;">Healthy: <strong>@(Model?.HealthyChecks ?? 0)</strong></div>
+                    <div class="k-badge k-badge-info" style="font-size: 14px; padding: 8px 12px;">Fixable: <strong>@(Model?.FixableIssues ?? 0)</strong></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Check Results Section -->
+        @if (Model?.Results != null && Model.Results.Count > 0)
+        {
+            <div class="k-card" style="margin-bottom: 20px;">
+                <div class="k-card-header" style="background: #f5f5f5; padding: 10px;">
+                    <h4 style="margin: 0;"><span class="k-icon k-i-check"></span> Check Results</h4>
+                </div>
+                <div class="k-card-body" style="padding: 15px;">
+                    <table class="k-table" style="width: 100%;">
+                        <thead>
+                            <tr style="background: #f9f9f9;">
+                                <th style="padding: 8px;">Check Name</th>
+                                <th style="padding: 8px;">Status</th>
+                                <th style="padding: 8px;">Message</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var result in Model.Results)
+                            {
+                                var statusClass = result.Status == "Healthy" ? "k-badge-success" :
+                                                 result.Status == "Critical" ? "k-badge-danger" : "k-badge-warning";
+                                <tr>
+                                    <td style="padding: 8px;">@result.CheckName</td>
+                                    <td style="padding: 8px;"><span class="k-badge @statusClass">@result.Status</span></td>
+                                    <td style="padding: 8px;">@result.Message</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+
+        <!-- PlanItemDetail Issues by Position -->
+        @if (Model?.IssuesByPosition != null && Model.IssuesByPosition.Count > 0)
+        {
+            <div class="k-card" style="margin-bottom: 20px; border-left: 4px solid #ff9800;">
+                <div class="k-card-header" style="background: #fff3e0; padding: 10px;">
+                    <h4 style="margin: 0;"><span class="k-icon k-i-list"></span> Issues by Position (@Model.IssuesByPosition.Count positions)</h4>
+                </div>
+                <div class="k-card-body" style="padding: 15px;">
+                    @foreach (var posGroup in Model.IssuesByPosition)
+                    {
+                        <div style="margin-bottom: 20px; padding: 15px; background: #fafafa; border: 1px solid #ddd; border-radius: 4px;">
+                            <h5 style="margin: 0 0 10px 0; color: #ff9800; font-weight: bold;">Position: @posGroup.Position (@posGroup.Issues.Count issue(s))</h5>
+                            <table class="k-table" style="width: 100%; font-size: 13px;">
+                                <thead>
+                                    <tr style="background: #f5f5f5;">
+                                        <th style="padding: 6px;">Issue Type</th>
+                                        <th style="padding: 6px;">Description</th>
+                                        <th style="padding: 6px;">Expected</th>
+                                        <th style="padding: 6px;">Actual</th>
+                                        <th style="padding: 6px;">Can Fix</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var issue in posGroup.Issues)
+                                    {
+                                        <tr>
+                                            <td style="padding: 6px;"><span class="k-badge k-badge-warning">@issue.IssueType</span></td>
+                                            <td style="padding: 6px;">@issue.Description</td>
+                                            <td style="padding: 6px; font-weight: bold; color: #4caf50;">@(issue.ExpectedValue ?? "N/A")</td>
+                                            <td style="padding: 6px; font-weight: bold; color: #f44336;">@(issue.ActualValue ?? "N/A")</td>
+                                            <td style="padding: 6px;">@(issue.CanAutoFix ? Html.Raw("<span class='k-badge k-badge-success'>Yes</span>") : Html.Raw("<span class='k-badge'>No</span>"))</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- Carton Issues -->
+        @if (Model?.IssuesByCarton != null && Model.IssuesByCarton.Count > 0)
+        {
+            <div class="k-card" style="margin-bottom: 20px; border-left: 4px solid #2196f3;">
+                <div class="k-card-header" style="background: #e3f2fd; padding: 10px;">
+                    <h4 style="margin: 0;"><span class="k-icon k-i-box"></span> Issues by Carton (@Model.IssuesByCarton.Count cartons)</h4>
+                </div>
+                <div class="k-card-body" style="padding: 15px;">
+                    @foreach (var cartonGroup in Model.IssuesByCarton)
+                    {
+                        <div style="margin-bottom: 20px; padding: 15px; background: #fafafa; border: 1px solid #ddd; border-radius: 4px;">
+                            <h5 style="margin: 0 0 10px 0; color: #2196f3; font-weight: bold;">Carton Barcode: @cartonGroup.CartonBarcode (@cartonGroup.Issues.Count issue(s))</h5>
+                            <table class="k-table" style="width: 100%; font-size: 13px;">
+                                <thead>
+                                    <tr style="background: #f5f5f5;">
+                                        <th style="padding: 6px;">Issue Type</th>
+                                        <th style="padding: 6px;">Description</th>
+                                        <th style="padding: 6px;">Expected</th>
+                                        <th style="padding: 6px;">Actual</th>
+                                        <th style="padding: 6px;">Can Fix</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var issue in cartonGroup.Issues)
+                                    {
+                                        <tr>
+                                            <td style="padding: 6px;"><span class="k-badge k-badge-danger">@issue.IssueType</span></td>
+                                            <td style="padding: 6px;">@issue.Description</td>
+                                            <td style="padding: 6px; font-weight: bold; color: #4caf50;">@(issue.ExpectedValue ?? "N/A")</td>
+                                            <td style="padding: 6px; font-weight: bold; color: #f44336;">@(issue.ActualValue ?? "N/A")</td>
+                                            <td style="padding: 6px;">@(issue.CanAutoFix ? Html.Raw("<span class='k-badge k-badge-success'>Yes</span>") : Html.Raw("<span class='k-badge'>No</span>"))</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- Label/Barcode Issues -->
+        @if (Model?.IssuesByLabel != null && Model.IssuesByLabel.Count > 0)
+        {
+            <div class="k-card" style="margin-bottom: 20px; border-left: 4px solid #9c27b0;">
+                <div class="k-card-header" style="background: #f3e5f5; padding: 10px;">
+                    <h4 style="margin: 0;"><span class="k-icon k-i-tag"></span> Issues by Label/Barcode (@Model.IssuesByLabel.Count labels)</h4>
+                </div>
+                <div class="k-card-body" style="padding: 15px;">
+                    @foreach (var labelGroup in Model.IssuesByLabel)
+                    {
+                        <div style="margin-bottom: 20px; padding: 15px; background: #fafafa; border: 1px solid #ddd; border-radius: 4px;">
+                            <h5 style="margin: 0 0 10px 0; color: #9c27b0; font-weight: bold;">Barcode: @labelGroup.Barcode (@labelGroup.Issues.Count issue(s))</h5>
+                            <table class="k-table" style="width: 100%; font-size: 13px;">
+                                <thead>
+                                    <tr style="background: #f5f5f5;">
+                                        <th style="padding: 6px;">Issue Type</th>
+                                        <th style="padding: 6px;">Description</th>
+                                        <th style="padding: 6px;">Expected</th>
+                                        <th style="padding: 6px;">Actual</th>
+                                        <th style="padding: 6px;">Can Fix</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var issue in labelGroup.Issues)
+                                    {
+                                        <tr>
+                                            <td style="padding: 6px;"><span class="k-badge k-badge-warning">@issue.IssueType</span></td>
+                                            <td style="padding: 6px;">@issue.Description</td>
+                                            <td style="padding: 6px; font-weight: bold; color: #4caf50;">@(issue.ExpectedValue ?? "N/A")</td>
+                                            <td style="padding: 6px; font-weight: bold; color: #f44336;">@(issue.ActualValue ?? "N/A")</td>
+                                            <td style="padding: 6px;">@(issue.CanAutoFix ? Html.Raw("<span class='k-badge k-badge-success'>Yes</span>") : Html.Raw("<span class='k-badge'>No</span>"))</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- Plan Level Issues -->
+        @if (Model?.PlanLevelIssues != null && Model.PlanLevelIssues.Count > 0)
+        {
+            <div class="k-card" style="margin-bottom: 20px; border-left: 4px solid #4caf50;">
+                <div class="k-card-header" style="background: #e8f5e9; padding: 10px;">
+                    <h4 style="margin: 0;"><span class="k-icon k-i-file"></span> Plan Level Issues (@Model.PlanLevelIssues.Count issue(s))</h4>
+                </div>
+                <div class="k-card-body" style="padding: 15px;">
+                    <table class="k-table" style="width: 100%; font-size: 13px;">
+                        <thead>
+                            <tr style="background: #f5f5f5;">
+                                <th style="padding: 6px;">Issue Type</th>
+                                <th style="padding: 6px;">Description</th>
+                                <th style="padding: 6px;">Expected</th>
+                                <th style="padding: 6px;">Actual</th>
+                                <th style="padding: 6px;">Can Fix</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var issue in Model.PlanLevelIssues)
+                            {
+                                <tr>
+                                    <td style="padding: 6px;"><span class="k-badge k-badge-info">@issue.IssueType</span></td>
+                                    <td style="padding: 6px;">@issue.Description</td>
+                                    <td style="padding: 6px; font-weight: bold; color: #4caf50;">@(issue.ExpectedValue ?? "N/A")</td>
+                                    <td style="padding: 6px; font-weight: bold; color: #f44336;">@(issue.ActualValue ?? "N/A")</td>
+                                    <td style="padding: 6px;">@(issue.CanAutoFix ? Html.Raw("<span class='k-badge k-badge-success'>Yes</span>") : Html.Raw("<span class='k-badge'>No</span>"))</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+
+    </div>
+    <div class="k-card-footer" style="padding: 15px; background: #f5f5f5; border-top: 1px solid #ddd; text-align: right; flex-shrink: 0;">
+        <button type="button" class="k-button k-button-md k-button-solid k-button-primary" onclick="$('#detailedResultsModal').data('kendoWindow').close();">Close</button>
+    </div>
+</div>
+

@@ -1,22 +1,19 @@
-﻿using Corno.Web.Areas.Admin.Services.Interfaces;
+using Corno.Web.Areas.Admin.Services.Interfaces;
 using Corno.Web.Areas.Kitchen.Dto.Label;
 using Corno.Web.Areas.Kitchen.Dto.StoreShirwalLabel;
-using Corno.Web.Areas.Kitchen.Labels;
 using Corno.Web.Areas.Kitchen.Services.Interfaces;
 using Corno.Web.Globals;
 using Corno.Web.Globals.Enums;
 using Corno.Web.Models.Packing;
 using Corno.Web.Models.Plan;
-using Corno.Web.Reports;
 using Corno.Web.Repository.Interfaces;
 using Corno.Web.Services.File.Interfaces;
 using Corno.Web.Services.Masters.Interfaces;
-using Corno.Web.Windsor;
-using Mapster;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 
 namespace Corno.Web.Areas.Kitchen.Services;
@@ -57,7 +54,7 @@ public class StoreShirwalLabelService : LabelService, IStoreShirwalLabelService
     #endregion
 
     #region  -- Public Methods --
-    public async System.Threading.Tasks.Task<List<Label>> CreateLabelsAsync(StoreShirwalCrudDto dto, Plan plan)
+    public async Task<List<Label>> CreateLabelsAsync(StoreShirwalCrudDto dto, Plan plan)
     {
         // 1. Validate Dto
         ValidateDto(dto);
@@ -128,57 +125,7 @@ public class StoreShirwalLabelService : LabelService, IStoreShirwalLabelService
             }
         }
 
-        return await System.Threading.Tasks.Task.FromResult(labels).ConfigureAwait(false);
-    }
-
-    public async System.Threading.Tasks.Task<BaseReport> CreateLabelReportAsync(List<Label> labels, bool bDuplicate)
-    {
-        var labelRpt = new ShirwalPartLabelRpt(labels, bDuplicate);
-        return await System.Threading.Tasks.Task.FromResult<BaseReport>(labelRpt).ConfigureAwait(false);
-    }
-    public async System.Threading.Tasks.Task UpdateDatabaseAsync(List<Label> labels, Plan plan)
-    {
-        if (null == plan)
-            throw new Exception("Invalid Plan");
-        foreach (var label in labels)
-        {
-            var planItemDetail = plan.PlanItemDetails.FirstOrDefault(d =>
-                d.Position == label.Position);
-            if (null == planItemDetail) continue;
-            planItemDetail.PrintQuantity ??= 0;
-            planItemDetail.PrintQuantity += label.Quantity;
-        }
-
-        // 2. Update Database
-        var planService = Bootstrapper.Get<IPlanService>();
-        await planService.UpdateAndSaveAsync(plan).ConfigureAwait(false);
-        await AddRangeAndSaveAsync(labels).ConfigureAwait(false);
-    }
-
-    public async System.Threading.Tasks.Task<LabelViewDto> CreateViewDtoAsync(int? id)
-    {
-        var label = await FirstOrDefaultAsync(p => p.Id == id, p => p).ConfigureAwait(false);
-        if (null == label)
-            throw new Exception($"Label with Id '{id}' not found.");
-
-        // Create dto
-        var dto = label.Adapt<LabelViewDto>();
-
-        // Create label report
-        var item = await _itemService.GetViewModelAsync(label.ItemId ?? 0).ConfigureAwait(false);
-        label.NotMapped = new NotMapped
-        {
-            ItemCode = item?.Code,
-            ItemName = item?.Description
-        };
-        var userIds = dto.LabelViewDetailDto.Select(d => d.CreatedBy);
-        var users = await _userService.GetAsync(p => userIds.Contains(p.Id), p => p).ConfigureAwait(false);
-
-        dto.LabelViewDetailDto.ForEach(d =>
-            d.UserName = users.FirstOrDefault(x => x.Id == d.CreatedBy)?.UserName);
-
-        dto.LabelReport = await CreateLabelReportAsync(new List<Label> { label }, true).ConfigureAwait(false);
-        return dto;
+        return await Task.FromResult(labels).ConfigureAwait(false);
     }
 
     #endregion

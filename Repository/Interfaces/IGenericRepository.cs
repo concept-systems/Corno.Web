@@ -41,6 +41,7 @@ public interface IGenericRepository<TEntity> where TEntity : class
     Task<int> GetCurrentSequenceAsync(string sequenceName);
 
     Task<IList<T>> ExecuteStoredProcedureAsync<T>(string procedureName, params object[] parameters);
+    Task<int> ExecuteSqlCommandAsync(string sql, params object[] parameters);
 }
 
 /*public interface IGenericRepository<TEntity> //: IDisposable

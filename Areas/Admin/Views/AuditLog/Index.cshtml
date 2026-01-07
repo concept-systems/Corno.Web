@@ -1,0 +1,154 @@
+@using Corno.Web.Areas.Admin.Dto
+@using Kendo.Mvc.UI
+@using Corno.Web.Helper
+
+@{
+    Layout = "~/Views/Shared/_AppLayout.cshtml";
+    ViewBag.BoxTitle = "Audit Log";
+}
+
+<div class="grid-container-full-height">
+    <!-- Filters -->
+    <div class="k-card" style="margin-bottom: 20px;">
+        <div class="k-card-body">
+            <div class="k-hstack k-gap-4" style="flex-wrap: wrap;">
+                <div class="k-form-field">
+                    <label class="k-form-label">From Date:</label>
+                    @(Html.Kendo().DatePicker()
+                        .Name("fromDate")
+                        .HtmlAttributes(new { style = "width: 150px;" })
+                    )
+                </div>
+                <div class="k-form-field">
+                    <label class="k-form-label">To Date:</label>
+                    @(Html.Kendo().DatePicker()
+                        .Name("toDate")
+                        .HtmlAttributes(new { style = "width: 150px;" })
+                    )
+                </div>
+                <div class="k-form-field">
+                    <label class="k-form-label">User:</label>
+                    <input type="text" id="userId" class="k-textbox k-input-md" placeholder="User ID" style="width: 150px;" />
+                </div>
+                <div class="k-form-field">
+                    <label class="k-form-label">Action:</label>
+                    <input type="text" id="action" class="k-textbox k-input-md" placeholder="Action" style="width: 150px;" />
+                </div>
+                <div class="k-form-field">
+                    <label class="k-form-label">Entity Type:</label>
+                    <input type="text" id="entityType" class="k-textbox k-input-md" placeholder="Entity Type" style="width: 150px;" />
+                </div>
+                <div class="k-form-field" style="align-self: flex-end;">
+                    <button type="button" id="btnFilter" class="k-button k-button-md k-button-solid k-button-primary">
+                        <span class="k-icon k-i-filter"></span>
+                        <span>Filter</span>
+                    </button>
+                    <button type="button" id="btnExport" class="k-button k-button-md k-button-solid-base">
+                        <span class="k-icon k-i-file-excel"></span>
+                        <span>Export</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grid -->
+    @(Html.Kendo().Grid<AuditLogDto>()
+        .Name("grid")
+        .ApplyIndexSettings(customToolbar: toolbar =>
+        {
+            toolbar.Custom()
+                .Text("<span class='k-icon k-i-file-excel'></span> Export")
+                .HtmlAttributes(new { @class = "k-grid-export k-button-export-outlined", style = "float: right;", onclick = "exportToExcel(); return false;" });
+        })
+        .Columns(columns =>
+        {
+            columns.Bound(m => m.Timestamp)
+                .Format("{0:MM/dd/yyyy HH:mm:ss}")
+                .Title("Timestamp")
+                .Width(150)
+                .HtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" });
+            columns.Bound(m => m.UserName)
+                .Title("User")
+                .Width(120)
+                .HtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" });
+            columns.Bound(m => m.Action)
+                .Title("Action")
+                .Width(100)
+                .HtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" });
+            columns.Bound(m => m.EntityType)
+                .Title("Entity Type")
+                .Width(120)
+                .HtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" });
+            columns.Bound(m => m.EntityName)
+                .Title("Entity")
+                .Width(150)
+                .HtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" });
+            columns.Bound(m => m.Details)
+                .Title("Details");
+            columns.Bound(m => m.IpAddress)
+                .Title("IP Address")
+                .Width(120)
+                .HtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" });
+        })
+        .Events(events => {
+            events.ApplyCommonEvents();
+            events.DataBound("onDataBound");
+        })
+        .DataSource(dataSource => dataSource
+            .Ajax()
+            .Read(read => read.Action("GetLogs", "AuditLog", new { area = "Admin" }).Data("getAuditLogFilters"))
+            .PageSize(20)
+            .Sort(sort => sort.Add(m => m.Timestamp).Descending())
+        ))
+</div>
+
+<script>
+    function getAuditLogFilters() {
+        var fromDate = $("#fromDate").data("kendoDatePicker")?.value();
+        var toDate = $("#toDate").data("kendoDatePicker")?.value();
+        return {
+            fromDate: fromDate ? kendo.toString(fromDate, "yyyy-MM-dd") : null,
+            toDate: toDate ? kendo.toString(toDate, "yyyy-MM-dd") : null,
+            userId: $("#userId").val() || null,
+            action: $("#action").val() || null,
+            entityType: $("#entityType").val() || null
+        };
+    }
+
+    function onDataBound(e) {
+        var grid = $("#grid").data("kendoGrid");
+        // Auto-fit each column
+        grid.columns.forEach(function (column, index) {
+            grid.autoFitColumn(index);
+        });
+    }
+
+    $(document).ready(function() {
+        $("#btnFilter").on("click", function() {
+            $("#grid").data("kendoGrid").dataSource.read();
+        });
+    });
+
+    function exportToExcel() {
+        var fromDate = $("#fromDate").data("kendoDatePicker")?.value();
+        var toDate = $("#toDate").data("kendoDatePicker")?.value();
+        var userId = $("#userId").val();
+        var action = $("#action").val();
+        var entityType = $("#entityType").val();
+
+        window.location.href = '@Url.Action("ExportToExcel", "AuditLog", new { area = "Admin" })?' +
+            'fromDate=' + (fromDate ? kendo.toString(fromDate, "yyyy-MM-dd") : '') +
+            '&toDate=' + (toDate ? kendo.toString(toDate, "yyyy-MM-dd") : '') +
+            '&userId=' + (userId || '') +
+            '&action=' + (action || '') +
+            '&entityType=' + (entityType || '');
+    }
+</script>
+

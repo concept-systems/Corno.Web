@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="packages\EntityFramework.6.5.1\build\EntityFramework.props" Condition="Exists('packages\EntityFramework.6.5.1\build\EntityFramework.props')" />
   <PropertyGroup>
@@ -277,6 +277,9 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="PresentationFramework" />
+    <Reference Include="Quartz, Version=3.15.1.0, Culture=neutral, PublicKeyToken=f6b8c98a402cc8a4, processorArchitecture=MSIL">
+      <HintPath>packages\Quartz.3.15.1\lib\net472\Quartz.dll</HintPath>
+    </Reference>
     <Reference Include="SixLabors.Fonts, Version=1.0.0.0, Culture=neutral, PublicKeyToken=d998eea7b14cab13, processorArchitecture=MSIL">
       <HintPath>packages\SixLabors.Fonts.1.0.1\lib\netstandard2.0\SixLabors.Fonts.dll</HintPath>
     </Reference>
@@ -358,6 +361,7 @@
     <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>packages\System.Runtime.CompilerServices.Unsafe.6.1.2\lib\net462\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
     </Reference>
+    <Reference Include="System.Runtime.Remoting" />
     <Reference Include="System.Security" />
     <Reference Include="System.Security.AccessControl, Version=6.0.0.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>packages\System.Security.AccessControl.6.0.1\lib\net461\System.Security.AccessControl.dll</HintPath>
@@ -868,11 +872,22 @@
     <Compile Include="App_Start\SmsService.cs" />
     <Compile Include="App_Start\Startup.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
+    <Compile Include="App_Start\HealthCheckConfig.cs" />
     <Compile Include="Areas\Admin\Dto\AspNetRoleDto.cs" />
     <Compile Include="Areas\Admin\Dto\RoleDto.cs" />
     <Compile Include="Areas\Admin\Dto\UserCrudDto.cs" />
     <Compile Include="Areas\Admin\Dto\UserIndexDto.cs" />
     <Compile Include="Areas\Admin\Dto\UserRoleDto.cs" />
+    <Compile Include="Areas\Admin\Dto\MenuDto.cs" />
+    <Compile Include="Areas\Admin\Dto\AccessControlDto.cs" />
+    <Compile Include="Areas\Admin\Dto\AuditLogDto.cs" />
+    <Compile Include="Areas\Admin\Dto\DashboardDto.cs" />
+    <Compile Include="Areas\Admin\Dto\ProfileDto.cs" />
+    <Compile Include="Areas\Admin\Dto\HealthCheck\HealthCheckReportDto.cs" />
+    <Compile Include="Areas\Admin\Dto\HealthCheck\HealthCheckSummaryDto.cs" />
+    <Compile Include="Areas\Admin\Dto\HealthCheck\DataIntegrityIssueDto.cs" />
+    <Compile Include="Areas\Admin\Dto\HealthCheck\HealthCheckDashboardDto.cs" />
+    <Compile Include="Areas\Admin\Dto\HealthCheck\DataIntegrityResultsModalDto.cs" />
     <Compile Include="Areas\Admin\Models\AspNetLoginHistory.cs" />
     <Compile Include="Areas\Admin\Models\AspNetRole.cs" />
     <Compile Include="Areas\Admin\Models\AspNetUser.cs" />
@@ -880,12 +895,29 @@
     <Compile Include="Areas\Admin\Models\AspNetUserLogin.cs" />
     <Compile Include="Areas\Admin\Models\AspNetUserRole.cs" />
     <Compile Include="Areas\Admin\Models\LoginResult.cs" />
+    <Compile Include="Areas\Admin\Models\Menu.cs" />
+    <Compile Include="Areas\Admin\Models\PermissionType.cs" />
+    <Compile Include="Areas\Admin\Models\AccessControl.cs" />
+    <Compile Include="Areas\Admin\Models\AuditLog.cs" />
+    <Compile Include="Areas\Admin\Models\PasswordResetToken.cs" />
     <Compile Include="Areas\Admin\Services\Interfaces\IRoleService.cs" />
     <Compile Include="Areas\Admin\Services\Interfaces\IUserRoleService.cs" />
     <Compile Include="Areas\Admin\Services\Interfaces\IUserService.cs" />
+    <Compile Include="Areas\Admin\Services\Interfaces\IMenuService.cs" />
+    <Compile Include="Areas\Admin\Services\Interfaces\IMenuMigrationService.cs" />
+    <Compile Include="Areas\Admin\Services\Interfaces\IPermissionService.cs" />
+    <Compile Include="Areas\Admin\Services\Interfaces\IAuditLogService.cs" />
+    <Compile Include="Areas\Admin\Services\Interfaces\IDashboardService.cs" />
+    <Compile Include="Areas\Admin\Services\Interfaces\IHealthCheckUIService.cs" />
+    <Compile Include="Areas\Admin\Services\MenuMigrationService.cs" />
+    <Compile Include="Areas\Admin\Services\HealthCheckUIService.cs" />
     <Compile Include="Areas\Admin\Services\RoleService.cs" />
     <Compile Include="Areas\Admin\Services\UserRoleService.cs" />
     <Compile Include="Areas\Admin\Services\UserService.cs" />
+    <Compile Include="Areas\Admin\Services\MenuService.cs" />
+    <Compile Include="Areas\Admin\Services\PermissionService.cs" />
+    <Compile Include="Areas\Admin\Services\AuditLogService.cs" />
+    <Compile Include="Areas\Admin\Services\DashboardService.cs" />
     <Compile Include="Areas\DemoProject\Controllers\ProductController.cs" />
     <Compile Include="Areas\DemoProject\Controllers\ProductLabelController.cs" />
     <Compile Include="Areas\DemoProject\Controllers\SalesInvoiceController.cs" />
@@ -924,12 +956,49 @@
     <Compile Include="Areas\DemoProject\Services\ProductLabelService.cs" />
     <Compile Include="Areas\DemoProject\ViewModels\LabelDisplayDetailViewModel.cs" />
     <Compile Include="Areas\DemoProject\ViewModels\LabelViewModel.cs" />
-    <Compile Include="Areas\Euro\Controllers\ItemLabelController.cs" />
+    <Compile Include="Areas\Euro\Controllers\CartonController.cs" />
+    <Compile Include="Areas\Euro\Controllers\LabelController.cs" />
+    <Compile Include="Areas\Euro\Controllers\PartLabelController.cs" />
+    <Compile Include="Areas\Euro\Controllers\PlanController.cs" />
+    <Compile Include="Areas\Euro\Dto\Label\LabelCrudDetailDto.cs" />
+    <Compile Include="Areas\Euro\Dto\Label\LabelDto.cs" />
     <Compile Include="Areas\Euro\Dto\Label\LabelImportDto.cs" />
     <Compile Include="Areas\Euro\Dto\Label\LabelIndexDto.cs" />
+    <Compile Include="Areas\Euro\Dto\Label\LabelViewDetailDto.cs" />
+    <Compile Include="Areas\Euro\Dto\Label\LabelViewDto.cs" />
+    <Compile Include="Areas\Euro\Dto\Label\PartLabelCrudDto.cs" />
+    <Compile Include="Areas\Euro\Dto\Plan\CartonViewChartDto.cs" />
+    <Compile Include="Areas\Euro\Dto\Plan\LabelViewChartDto.cs" />
+    <Compile Include="Areas\Euro\Dto\Plan\PlanIndexDto.cs" />
+    <Compile Include="Areas\Euro\Dto\Plan\PlanViewChartDto.cs" />
+    <Compile Include="Areas\Euro\Dto\Plan\PlanViewDto.cs" />
+    <Compile Include="Areas\Euro\Dto\Plan\PlanViewItemDto.cs" />
+    <Compile Include="Areas\Euro\Dto\Plan\PlanViewItemsDto.cs" />
+    <Compile Include="Areas\Euro\Dto\Plan\PositionDetailDto.cs" />
+    <Compile Include="Areas\Euro\Dto\Carton\CartonCrudDto.cs" />
+    <Compile Include="Areas\Euro\Dto\Carton\CartonDetailDto.cs" />
+    <Compile Include="Areas\Euro\Dto\Carton\CartonDetailsDto.cs" />
+    <Compile Include="Areas\Euro\Dto\Carton\CartonIndexDto.cs" />
+    <Compile Include="Areas\Euro\Dto\Carton\CartonViewDto.cs" />
     <Compile Include="Areas\Euro\EuroAreaRegistration.cs" />
-    <Compile Include="Areas\Euro\Services\EuroLabelService.cs" />
-    <Compile Include="Areas\Euro\Services\Interfaces\IEuroLabelService.cs" />
+    <Compile Include="Areas\Euro\Labels\PartLabelRpt.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Areas\Euro\Labels\PartLabelRpt.Designer.cs">
+      <DependentUpon>PartLabelRpt.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Areas\Euro\Services\Interfaces\ILabelService.cs" />
+    <Compile Include="Areas\Euro\Services\Interfaces\IPartLabelService.cs" />
+    <Compile Include="Areas\Euro\Services\Interfaces\ICartonService.cs" />
+    <Compile Include="Areas\Euro\Services\Interfaces\INonWeighingPackingService.cs" />
+    <Compile Include="Areas\Euro\Services\Interfaces\IPlanItemDetailService.cs" />
+    <Compile Include="Areas\Euro\Services\Interfaces\IPlanService.cs" />
+    <Compile Include="Areas\Euro\Services\CartonService.cs" />
+    <Compile Include="Areas\Euro\Services\LabelService.cs" />
+    <Compile Include="Areas\Euro\Services\NonWeighingPackingService.cs" />
+    <Compile Include="Areas\Euro\Services\PartLabelService.cs" />
+    <Compile Include="Areas\Euro\Services\PlanBusinessImportService.cs" />
+    <Compile Include="Areas\Euro\Services\PlanService.cs" />
     <Compile Include="Areas\Kitchen\Controllers\CarcassController.cs" />
     <Compile Include="Areas\Kitchen\Controllers\DispatchController.cs" />
     <Compile Include="Areas\Kitchen\Controllers\KittingController.cs" />
@@ -941,18 +1010,19 @@
     <Compile Include="Areas\Kitchen\Controllers\RackInController.cs" />
     <Compile Include="Areas\Kitchen\Controllers\RackOutController.cs" />
     <Compile Include="Areas\Kitchen\Controllers\SortingController.cs" />
+    <Compile Include="Areas\Kitchen\Controllers\LabelImportController.cs" />
     <Compile Include="Areas\Kitchen\Controllers\StiffenerLabelController.cs" />
     <Compile Include="Areas\Kitchen\Controllers\StoreKhalapurController.cs" />
     <Compile Include="Areas\Kitchen\Controllers\StoreShirwalController.cs" />
     <Compile Include="Areas\Kitchen\Controllers\SubAssemblyLabelController.cs" />
     <Compile Include="Areas\Kitchen\Controllers\LabelController.cs" />
     <Compile Include="Areas\Kitchen\Controllers\CartonController.cs" />
+    <Compile Include="Areas\Kitchen\Controllers\DashboardController.cs" />
     <Compile Include="Areas\Kitchen\Controllers\TrolleyConfigController.cs" />
     <Compile Include="Areas\Kitchen\Controllers\TrolleyLabelController.cs" />
     <Compile Include="Areas\Kitchen\Dto\Carcass\CarcassCrudDto.cs" />
     <Compile Include="Areas\Kitchen\Dto\Carcass\CarcassDetailDto.cs" />
     <Compile Include="Areas\Kitchen\Dto\Carcass\CarcassIndexDto.cs" />
-    <Compile Include="Areas\Kitchen\Dto\Carcass\CarcassViewDto.cs" />
     <Compile Include="Areas\Kitchen\Dto\Carton\CartonCrudDto.cs" />
     <Compile Include="Areas\Kitchen\Dto\Carton\CartonDetailDto.cs" />
     <Compile Include="Areas\Kitchen\Dto\Carton\CartonDetailsDto.cs" />
@@ -980,6 +1050,10 @@
     <Compile Include="Areas\Kitchen\Dto\Plan\PlanViewChartDto.cs" />
     <Compile Include="Areas\Kitchen\Dto\Plan\PlanViewDto.cs" />
     <Compile Include="Areas\Kitchen\Dto\Plan\PlanViewItemDto.cs" />
+    <Compile Include="Areas\Kitchen\Dto\Dashboard\CartonDashboardDto.cs" />
+    <Compile Include="Areas\Kitchen\Dto\Dashboard\LabelDashboardDto.cs" />
+    <Compile Include="Areas\Kitchen\Dto\Dashboard\MainDashboardDto.cs" />
+    <Compile Include="Areas\Kitchen\Dto\Dashboard\PlanDashboardDto.cs" />
     <Compile Include="Areas\Kitchen\Dto\Plan\PlanViewItemsDto.cs" />
     <Compile Include="Areas\Kitchen\Dto\Plan\PositionDetailDto.cs" />
     <Compile Include="Areas\Kitchen\Dto\Put To Light\PutToLightkittingViewDto.cs" />
@@ -1024,12 +1098,6 @@
     <Compile Include="Areas\Kitchen\Labels\ShirwalPartLabelRpt.Designer.cs">
       <DependentUpon>ShirwalPartLabelRpt.cs</DependentUpon>
     </Compile>
-    <Compile Include="Areas\Kitchen\Labels\ShirwalPartLabelRpt_.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Areas\Kitchen\Labels\ShirwalPartLabelRpt_.Designer.cs">
-      <DependentUpon>ShirwalPartLabelRpt_.cs</DependentUpon>
-    </Compile>
     <Compile Include="Areas\Kitchen\Labels\SubAssemblyLabelRpt.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -1049,7 +1117,6 @@
     <Compile Include="Areas\Kitchen\Models\StoreKhalapurViewMode.cs" />
     <Compile Include="Areas\Kitchen\Models\StoreShirwalViewMode.cs" />
     <Compile Include="Areas\Kitchen\Models\TrolleyLabelViewModel.cs" />
-    <Compile Include="Areas\Kitchen\Models\ImportSession.cs" />
     <Compile Include="Areas\Kitchen\Reports\CartonItemDetailRpt.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -1192,8 +1259,65 @@
     <Compile Include="Areas\Kitchen\Services\BaseReportService.cs" />
     <Compile Include="Areas\Kitchen\Services\CarcassPackingService.cs" />
     <Compile Include="Areas\Kitchen\Services\CartonService.cs" />
+    <Compile Include="Areas\Kitchen\Services\DashboardService.cs" />
     <Compile Include="Areas\Kitchen\Services\DispatchService.cs" />
-    <Compile Include="Areas\Kitchen\Services\ImportSessionService.cs" />
+    <Compile Include="Areas\Kitchen\Helpers\LabelFamilyValidationHelper.cs" />
+    <Compile Include="Areas\Masters\Dtos\Product\BomImportDto.cs" />
+    <Compile Include="Areas\Masters\Services\ProductBusinessImportService.cs" />
+    <Compile Include="Areas\Nilkamal\Controllers\PacketLabelController.cs" />
+    <Compile Include="Areas\Nilkamal\Controllers\PartLabelController.cs" />
+    <Compile Include="Areas\Nilkamal\Controllers\PlanController.cs" />
+    <Compile Include="Areas\Nilkamal\Dto\CartonIndexDto.cs" />
+    <Compile Include="Areas\Nilkamal\Dto\ImportViewDto.cs" />
+    <Compile Include="Areas\Nilkamal\Dto\LabelIndexDto.cs" />
+    <Compile Include="Areas\Nilkamal\Dto\PacketLabel\CartonCrudDetailDto.cs" />
+    <Compile Include="Areas\Nilkamal\Dto\PacketLabel\PacketDto.cs" />
+    <Compile Include="Areas\Nilkamal\Dto\PacketLabel\PacketIndexDto.cs" />
+    <Compile Include="Areas\Nilkamal\Dto\PacketLabel\PacketLabelCrudDto.cs" />
+    <Compile Include="Areas\Nilkamal\Dto\PacketLabel\PacketViewDetailDto.cs" />
+    <Compile Include="Areas\Nilkamal\Dto\PacketLabel\PacketViewDto.cs" />
+    <Compile Include="Areas\Nilkamal\Dto\PartLabel\BmImportModel.cs" />
+    <Compile Include="Areas\Nilkamal\Dto\PartLabel\LabelCrudDetailDto.cs" />
+    <Compile Include="Areas\Nilkamal\Dto\PartLabel\LabelDto.cs" />
+    <Compile Include="Areas\Nilkamal\Dto\PartLabel\LabelIndexDto.cs" />
+    <Compile Include="Areas\Nilkamal\Dto\PartLabel\LabelViewDetailDto.cs" />
+    <Compile Include="Areas\Nilkamal\Dto\PartLabel\LabelViewDto.cs" />
+    <Compile Include="Areas\Nilkamal\Dto\PartLabel\PartLabelCrudDto.cs" />
+    <Compile Include="Areas\Nilkamal\Dto\PartLabel\SalvaginiExcelDto.cs" />
+    <Compile Include="Areas\Nilkamal\Dto\PartLabel\SalvaginiXmlDto.cs" />
+    <Compile Include="Areas\Nilkamal\Dto\PartLabel\SubAssemblyCrudDto.cs" />
+    <Compile Include="Areas\Nilkamal\Dto\Plan\CartonViewChartDto.cs" />
+    <Compile Include="Areas\Nilkamal\Dto\Plan\LabelViewChartDto.cs" />
+    <Compile Include="Areas\Nilkamal\Dto\Plan\PlanImportDto.cs" />
+    <Compile Include="Areas\Nilkamal\Dto\Plan\PlanIndexDto.cs" />
+    <Compile Include="Areas\Nilkamal\Dto\Plan\PlanViewChartDto.cs" />
+    <Compile Include="Areas\Nilkamal\Dto\Plan\PlanViewDto.cs" />
+    <Compile Include="Areas\Nilkamal\Dto\Plan\PlanViewItemDto.cs" />
+    <Compile Include="Areas\Nilkamal\Dto\Plan\PlanViewItemsDto.cs" />
+    <Compile Include="Areas\Nilkamal\Dto\Plan\PositionDetailDto.cs" />
+    <Compile Include="Areas\Nilkamal\Labels\PacketLabelRpt.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Areas\Nilkamal\Labels\PacketLabelRpt.Designer.cs">
+      <DependentUpon>PacketLabelRpt.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Areas\Nilkamal\Labels\PartLabelRpt.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Areas\Nilkamal\Labels\PartLabelRpt.Designer.cs">
+      <DependentUpon>PartLabelRpt.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Areas\Nilkamal\NilkamalAreaRegistration.cs" />
+    <Compile Include="Areas\Nilkamal\Services\CartonService.cs" />
+    <Compile Include="Areas\Nilkamal\Services\Interfaces\ICartonService.cs" />
+    <Compile Include="Areas\Nilkamal\Services\Interfaces\IPartLabelService.cs" />
+    <Compile Include="Areas\Nilkamal\Services\Interfaces\IPlanItemDetailService.cs" />
+    <Compile Include="Areas\Nilkamal\Services\Interfaces\IPlanService.cs" />
+    <Compile Include="Areas\Nilkamal\Services\PartLabelService.cs" />
+    <Compile Include="Areas\Nilkamal\Services\PlanBusinessImportService.cs" />
+    <Compile Include="Areas\Nilkamal\Services\PlanItemDetailService.cs" />
+    <Compile Include="Areas\Nilkamal\Services\PlanService.cs" />
+    <Compile Include="Attributes\SessionValidationAttribute.cs" />
     <Compile Include="Models\Sales\SalesInvoice.cs" />
     <Compile Include="Models\Sales\SalesInvoiceDetail.cs" />
     <Compile Include="Models\Sales\SalesOrder.cs" />
@@ -1202,10 +1326,16 @@
     <Compile Include="Models\Sales\SalesReturnDetail.cs" />
     <Compile Include="Services\File\CsvFileService.cs" />
     <Compile Include="Services\File\Interfaces\ICsvFileService.cs" />
+    <Compile Include="Services\Import\CsvHeaderNormalizer.cs" />
+    <Compile Include="Services\Import\Interfaces\IBusinessImportService.cs" />
     <Compile Include="Services\Import\Interfaces\IFileImportService.cs" />
     <Compile Include="Services\Import\Interfaces\IFileReader.cs" />
     <Compile Include="Services\Import\BaseImportController.cs" />
+    <Compile Include="Services\Import\CommonImportService.cs" />
+    <Compile Include="Services\Import\FileImportService.cs" />
     <Compile Include="Services\Import\FileReaders\CsvFileReader.cs" />
+    <Compile Include="Services\Import\ImportSessionService.cs" />
+    <Compile Include="Services\Import\Models\ImportSession.cs" />
     <Compile Include="Areas\Kitchen\Services\Interfaces\IAssemblyLabelService.cs" />
     <Compile Include="Areas\Kitchen\Services\Interfaces\IBaseReportService.cs" />
     <Compile Include="Areas\Kitchen\Services\Interfaces\ICarcassPackingService.cs" />
@@ -1226,11 +1356,14 @@
     <Compile Include="Areas\Kitchen\Services\Interfaces\ITrolleyConfigService.cs" />
     <Compile Include="Areas\Kitchen\Services\Interfaces\ITrolleyLabelService.cs" />
     <Compile Include="Areas\Kitchen\Services\Interfaces\IWebSocketService.cs" />
+    <Compile Include="Areas\Kitchen\Services\Interfaces\IDashboardService.cs" />
+    <Compile Include="Areas\Kitchen\Services\LabelBusinessImportService.cs" />
     <Compile Include="Areas\Kitchen\Services\LabelService.cs" />
     <Compile Include="Areas\Kitchen\Services\NonWeighingPackingService.cs" />
     <Compile Include="Areas\Kitchen\Services\PalletInService.cs" />
     <Compile Include="Areas\Kitchen\Services\PartLabelService.cs" />
     <Compile Include="Areas\Kitchen\Services\PlanItemDetailService.cs" />
+    <Compile Include="Areas\Kitchen\Services\PlanBusinessImportService.cs" />
     <Compile Include="Areas\Kitchen\Services\PlanService.cs" />
     <Compile Include="Areas\Kitchen\Services\RackInService.cs" />
     <Compile Include="Areas\Kitchen\Services\RackOutService.cs" />
@@ -1301,6 +1434,12 @@
     <Compile Include="Areas\Admin\Controllers\SqlQueryController.cs" />
     <Compile Include="Areas\Admin\Controllers\UserController.cs" />
     <Compile Include="Areas\Admin\Controllers\RoleController.cs" />
+    <Compile Include="Areas\Admin\Controllers\MenuController.cs" />
+    <Compile Include="Areas\Admin\Controllers\AccessControlController.cs" />
+    <Compile Include="Areas\Admin\Controllers\AuditLogController.cs" />
+    <Compile Include="Areas\Admin\Controllers\DashboardController.cs" />
+    <Compile Include="Areas\Admin\Controllers\ProfileController.cs" />
+    <Compile Include="Areas\Admin\Controllers\HealthCheckController.cs" />
     <Compile Include="Areas\Admin\Dto\LogViewModel.cs" />
     <Compile Include="Areas\Admin\Dto\SqlQuery\SqlQuoryDto.cs" />
     <Compile Include="Areas\Admin\Dto\SqlQuery\SqlQuoryIndexDto.cs" />
@@ -1342,6 +1481,8 @@
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\MachineConfigurationController.cs" />
     <Compile Include="Attributes\SessionExpireAttribute.cs" />
+    <Compile Include="Attributes\PageAuthorizeAttribute.cs" />
+    <Compile Include="Attributes\ControlAuthorizeAttribute.cs" />
     <Compile Include="Controllers\TransactionController.cs" />
     <Compile Include="Controllers\MasterController.cs" />
     <Compile Include="Dtos\BaseDto.cs" />
@@ -1423,6 +1564,9 @@
     <Compile Include="Models\Packing\SubAssemblyDetail.cs" />
     <Compile Include="Models\OtpViewModel.cs" />
     <Compile Include="Models\PartyBase.cs" />
+    <Compile Include="Models\HealthCheck\HealthCheckReport.cs" />
+    <Compile Include="Models\HealthCheck\HealthCheckSummary.cs" />
+    <Compile Include="Models\HealthCheck\DataIntegrityReport.cs" />
     <Compile Include="Models\Plan\Plan.cs" />
     <Compile Include="Models\Plan\PlanAssemblyDetail.cs" />
     <Compile Include="Models\Plan\PlanItemDetail.cs" />
@@ -1495,6 +1639,12 @@
     <Compile Include="Services\Location\Interfaces\IBaseLocationService.cs" />
     <Compile Include="Services\Logger\Interfaces\ILoggingService.cs" />
     <Compile Include="Services\Logger\LoggingService.cs" />
+    <Compile Include="Services\HealthCheck\Interfaces\IHealthCheckService.cs" />
+    <Compile Include="Services\HealthCheck\HealthCheckService.cs" />
+    <Compile Include="Services\HealthCheck\HealthCheckJob.cs" />
+    <Compile Include="Services\HealthCheck\DataIntegrity\IDataIntegrityHealthCheckService.cs" />
+    <Compile Include="Services\HealthCheck\DataIntegrity\DataIntegrityHealthCheckService.cs" />
+    <Compile Include="Services\HealthCheck\DataIntegrity\DataIntegrityHealthCheckJob.cs" />
     <Compile Include="Services\MachineConfigurationService.cs" />
     <Compile Include="Hubs\ChatHub.cs" />
     <Compile Include="Hubs\WeighingScaleHub.cs" />
@@ -1508,10 +1658,6 @@
     <Compile Include="Services\Plan\Interfaces\IBasePlanService.cs" />
     <Compile Include="Services\Masters\ProductService.cs" />
     <Compile Include="Hubs\BaseProgressHub.cs" />
-    <Compile Include="Services\Progress\BaseProgressService.cs" />
-    <Compile Include="Services\Progress\Interfaces\IBaseProgressService.cs" />
-    <Compile Include="Services\Progress\Interfaces\IWebProgressService.cs" />
-    <Compile Include="Services\Progress\WebProgressService.cs" />
     <Compile Include="Services\Masters\SupplierService.cs" />
     <Compile Include="Services\Report\ReportServiceResolver.cs" />
     <Compile Include="Services\Report\ReportFactory.cs" />
@@ -1531,6 +1677,8 @@
     <Compile Include="Startup.cs" />
     <Compile Include="Models\SessionGlobals.cs" />
     <Compile Include="Helpers\MenuIconHelper.cs" />
+    <Compile Include="Helpers\MenuHelper.cs" />
+    <Compile Include="Helpers\ControlPermissionHelper.cs" />
     <Compile Include="Windsor\Bootstrapper.cs" />
     <Compile Include="Windsor\ServicesModule.cs" />
     <Compile Include="Windsor\ReportsModule.cs" />
@@ -1542,16 +1690,22 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\css\menu.css" />
-    <Content Include="Areas\Euro\Views\ItemLabel\Import.cshtml" />
-    <Content Include="Areas\Euro\Views\ItemLabel\Index.cshtml" />
+    <Content Include="Content\css\sessionTimeout.css" />
     <Content Include="Content\css\responsive-panel.css" />
-    <Content Include="Scripts\GetPanelDetailReport.sql" />
-    <Content Include="Scripts\GetPanelLabelReport.sql" />
-    <Content Include="Scripts\GetScanningDateWiseReport.sql" />
-    <Content Include="Scripts\GetScanningRplWiseReport.sql" />
-    <Content Include="Scripts\GetScanningUserWiseReport.sql" />
-    <Content Include="Scripts\GetShortageAllReport.sql" />
-    <Content Include="Scripts\GetWipReport.sql" />
+    <Content Include="Database\CreatePerformanceIndexes.sql" />
+    <Content Include="Database\CreatePerformanceIndexes_Output.txt" />
+    <Content Include="Database\CreatePerformanceIndexes_Output2.txt" />
+    <Content Include="Database\CreatePerformanceIndexes_Output3.txt" />
+    <Content Include="Database\GetPanelDetailReport.sql" />
+    <Content Include="Database\GetPanelLabelReport.sql" />
+    <Content Include="Database\GetScanningDateWiseReport.sql" />
+    <Content Include="Database\GetScanningRplWiseReport.sql" />
+    <Content Include="Database\GetScanningUserWiseReport.sql" />
+    <Content Include="Database\GetShortageAllReport.sql" />
+    <Content Include="Database\GetWipReport.sql" />
+    <Content Include="Database\Migration_LoginModule.sql" />
+    <Content Include="Database\ModifyCartonDetailBarcodeAndCreateIndex.sql" />
+    <Content Include="Database\ModifyCartonDetailBarcode_Output.txt" />
     <Content Include="Views\Shared\Import\_GenericImport.cshtml" />
     <Content Include="Areas\Masters\Views\Customer\Create.cshtml" />
     <Content Include="Areas\Masters\Views\Customer\Delete.cshtml" />
@@ -2241,6 +2395,9 @@
     <Content Include="Areas\Report\Views\web.config" />
     <Content Include="Areas\Report\Views\Report\ShowReport.cshtml" />
     <Content Include="Areas\Admin\Views\web.config" />
+    <Content Include="Areas\Admin\Views\HealthCheck\Index.cshtml" />
+    <Content Include="Areas\Admin\Views\HealthCheck\DataIntegrity.cshtml" />
+    <Content Include="Areas\Admin\Views\HealthCheck\_DataIntegrityResultsModal.cshtml" />
     <Content Include="Areas\Admin\Views\Role\_Role.cshtml" />
     <Content Include="Areas\Admin\Views\Role\Create.cshtml" />
     <Content Include="Areas\Admin\Views\Role\Delete.cshtml" />
@@ -2399,6 +2556,14 @@
     <Content Include="Areas\Admin\Views\Role\SetSitemap.cshtml" />
     <Content Include="Areas\Admin\Views\SqlQuery\_SqlQuery.cshtml" />
     <Content Include="Areas\Admin\Views\SqlQuery\Create.cshtml" />
+    <Content Include="Areas\Admin\Views\Dashboard\Index.cshtml" />
+    <Content Include="Areas\Admin\Views\Menu\Index.cshtml" />
+    <Content Include="Areas\Admin\Views\Menu\Create.cshtml" />
+    <Content Include="Areas\Admin\Views\Menu\Edit.cshtml" />
+    <Content Include="Areas\Admin\Views\AccessControl\Index.cshtml" />
+    <Content Include="Areas\Admin\Views\AuditLog\Index.cshtml" />
+    <Content Include="Areas\Admin\Views\Profile\Index.cshtml" />
+    <Content Include="Areas\Admin\Views\Profile\ChangePassword.cshtml" />
     <Content Include="Content\bootstrap.rtl.min.css.map" />
     <Content Include="Content\bootstrap.rtl.css.map" />
     <Content Include="Content\bootstrap.min.css.map" />
@@ -2487,6 +2652,10 @@
     <Content Include="Areas\Kitchen\Views\TrolleyLabel\Index.cshtml" />
     <Content Include="Areas\Kitchen\Views\TrolleyLabel\View.cshtml" />
     <Content Include="Areas\Kitchen\Views\TrolleyLabel\_TrolleyLabel.cshtml" />
+    <Content Include="Areas\Kitchen\Views\Dashboard\Index.cshtml" />
+    <Content Include="Areas\Kitchen\Views\Dashboard\Plan.cshtml" />
+    <Content Include="Areas\Kitchen\Views\Dashboard\Label.cshtml" />
+    <Content Include="Areas\Kitchen\Views\Dashboard\Carton.cshtml" />
     <Content Include="Areas\Kitchen\Views\web.config" />
     <Content Include="Areas\Kitchen\Views\Weighing\Create.cshtml" />
     <Content Include="Areas\Kitchen\Views\Weighing\Index.cshtml" />
@@ -2500,6 +2669,7 @@
     <Content Include="Areas\Kitchen\Views\Label\CreateStoreKhalapur.cshtml" />
     <Content Include="Areas\Kitchen\Views\Label\CreateStoreShirwal.cshtml" />
     <Content Include="Areas\Kitchen\Views\Label\CreateStiffenerLabel.cshtml" />
+    <Content Include="Areas\Kitchen\Views\Label\Import.cshtml" />
     <Content Include="Areas\Kitchen\Views\Label\View.cshtml" />
     <Content Include="Areas\Kitchen\Views\Label\_StoreKhalapur.cshtml" />
     <Content Include="Areas\Kitchen\Views\Label\_StoreShirwal.cshtml" />
@@ -2509,6 +2679,8 @@
     <Content Include="Areas\Kitchen\Views\Carton\CreateCarcass.cshtml" />
     <Content Include="Areas\Kitchen\Views\Carton\CreateNonWeighingPacking.cshtml" />
     <Content Include="Areas\Kitchen\Views\Carton\View.cshtml" />
+    <Content Include="Areas\Kitchen\Views\Shared\_PackingView.cshtml" />
+    <Content Include="Areas\Kitchen\Views\Shared\_PackingIndex.cshtml" />
     <Content Include="Areas\DemoProject\Sitemaps\Main.sitemap" />
     <Content Include="Areas\DemoProject\Views\ProductLabel\Create.cshtml" />
     <Content Include="Areas\DemoProject\Views\ProductLabel\Index.cshtml" />
@@ -2528,10 +2700,51 @@
     <Content Include="Areas\DemoProject\Views\SalesInvoice\Index.cshtml" />
     <Content Include="Areas\DemoProject\Views\SalesInvoice\View.cshtml" />
     <Content Include="Areas\DemoProject\Views\web.config" />
-    <Content Include="Areas\Euro\Views\ItemLabel\View.cshtml" />
-    <Content Include="Areas\Euro\Views\web.config" />
     <Content Include="Areas\DemoProject\Views\SalesInvoice\_SalesInvoice.cshtml" />
     <Content Include="Areas\DemoProject\Views\SalesInvoice\_SalesInvoiceHeaderButtons.cshtml" />
+    <Content Include="Areas\Kitchen\Views\Shared\_LabelIndex.cshtml" />
+    <Content Include="Areas\Kitchen\Views\Shared\_LabelView.cshtml" />
+    <Content Include="Areas\Admin\Views\Menu\_Menu.cshtml" />
+    <Content Include="Database\README.md" />
+    <Content Include="Database\RUN_MIGRATION.md" />
+    <Content Include="Areas\Nilkamal\Sitemaps\Main.sitemap" />
+    <Content Include="Areas\Nilkamal\Views\PacketLabel\Create.cshtml" />
+    <Content Include="Areas\Nilkamal\Views\PacketLabel\Index.cshtml" />
+    <Content Include="Areas\Nilkamal\Views\PacketLabel\View.cshtml" />
+    <Content Include="Areas\Nilkamal\Views\PacketLabel\_PacketLabel.cshtml" />
+    <Content Include="Areas\Nilkamal\Views\PartLabel\Create.cshtml" />
+    <Content Include="Areas\Nilkamal\Views\PartLabel\Index.cshtml" />
+    <Content Include="Areas\Nilkamal\Views\PartLabel\View.cshtml" />
+    <Content Include="Areas\Nilkamal\Views\PartLabel\_PartialIndex.cshtml" />
+    <Content Include="Areas\Nilkamal\Views\PartLabel\_PartLabel.cshtml" />
+    <Content Include="Areas\Nilkamal\Views\Plan\Create.cshtml" />
+    <Content Include="Areas\Nilkamal\Views\Plan\Delete.cshtml" />
+    <Content Include="Areas\Nilkamal\Views\Plan\Import.cshtml" />
+    <Content Include="Areas\Nilkamal\Views\Plan\Index.cshtml" />
+    <Content Include="Areas\Nilkamal\Views\Plan\PlanDetailView.cshtml" />
+    <Content Include="Areas\Nilkamal\Views\Plan\View.cshtml" />
+    <Content Include="Areas\Nilkamal\Views\Plan\_Plan.cshtml" />
+    <Content Include="Areas\Nilkamal\Views\web.config" />
+    <Content Include="Areas\Euro\Sitemaps\Main.sitemap" />
+    <Content Include="Areas\Euro\Views\PartLabel\Create.cshtml" />
+    <Content Include="Areas\Euro\Views\PartLabel\Index.cshtml" />
+    <Content Include="Areas\Euro\Views\PartLabel\View.cshtml" />
+    <Content Include="Areas\Euro\Views\PartLabel\_PartialIndex.cshtml" />
+    <Content Include="Areas\Euro\Views\PartLabel\_PartLabel.cshtml" />
+    <Content Include="Areas\Euro\Views\Plan\Create.cshtml" />
+    <Content Include="Areas\Euro\Views\Plan\Delete.cshtml" />
+    <Content Include="Areas\Euro\Views\Plan\Import.cshtml" />
+    <Content Include="Areas\Euro\Views\Plan\Index.cshtml" />
+    <Content Include="Areas\Euro\Views\Plan\PlanDetailView.cshtml" />
+    <Content Include="Areas\Euro\Views\Plan\View.cshtml" />
+    <Content Include="Areas\Euro\Views\Shared\_LabelIndex.cshtml" />
+    <Content Include="Areas\Euro\Views\Shared\_LabelView.cshtml" />
+    <Content Include="Areas\Euro\Views\Shared\_PackingView.cshtml" />
+    <Content Include="Areas\Euro\Views\Carton\CreateNonWeighingPacking.cshtml" />
+    <Content Include="Areas\Euro\Views\Carton\Index.cshtml" />
+    <Content Include="Areas\Euro\Views\Carton\View.cshtml" />
+    <Content Include="Areas\Euro\Views\Carton\_PartialIndex.cshtml" />
+    <Content Include="Areas\Euro\Views\web.config" />
     <None Include="Dockerfile" />
     <None Include=".dockerignore">
       <DependentUpon>Dockerfile</DependentUpon>
@@ -2579,6 +2792,7 @@
     <Content Include="Scripts\js\combobox.js" />
     <Content Include="Scripts\js\errorHandler.js" />
     <Content Include="Scripts\js\multicolumncomboboxHelper.js" />
+    <Content Include="Scripts\js\sessionTimeout.js" />
     <Content Include="Scripts\js\print.js" />
     <Content Include="Scripts\js\loader.js" />
     <Content Include="Scripts\js\corno.js" />
@@ -2757,6 +2971,18 @@
     <Content Include="Scripts\DataTables\media\js\jquery.dataTables.min.js" />
     <Content Include="Scripts\eneter-messaging-7.0.0.js" />
     <Content Include="libman.json" />
+    <Content Include="Documentation\HealthCheckModule\CODE_IMPLEMENTATION.md" />
+    <Content Include="Documentation\HealthCheckModule\DEPLOYMENT_GUIDE.md" />
+    <Content Include="Documentation\HealthCheckModule\README.md" />
+    <Content Include="Documentation\HealthCheckModule\USER_MANUAL.md" />
+    <Content Include="Documentation\HealthCheckModule\WIREFRAMES.md" />
+    <Content Include="Documentation\Login Module\CODE_DOCUMENTATION.md" />
+    <Content Include="Documentation\Login Module\DEPLOYMENT_GUIDE.md" />
+    <Content Include="Documentation\Login Module\IMPLEMENTATION_GUIDE.md" />
+    <Content Include="Documentation\Login Module\IMPLEMENTATION_SUMMARY.md" />
+    <Content Include="Documentation\Login Module\MENU_MIGRATION_GUIDE.md" />
+    <Content Include="Documentation\Login Module\USER_MANUAL.md" />
+    <Content Include="Documentation\Login Module\WIREFRAMES.md" />
     <None Include="packages.config" />
     <None Include="Properties\PublishProfiles\FolderProfile.pubxml" />
     <Content Include="Scripts\error\errorhandlers.js" />
@@ -5302,6 +5528,8 @@
     <Folder Include="Areas\DemoProject\Views\Shared\" />
     <Folder Include="Areas\Euro\Models\" />
     <Folder Include="Areas\Masters\Views\Shared\" />
+    <Folder Include="Areas\Nilkamal\Models\" />
+    <Folder Include="Areas\Nilkamal\Reports\" />
     <Folder Include="Areas\Report\Data\" />
     <Folder Include="Areas\Report\Views\Shared\" />
     <Folder Include="Scripts\fontawesome\" />
@@ -5328,6 +5556,9 @@
     <EmbeddedResource Include="Areas\DemoProject\Reports\SalesInvoiceReceiptRpt.resx">
       <DependentUpon>SalesInvoiceReceiptRpt.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Areas\Euro\Labels\PartLabelRpt.resx">
+      <DependentUpon>PartLabelRpt.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Areas\Kitchen\Labels\BranchLabelRpt.resx">
       <DependentUpon>BranchLabelRpt.cs</DependentUpon>
     </EmbeddedResource>
@@ -5339,9 +5570,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Areas\Kitchen\Labels\ShirwalPartLabelRpt.resx">
       <DependentUpon>ShirwalPartLabelRpt.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Areas\Kitchen\Labels\ShirwalPartLabelRpt_.resx">
-      <DependentUpon>ShirwalPartLabelRpt_.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Areas\Kitchen\Labels\SubAssemblyLabelRpt.resx">
       <DependentUpon>SubAssemblyLabelRpt.cs</DependentUpon>
@@ -5417,6 +5645,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Areas\Kitchen\Reports\WipRpt.resx">
       <DependentUpon>WipRpt.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Areas\Nilkamal\Labels\PacketLabelRpt.resx">
+      <DependentUpon>PacketLabelRpt.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Areas\Nilkamal\Labels\PartLabelRpt.resx">
+      <DependentUpon>PartLabelRpt.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\licenses.licx" />
     <EmbeddedResource Include="Reports\BaseReport.resx">

@@ -4,7 +4,6 @@ using System.Web.Mvc;
 using Corno.Web.Areas.BoardStore.Models;
 using Corno.Web.Areas.BoardStore.Services.Interfaces;
 using Corno.Web.Controllers;
-using Corno.Web.Services.Progress.Interfaces;
 using Kendo.Mvc.Extensions;
 using Kendo.Mvc.UI;
 using Mapster;
@@ -14,9 +13,8 @@ namespace Corno.Web.Areas.BoardStore.Controllers;
 public class LocationController : MasterController <Location>
 {
     #region -- Constructors --
-    public LocationController(ILocationService locationService,
-        IWebProgressService progressService) 
-        : base(locationService, progressService)
+    public LocationController(ILocationService locationService) 
+        : base(locationService)
     {
         _locationService = locationService;
     }

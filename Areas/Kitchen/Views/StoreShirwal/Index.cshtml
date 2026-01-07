@@ -1,54 +1,21 @@
 ﻿@using Corno.Web.Areas.Kitchen.Dto.Label
 @using Corno.Web.Globals
+@using Corno.Web.Globals.Enums
 @using Corno.Web.Helper
 @using Kendo.Mvc.UI
 @{
     Layout = "~/Views/Shared/_AppLayout.cshtml";
     ViewBag.BoxTitle = "Store Shirwal";
+    ViewBag.ControllerName = "StoreShirwal";
+    ViewBag.ViewAction = "View";
+    ViewBag.DataSourceAction = "GetIndexViewDto";
+    ViewBag.ShowAddNewButton = true;
+    ViewBag.BarcodeColumnLink = true;
+    ViewBag.WarehouseOrderColumnLink = true;
+    ViewBag.GroupByWarehouseOrder = false;
+    ViewBag.LabelType = nameof(LabelType.StoreShirwal);
 }
 
 <div class="grid-container-full-height">
-    @(Html.Kendo().Grid<LabelIndexDto>()
-        .Name("grid")
-        .ApplyIndexSettings() // 👈 Apply index settings (full height, responsive)
-        .AddExportToolBar(enableExcel: true, enablePdf: true, enableSearch: true, customToolbar: toolbar =>
-        {
-            toolbar.Custom()
-                .Text("<span class='k-icon k-i-plus'></span> Add New")
-                .HtmlAttributes(new { @class = "k-grid-add-new k-button-add-new-outlined", style = "float: right;", onclick = $"window.location.href='{Url.Action("Create", "StoreShirwal", new { area = "Kitchen" })}'; return false;" });
-        })
-        .Events(events => events.ApplyCommonEvents())
-        .Columns(columns =>
-        {
-            //columns.AddCommandColumns(new List<GridCommandConfig>
-            //{
-            //    new() { Name = "View", Text = "", IconClass = "k-icon k-i-preview k-i-eye", ClickHandler = "onViewClick" },
-            //});
-            columns.Bound(m => m.LabelDate)
-                .Format("{0:dd/MM/yyyy hh:mm tt}");
-            columns.Bound(m => m.WarehouseOrderNo).Align(TextAlign.Left)
-                .ClientTemplate("<a href='" + Url.Action("View", "StoreShirwal", new { area = "Kitchen" }) + "?id=#=Id#' class='text-primary text-decoration-underline'>#=WarehouseOrderNo#</a>");
-            columns.Bound(m => m.LotNo).Align(TextAlign.Left);
-            columns.Bound(m => m.Position);
-            columns.Bound(m => m.OrderQuantity).Hidden();
-            columns.Bound(m => m.Quantity);
-            columns.AddStatusColumn();
-        })
-        .DataSource(dataSource => dataSource
-            .ApplyCommonDataSourceSettings("GetIndexViewDto", "StoreShirwal", "Kitchen")
-            .Group(group => { group.Add(g => g.WarehouseOrderNo); })
-            .Sort(s => s.Add(FieldConstants.Id).Descending())
-        ))
+    @Html.Partial("~/Areas/Kitchen/Views/Shared/_LabelIndex.cshtml")
 </div>
-
-<script type="text/javascript">
-      function onViewClick(e) {
-         e.preventDefault();
-         var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
-         var id = dataItem.Id; // Assuming 'Id' is the field name
-         window.location.href = '@Url.Action("View", "StoreShirwal", new { area = "Kitchen" })' + '?id=' + id;
-    }
-
-    function sendData() {
-    }
-</script>

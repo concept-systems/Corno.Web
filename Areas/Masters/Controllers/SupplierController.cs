@@ -5,7 +5,6 @@ using Corno.Web.Globals;
 using Corno.Web.Models.Masters;
 using Corno.Web.Services.Interfaces;
 using Corno.Web.Services.Masters.Interfaces;
-using Corno.Web.Services.Progress.Interfaces;
 using Kendo.Mvc.Extensions;
 using Kendo.Mvc.UI;
 using System;
@@ -20,7 +19,7 @@ public class SupplierController : SuperController
 {
     #region -- Constructors --
     public SupplierController(IMasterService<Supplier> supplierService, 
-        IWebProgressService progressService, IBaseItemService itemService)
+        IBaseItemService itemService)
     {
         _supplierService = supplierService;
         _itemService = itemService;

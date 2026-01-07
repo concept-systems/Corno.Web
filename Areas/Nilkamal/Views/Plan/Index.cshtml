@@ -1,0 +1,299 @@
+﻿@using Corno.Web.Areas.Nilkamal.Dto.Plan
+@using Corno.Web.Globals
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@{
+    Layout = "~/Views/Shared/_AppLayout.cshtml";
+
+    ViewBag.BoxTitle = "Plan List";
+    ViewData["SearchAction"] = "GetPlans";
+    ViewData["Area"] = "Nilkamal";
+    ViewData["ImportAction"] = "ImportPlan";
+}
+
+<div class="grid-container-full-height">
+    @(Html.Kendo().Grid<PlanIndexDto>()
+        .Name("grid")
+        .ApplyIndexSettings(customToolbar: toolbar =>
+        {
+            toolbar.Custom()
+               .Text("<span class='k-icon k-i-refresh'></span> Correct Plan")
+               .HtmlAttributes(new { @class = "k-grid-import k-button-import-outlined", style = "float: right;", onclick = "onUpdateQuantitiesClick(event); return false;" });
+            toolbar.Custom()
+                .Text("<span class='k-icon k-i-import'></span> Import")
+                .HtmlAttributes(new { @class = "k-grid-import k-button-import-outlined", style = "float: right;", onclick = "onImportClick(event); return false;" });
+        }) // 👈 Apply index settings (full height, responsive)
+        .Events(events => events.ApplyCommonEvents())
+        .Columns(columns =>
+        {
+            //columns.AddCommandColumns(new List<GridCommandConfig>
+            //{
+            //    new() { Name = "View", Text = "", IconClass = "k-icon k-i-preview k-i-eye", ClickHandler = "onViewClick" },
+            //});
+            columns.Bound(m => m.PlanDate).Format("{0:dd/MM/yyyy}");
+            columns.Bound(m => m.ProductionOrderNo).Align(TextAlign.Left).Title("Production Order No")
+                .ClientTemplate("<a href='" + Url.Action("View", "Plan") + "?id=#=Id#' class='text-primary text-decoration-underline'>#=ProductionOrderNo#</a>");
+            columns.Bound(m => m.DueDate).Format("{0:dd/MM/yyyy}");
+            columns.Bound(m => m.OrderQuantity).Title("Order<br/>Qty");
+            columns.Bound(m => m.PrintQuantity).Title("Print<br/>Qty");
+            columns.Bound(m => m.PackedQuantity).Title("Pack<br/>Qty");
+        })
+        .DataSource(dataSource => dataSource
+            .ApplyCommonDataSourceSettings("GetIndexViewDto", "Plan", "Nilkamal")
+            .Sort(s => s.Add(FieldConstants.Id).Descending())
+            //.Group(group => { group.Add(g => g.LotNo); })
+            .Model(model => model.Id(FieldConstants.Id))
+        ))
+</div>
+
+<script type="text/javascript">
+    function onViewClick(e) {
+         e.preventDefault();
+         var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+        var id = dataItem.Id; // Assuming 'Id' is the field name
+        var productionOrderNo = dataItem.ProductionOrderNo;
+        window.location.href = '@Url.Action("View", "Plan", new {area ="Nilkamal"})' + '?id=' + id + '&productionOrderNo=' + productionOrderNo;
+    }
+
+    function onImportClick(e) {
+        e.preventDefault();
+        window.location.href = '@Url.Action("Import", "Plan", new { area = "Nilkamal" })';
+    }
+
+    function onUpdateQuantitiesClick(e) {
+        e.preventDefault();
+
+        // Show custom dialog to get either WarehouseOrderNo or Due Date
+        var dialogHtml = '<div class="form-group">' +
+            '<label for="correctPlanWarehouseOrderNo">Warehouse Order No:</label>' +
+            '<input type="text" id="correctPlanWarehouseOrderNo" class="form-control" placeholder="Enter Warehouse Order No" />' +
+            '</div>' +
+            '<div class="form-group mt-3">' +
+            '<label class="d-block">OR</label>' +
+            '</div>' +
+            '<div class="form-group">' +
+            '<label for="correctPlanDueDate">Due Date:</label>' +
+            '<input type="date" id="correctPlanDueDate" class="form-control" />' +
+            '</div>' +
+            '<div class="alert alert-info mt-3">' +
+            '<small><i class="fa fa-info-circle"></i> Enter either Warehouse Order No or Due Date (not both).</small>' +
+            '</div>';
+
+        bootbox.dialog({
+            title: "Correct Plan",
+            message: dialogHtml,
+            centerVertical: true,
+            size: 'medium',
+            buttons: {
+                confirm: {
+                    label: 'Correct Plan',
+                    className: 'btn-primary',
+                    callback: function() {
+                        var warehouseOrderNo = $('#correctPlanWarehouseOrderNo').val() || null;
+                        var dueDate = $('#correctPlanDueDate').val() || null;
+
+                        // Validate that at least one is provided
+                        if (!warehouseOrderNo && !dueDate) {
+                            showErrorMessage("Please enter either Warehouse Order No or Due Date.", "Validation Error");
+                            return false; // Keep dialog open
+                        }
+
+                        // Validate that both are not provided
+                        if (warehouseOrderNo && dueDate) {
+                            showErrorMessage("Please enter either Warehouse Order No OR Due Date, not both.", "Validation Error");
+                            return false; // Keep dialog open
+                        }
+
+                        // Show confirmation dialog
+                        var searchCriteria = warehouseOrderNo ? 
+                            'warehouse order: <strong>' + warehouseOrderNo + '</strong>' : 
+                            'due date: <strong>' + dueDate + '</strong>';
+
+                        bootbox.confirm({
+                            title: "Update Quantities",
+                            message: "Are you sure you want to update quantities for " + searchCriteria + "?<br/><br/>This will:<br/>- Recalculate all quantities based on current label statuses<br/>- Update label statuses if needed<br/>- Refresh plan quantities",
+                            centerVertical: true,
+                            buttons: {
+                                confirm: {
+                                    label: 'Yes, Update',
+                                    className: 'btn-primary'
+                                },
+                                cancel: {
+                                    label: 'Cancel',
+                                    className: 'btn-secondary'
+                                }
+                            },
+                            callback: function (result) {
+                                if (result) {
+                                    // Show progress dialog
+                                    var progressDialog = bootbox.dialog({
+                                        title: "Updating Quantities",
+                                        message: '<div class="text-center"><i class="fa fa-spinner fa-spin fa-3x"></i><br/><br/><p>Updating quantities, please wait...</p><div class="progress" style="margin-top: 20px;"><div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div></div></div>',
+                                        centerVertical: true,
+                                        closeButton: false,
+                                        buttons: {}
+                                    });
+
+                                    // Build request body
+                                    var body = '';
+                                    if (warehouseOrderNo) {
+                                        body = 'warehouseOrderNo=' + encodeURIComponent(warehouseOrderNo);
+                                    } else if (dueDate) {
+                                        body = 'dueDate=' + encodeURIComponent(dueDate);
+                                    }
+
+                                    // Use fetch API to update quantities
+                                    fetch('@Url.Action("UpdateQuantities", "Plan")', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/x-www-form-urlencoded',
+                                        },
+                                        body: body
+                                    })
+                                    .then(function(response) {
+                                        return response.json();
+                                    })
+                                    .then(function(data) {
+                                        // Hide progress dialog and wait for it to close before showing messages
+                                        var modalElement = progressDialog.find('.modal');
+                                        if (modalElement.length > 0) {
+                                            modalElement.one('hidden.bs.modal', function() {
+                                                if (data.success === true) {
+                                                    bootbox.alert({
+                                                        title: "Success",
+                                                        message: '<i class="fa fa-check-circle" style="color: green; font-size: 24px;"></i><br/><br/><strong>Quantities updated successfully!</strong><br/><br/>The plan quantities have been recalculated and updated.',
+                                                        centerVertical: true,
+                                                        callback: function() {
+                                                            // Refresh the grid to show updated quantities
+                                                            var grid = $("#grid").data("kendoGrid");
+                                                            if (grid) {
+                                                                grid.dataSource.read();
+                                                            }
+                                                        }
+                                                    });
+                                                } else {
+                                                    showErrorMessage(data.message || 'An unknown error occurred.', "Update failed");
+                                                }
+                                            });
+                                            progressDialog.modal('hide');
+                                        } else {
+                                            // Fallback if modal structure is different
+                                            progressDialog.modal('hide');
+                                            setTimeout(function() {
+                                                if (data.success === true) {
+                                                    bootbox.alert({
+                                                        title: "Success",
+                                                        message: '<i class="fa fa-check-circle" style="color: green; font-size: 24px;"></i><br/><br/><strong>Quantities updated successfully!</strong><br/><br/>The plan quantities have been recalculated and updated.',
+                                                        centerVertical: true,
+                                                        callback: function() {
+                                                            // Refresh the grid to show updated quantities
+                                                            var grid = $("#grid").data("kendoGrid");
+                                                            if (grid) {
+                                                                grid.dataSource.read();
+                                                            }
+                                                        }
+                                                    });
+                                                } else {
+                                                    showErrorMessage(data.message || 'An unknown error occurred.', "Update failed");
+                                                }
+                                            }, 300);
+                                        }
+                                    })
+                                    .catch(function(error) {
+                                        // Hide progress dialog and wait for it to close before showing error
+                                        var modalElement = progressDialog.find('.modal');
+                                        if (modalElement.length > 0) {
+                                            modalElement.one('hidden.bs.modal', function() {
+                                                showErrorMessage(error.message || 'Failed to update quantities. Please try again.');
+                                            });
+                                            progressDialog.modal('hide');
+                                        } else {
+                                            // Fallback if modal structure is different
+                                            progressDialog.modal('hide');
+                                            setTimeout(function() {
+                                                showErrorMessage(error.message || 'Failed to update quantities. Please try again.');
+                                            }, 300);
+                                        }
+                                    });
+                                }
+                            }
+                        });
+
+                        return false; // Close the input dialog
+                    }
+                },
+                cancel: {
+                    label: 'Cancel',
+                    className: 'btn-secondary'
+                }
+            }
+        });
+    }
+
+    function sendData() {
+    }
+
+    // Calculate and adjust page size based on available grid height
+    function adjustGridPageSize() {
+        var grid = $("#grid").data("kendoGrid");
+        if (!grid) return;
+
+        try {
+            // Get grid container height
+            var gridElement = grid.element;
+            var gridHeight = gridElement.height();
+            
+            // Get heights of grid components
+            var toolbarHeight = gridElement.find(".k-grid-toolbar").outerHeight() || 0;
+            var headerHeight = gridElement.find(".k-grid-header").outerHeight() || 0;
+            var pagerHeight = gridElement.find(".k-pager-wrap").outerHeight() || 0;
+            var filterRowHeight = gridElement.find(".k-grid-header .k-filter-row").outerHeight() || 0;
+            
+            // Calculate available height for data rows
+            var availableHeight = gridHeight - toolbarHeight - headerHeight - pagerHeight - filterRowHeight - 10; // 10px buffer
+            
+            // Estimate row height (typically around 30-35px per row)
+            var estimatedRowHeight = 35;
+            
+            // Calculate optimal page size (ensure at least 1 row)
+            var optimalPageSize = Math.max(1, Math.floor(availableHeight / estimatedRowHeight));
+            
+            // Set reasonable limits
+            optimalPageSize = Math.min(optimalPageSize, 1000); // Max 1000 rows
+            optimalPageSize = Math.max(optimalPageSize, 5); // Min 5 rows
+            
+            // Update page size if different from current
+            var currentPageSize = grid.dataSource.pageSize();
+            if (currentPageSize !== optimalPageSize) {
+                grid.dataSource.pageSize(optimalPageSize);
+                grid.dataSource.page(1); // Reset to first page
+                grid.refresh();
+            }
+        } catch (e) {
+            console.log("Error adjusting grid page size:", e);
+        }
+    }
+
+    $(document).ready(function () {
+        // Adjust page size on load
+        setTimeout(function () {
+            adjustGridPageSize();
+        }, 500);
+
+        // Adjust page size on window resize
+        var resizeTimer;
+        $(window).on('resize', function () {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(function () {
+                adjustGridPageSize();
+            }, 250);
+        });
+
+        // Adjust page size after grid data is bound
+        $("#grid").on("dataBound", function () {
+            setTimeout(function () {
+                adjustGridPageSize();
+            }, 100);
+        });
+    });
+</script>

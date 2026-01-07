@@ -8,7 +8,6 @@ using Corno.Web.Repository.Interfaces;
 using Corno.Web.Services.Base;
 using Corno.Web.Services.Packing.Interfaces;
 using Corno.Web.Services.Plan.Interfaces;
-using Corno.Web.Services.Progress.Interfaces;
 using Corno.Web.Windsor;
 
 namespace Corno.Web.Services.Plan;
@@ -44,6 +43,22 @@ public class BasePlanService : PrintService<Models.Plan.Plan>, IBasePlanService
 
         return !plan.PlanItemDetails.Any() ?
             throw new Exception($"Warehouse Order No ({warehouseOrderNo}) doesn't have items.") :
+            plan;
+    }
+
+    public virtual async Task<Models.Plan.Plan> GetByProductionOrderNoAsync(string productionOrderNo)
+    {
+        if (string.IsNullOrEmpty(productionOrderNo))
+            throw new Exception($"Invalid Production Order No ({productionOrderNo}).");
+
+        // Enable includes since PlanItemDetails are usually needed
+        //SetIncludes($"{nameof(Models.Plan.Plan.PlanItemDetails)},{nameof(Models.Plan.Plan.PlanPacketDetails)}");
+        var plan = await FirstOrDefaultAsync(p => p.ProductionOrderNo == productionOrderNo, p => p).ConfigureAwait(false);
+        if (null == plan)
+            throw new Exception($"No plan available for entered Production Order No ({productionOrderNo}).");
+
+        return !plan.PlanItemDetails.Any() ?
+            throw new Exception($"Production Order No ({productionOrderNo}) doesn't have items.") :
             plan;
     }
 
@@ -101,12 +116,12 @@ public class BasePlanService : PrintService<Models.Plan.Plan>, IBasePlanService
     public new event EventHandler OnDeleteComplete;
     public new event EventHandler<Exception> OnDeleteError;
 
-    protected virtual void DeleteOtherPlanRelatedEntries(Models.Plan.Plan plan, IBaseProgressService progressService = null)
+    protected virtual void DeleteOtherPlanRelatedEntries(Models.Plan.Plan plan)
     {
         // Do Nothing
     }
 
-    public async Task DeleteAsync(object id, IBaseProgressService progressService = null)
+    public async Task DeleteAsync(object id)
     {
         try
         {
@@ -114,12 +129,10 @@ public class BasePlanService : PrintService<Models.Plan.Plan>, IBasePlanService
             if (null == plan)
                 throw new Exception($"Plan not found with id {id}");
 
-            DeleteOtherPlanRelatedEntries(plan, progressService);
+            DeleteOtherPlanRelatedEntries(plan);
 
             await DeleteAsync(plan).ConfigureAwait(false);
             await SaveAsync().ConfigureAwait(false);
-
-            progressService?.Report("Deleted plan & plan related labels, pallets, cartons successfully.");
 
             OnDeleteComplete?.Invoke(null, null);
         }

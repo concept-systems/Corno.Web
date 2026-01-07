@@ -1,5 +1,6 @@
 using System;
 using LINQtoCSV;
+using Corno.Web.Services.Import;
 
 namespace Corno.Web.Areas.Euro.Dto.Label;
 
@@ -22,7 +23,9 @@ public class LabelImportDto
     public double? Quantity { get; set; }
     [CsvColumn(Name = "Part Name")]
     public string Description { get; set; }
+    
     [CsvColumn(Name = "Material Description")]
+    [CsvColumnAlternative("Material Description", "Material")]
     public string MaterialDescription { get; set; }
 
     [CsvColumn(Name = "Barcode 1")]

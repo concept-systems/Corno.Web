@@ -1,16 +1,13 @@
-﻿using Corno.Web.Areas.Admin.Services.Interfaces;
+using Corno.Web.Areas.Admin.Services.Interfaces;
 using Corno.Web.Areas.Kitchen.Dto.Label;
-using Corno.Web.Areas.Kitchen.Labels;
 using Corno.Web.Areas.Kitchen.Services.Interfaces;
 using Corno.Web.Extensions;
 using Corno.Web.Globals;
 using Corno.Web.Globals.Enums;
 using Corno.Web.Models.Packing;
 using Corno.Web.Models.Plan;
-using Corno.Web.Reports;
 using Corno.Web.Repository.Interfaces;
 using Corno.Web.Services.File.Interfaces;
-using Corno.Web.Windsor;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -87,14 +84,13 @@ public class PartLabelService : LabelService, IPartLabelService
         var labels = new List<Label>();
         for (var index = 0; index < dto.Quantity; index++)
         {
-            await Task.Delay(1).ConfigureAwait(false);
             var barcode = $"{DateTime.Now:ddMMyyyyhhmmssffff}";
             var label = new Label
             {
                 Code = barcode,
 
                 LabelDate = DateTime.Now,
-                LabelType = LabelType.Part.ToString(),
+                LabelType = nameof(LabelType.Part),
 
                 LotNo = plan.LotNo,
 
@@ -136,45 +132,6 @@ public class PartLabelService : LabelService, IPartLabelService
         }
 
         return labels;
-    }
-
-    public async Task<BaseReport> CreateLabelReportAsync(List<Label> labels, bool bDuplicate)
-    {
-        var labelRpt = new PartLabelRpt(labels, bDuplicate);
-        return await Task.FromResult<BaseReport>(labelRpt).ConfigureAwait(false);
-    }
-
-    public async Task UpdateDatabaseAsync(List<Label> entities, Plan plan)
-    {
-        if (null == plan)
-            throw new Exception("Invalid Plan");
-        foreach(var label in entities)
-        {
-            var planItemDetail = plan.PlanItemDetails.FirstOrDefault(d =>
-                d.Position == label.Position);
-            if(null == planItemDetail) continue;
-            planItemDetail.PrintQuantity ??= 0;
-            planItemDetail.PrintQuantity += label.Quantity;
-        }
-
-        var planService = Bootstrapper.Get<IPlanService>();
-        await planService.UpdateAndSaveAsync(plan).ConfigureAwait(false);
-        await AddRangeAndSaveAsync(entities).ConfigureAwait(false);
-    }
-
-    public async Task<LabelViewDto> CreateViewDtoAsync(int? id)
-    {
-        var label = await FirstOrDefaultAsync(p => p.Id == id, p => p).ConfigureAwait(false);
-        if (label == null)
-            throw new Exception($"Label with Id '{id}' not found.");
-
-        var dto = await GetLabelViewDto(label).ConfigureAwait(false);
-
-        var report = await CreateLabelReportAsync([label], true).ConfigureAwait(false);
-        dto.Base64 = Convert.ToBase64String(report.ToDocumentBytes());
-        //System.IO.File.WriteAllBytes("D://debug.pdf", report.ToDocumentBytes());
-
-        return dto;
     }
 
     #endregion

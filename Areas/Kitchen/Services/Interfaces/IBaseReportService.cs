@@ -33,6 +33,9 @@ public interface IBaseReportService : IService
         string methodName, Type reportType, string filterName, Type filterType, string fieldName);
     void FillTwoDateFilterParameter(ReportParameterCollection parameters, string methodName, 
         Type reportType, string fieldName);
+
+    void AddIsPreviewParameter(ReportParameterCollection parameters);
+
     #endregion
 
     #endregion

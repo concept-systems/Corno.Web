@@ -1,0 +1,18 @@
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@using Corno.Web.Areas.Euro.Dto.Carton
+@model Corno.Web.Areas.Euro.Dto.Carton.CartonViewDto
+
+@{
+    Layout = "~/Views/Shared/_AppLayout.cshtml";
+    ViewBag.BoxTitle = "Carton View";
+    ViewBag.SubmitButtonText = "Print";
+    ViewBag.ControllerName = "Carton";
+    ViewBag.DeleteAction = "DeleteCarton";
+    ViewBag.IndexAction = "Index";
+    ViewBag.ShowDeleteButton = true;
+    ViewBag.ShowPrintQuantity = false;
+}
+
+@Html.Partial("~/Areas/Euro/Views/Shared/_PackingView.cshtml", Model)
+

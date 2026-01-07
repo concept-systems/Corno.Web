@@ -1,16 +1,17 @@
-﻿using System.Collections;
+﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Web;
 using System.Web.Mvc;
-using System.Xml;
+using Corno.Web.Areas.Admin.Dto;
+using Corno.Web.Areas.Admin.Services.Interfaces;
 using Corno.Web.Globals;
+using Corno.Web.Services.Interfaces;
+using Corno.Web.Logger;
 using Corno.Web.Services.Masters.Interfaces;
 using Kendo.Mvc;
+using Kendo.Mvc.Extensions;
 using Microsoft.AspNet.Identity;
-using Microsoft.AspNet.Identity.Owin;
 using SiteMapNode = Kendo.Mvc.SiteMapNode;
 
 namespace Corno.Web.Controllers;
@@ -20,9 +21,13 @@ public class HomeController : Controller
 {
     #region -- Constructors --
 
-    public HomeController(IProjectService projectService)
+    public HomeController(IProjectService projectService, IMenuService menuService, IPermissionService permissionService, IUserService userService, IMenuMigrationService migrationService)
     {
         _projectService = projectService;
+        _menuService = menuService;
+        _permissionService = permissionService;
+        _userService = userService;
+        _migrationService = migrationService;
     }
 
     #endregion
@@ -30,107 +35,225 @@ public class HomeController : Controller
     #region -- Data Members --
 
     private readonly IProjectService _projectService;
-    private IList<string> _userRoles;
+    private readonly IMenuService _menuService;
+    private readonly IPermissionService _permissionService;
+    private readonly IUserService _userService;
+    private readonly IMenuMigrationService _migrationService;
 
     #endregion
 
     #region -- Private Methods --
-
-    private void AddXmlNode(IEnumerable documentChild, SiteMapNode sitemapNode)
-    {
-        foreach (XmlNode node in documentChild)
-        {
-            var assignedRoles = node?.Attributes?["roles"]?.Value?.Split().ToList();
-            if (assignedRoles == null) continue;
-            for (var index = 0; index < assignedRoles.Count; index++)
-            {
-                assignedRoles[index] = assignedRoles[index].Trim();
-                assignedRoles[index] = assignedRoles[index].ToLower();
-            }
-            if (!_userRoles.Intersect(assignedRoles).Any())
-                continue;
-
-            if (node?.Attributes == null) continue;
-
-            var siteMapNode = new SiteMapNode
-            {
-                Title = node.Attributes["title"]?.Value,
-                ControllerName = node.Attributes["controller"]?.Value,
-                ActionName = node.Attributes["action"]?.Value,
-            };
-
-            // Preserve additional attributes from sitemap for later use (e.g., icons, names)
-            var miscType = node.Attributes[FieldConstants.MiscType.ToLower()]?.Value;
-            if (!string.IsNullOrEmpty(miscType))
-                siteMapNode.Attributes.Add(new KeyValuePair<string, object>(FieldConstants.MiscType, miscType));
-
-            var icon = node.Attributes["icon"]?.Value;
-            if (!string.IsNullOrEmpty(icon))
-            {
-                siteMapNode.Attributes.Add(new KeyValuePair<string, object>("icon", icon));
-            }
-
-            var name = node.Attributes["name"]?.Value;
-            if (!string.IsNullOrEmpty(name))
-            {
-                siteMapNode.Attributes.Add(new KeyValuePair<string, object>("name", name));
-            }
-            var area = node.Attributes["area"]?.Value;
-            siteMapNode.RouteValues.Add("area", area);
-            siteMapNode.RouteValues.Add(FieldConstants.MiscType, node.Attributes[FieldConstants.MiscType.ToLower()]?.Value);
-            siteMapNode.RouteValues.Add(FieldConstants.ReportName, node.Attributes["reportName"]?.Value);
-            siteMapNode.RouteValues.Add(FieldConstants.Title, node.Attributes[FieldConstants.Title.ToLower()]?.Value);
-            siteMapNode.RouteValues.Add("web", node.Attributes["web".ToLower()]?.Value);
-
-            sitemapNode.ChildNodes.Add(siteMapNode);
-            if (node.HasChildNodes)
-                AddXmlNode(node, siteMapNode);
-        }
-    }
+    // XML sitemap methods removed - system now uses database menus exclusively
     #endregion
 
     #region -- Actions --
     public async Task<ActionResult> Index()
     {
-        var project = await _projectService.GetProjectAsync("Active").ConfigureAwait(false);
-        ApplicationGlobals.ProjectId = project.Id;
-
-        //_userRoles = _identityService.GetUserRoles(User.Identity.GetUserId()).ToList();
-        var userManager = HttpContext.GetOwinContext().GetUserManager<ApplicationUserManager>();
-        var userId = User.Identity.GetUserId();
-        _userRoles = await Task.Run(() => userManager.GetRoles(userId).ToList()).ConfigureAwait(false);
-        for (var index = 0; index < _userRoles.Count; index++)
+        try
         {
-            _userRoles[index] = _userRoles[index].Trim();
-            _userRoles[index] = _userRoles[index].ToLower();
+            var project = await _projectService.GetProjectAsync("Active").ConfigureAwait(false);
+            ApplicationGlobals.ProjectId = project.Id;
+
+            var userId = User.Identity.GetUserId();
+
+            // Check if menus exist in database
+            var menuCount = await _menuService.GetMenuCountAsync().ConfigureAwait(false);
+            
+            // If menus exist but default login module menus don't, create them
+            if (menuCount > 0)
+            {
+                // Check if Dashboard menu exists (as indicator of default menus)
+                // Use GetVisibleMenusAsync to check all menus, not just tree structure
+                var allVisibleMenus = await _menuService.GetVisibleMenusAsync().ConfigureAwait(false);
+                var hasDashboard = allVisibleMenus?.Any(m => m.MenuName == "Dashboard") ?? false;
+                
+                if (!hasDashboard)
+                {
+                    // Default login module menus are missing, create them
+                    var createResult = await _migrationService.CreateDefaultLoginModuleMenusAsync(userId).ConfigureAwait(false);
+                    LogHandler.LogInfo($"Created default login module menus: {createResult.CreatedMenus} created, {createResult.SkippedMenus} skipped. Message: {createResult.Message}");
+                }
+            }
+
+            // If no menus exist, check if user is admin and show migration prompt
+            if (menuCount == 0)
+            {
+                var isAdmin = await _userService.IsAdministratorAsync(userId).ConfigureAwait(false);
+                if (isAdmin && !string.IsNullOrEmpty(project.MenuXml))
+                {
+                    // Check if migration was already attempted (prevent repeated prompts)
+                    var migrationAttempted = Session["MenuMigrationAttempted"] as bool? ?? false;
+                    if (!migrationAttempted)
+                    {
+                        ViewBag.ShowMigrationPrompt = true;
+                        ViewBag.ProjectName = "Active";
+                    }
+                }
+            }
+
+            // Get all visible menus from database
+            var allMenus = await _menuService.GetVisibleMenusAsync().ConfigureAwait(false);
+
+            // Debug: Log menu information
+            LogHandler.LogInfo($"HomeController.Index: Found {allMenus?.Count ?? 0} visible menus. Menu names: {string.Join(", ", allMenus?.Select(m => m.MenuName) ?? new List<string>())}");
+
+            // If no menus, return empty sitemap
+            var sitemapName = User.Identity.GetUserId();
+            if (allMenus == null || !allMenus.Any())
+            {
+                LogHandler.LogInfo("HomeController.Index: No visible menus found, returning empty sitemap");
+                var emptySiteMap = new XmlSiteMap();
+                emptySiteMap.RootNode = new SiteMapNode
+                {
+                    Title = "",
+                    ControllerName = "",
+                    ActionName = ""
+                };
+                SiteMapManager.SiteMaps.Remove(sitemapName);
+                SiteMapManager.SiteMaps.Add(new KeyValuePair<string, SiteMapBase>(sitemapName, emptySiteMap));
+                ViewBag.SiteMapRoot = emptySiteMap.RootNode;
+                return View();
+            }
+
+            // Convert database menus to Kendo SiteMapNode structure (with permission filtering)
+            var siteMap = new XmlSiteMap();
+            siteMap.RootNode = await ConvertMenusToSiteMapAsync(allMenus, userId, null).ConfigureAwait(false);
+
+            // Remove existing entry if it exists
+            SiteMapManager.SiteMaps.Remove(sitemapName);
+
+            // Now add the new sitemap
+            SiteMapManager.SiteMaps.Add(new KeyValuePair<string, SiteMapBase>(sitemapName, siteMap));
+
+            // Pass sitemap root node to view for menu display
+            ViewBag.SiteMapRoot = siteMap.RootNode;
+
+            //ViewBag.ShowMigrationPrompt = true;
+
+            return View();
+        }
+        catch(Exception exception)
+        {
+            LogHandler.LogError(exception);
+            
+            // Get user-friendly error message
+            var errorMessage = LogHandler.GetDetailException(exception)?.Message ?? exception.Message;
+            ViewBag.ErrorMessage = errorMessage;
+            
+            // Set up empty sitemap so view can still render
+            var sitemapName = User.Identity.GetUserId();
+            var emptySiteMap = new XmlSiteMap();
+            emptySiteMap.RootNode = new SiteMapNode
+            {
+                Title = "",
+                ControllerName = "",
+                ActionName = ""
+            };
+            SiteMapManager.SiteMaps.Remove(sitemapName);
+            SiteMapManager.SiteMaps.Add(new KeyValuePair<string, SiteMapBase>(sitemapName, emptySiteMap));
+            ViewBag.SiteMapRoot = emptySiteMap.RootNode;
+            
+            return View();
+        }
+    }
+
+    private async Task<SiteMapNode> ConvertMenusToSiteMapAsync(List<MenuDto> menus, string userId, int? parentMenuId)
+    {
+        var rootNode = new SiteMapNode
+        {
+            Title = "",
+            ControllerName = "",
+            ActionName = ""
+        };
+
+        // Filter menus by parent
+        var childMenus = menus.Where(m => 
+            (parentMenuId == null && m.ParentMenuId == null) ||
+            (parentMenuId != null && m.ParentMenuId == parentMenuId)
+        ).OrderBy(m => m.DisplayOrder).ToList();
+
+        foreach (var menu in childMenus)
+        {
+            // Check menu-level permission
+            var hasMenuAccess = await _permissionService.HasMenuAccessAsync(userId, menu.Id).ConfigureAwait(false);
+            if (!hasMenuAccess)
+            {
+                LogHandler.LogInfo($"HomeController: Menu '{menu.MenuName}' (ID: {menu.Id}) filtered out - no menu access");
+                continue;
+            }
+
+            // If has controller/action, check page-level permission
+            if (!string.IsNullOrEmpty(menu.ControllerName) && !string.IsNullOrEmpty(menu.ActionName))
+            {
+                var hasPageAccess = await _permissionService.HasPageAccessAsync(userId, menu.ControllerName, menu.ActionName, menu.Area).ConfigureAwait(false);
+                if (!hasPageAccess)
+                {
+                    LogHandler.LogInfo($"HomeController: Menu '{menu.MenuName}' (ID: {menu.Id}) filtered out - no page access for {menu.ControllerName}/{menu.ActionName}");
+                    continue;
+                }
+            }
+
+            var siteMapNode = new SiteMapNode
+            {
+                Title = menu.DisplayName,
+                ControllerName = menu.ControllerName,
+                ActionName = menu.ActionName ?? "Index"
+            };
+
+            // Add area to route values
+            if (!string.IsNullOrEmpty(menu.Area))
+                siteMapNode.RouteValues.Add("area", menu.Area);
+
+            // Add icon
+            if (!string.IsNullOrEmpty(menu.IconClass))
+                siteMapNode.Attributes.Add(new KeyValuePair<string, object>("icon", menu.IconClass));
+
+            // Add menu name
+            if (!string.IsNullOrEmpty(menu.MenuName))
+                siteMapNode.Attributes.Add(new KeyValuePair<string, object>("name", menu.MenuName));
+
+            // Parse and add route values from JSON
+            if (!string.IsNullOrEmpty(menu.RouteValues))
+            {
+                try
+                {
+                    var routeValues = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, string>>(menu.RouteValues);
+                    if (routeValues != null)
+                    {
+                        foreach (var kvp in routeValues)
+                        {
+                            if (kvp.Key == "misctype")
+                                siteMapNode.RouteValues.Add(FieldConstants.MiscType, kvp.Value);
+                            else if (kvp.Key == "reportName")
+                                siteMapNode.RouteValues.Add(FieldConstants.ReportName, kvp.Value);
+                            else
+                                siteMapNode.RouteValues.Add(kvp.Key, kvp.Value);
+                        }
+                    }
+                }
+                catch
+                {
+                    // Ignore JSON parse errors
+                }
+            }
+            else
+            {
+                // If no route values, add "web" = "true" by default for system menus
+                // This ensures they appear in the treeview and home page
+                siteMapNode.RouteValues.Add("web", "true");
+            }
+
+            // Process children recursively
+            var childSiteMapNode = await ConvertMenusToSiteMapAsync(menus, userId, menu.Id).ConfigureAwait(false);
+            if (childSiteMapNode.ChildNodes.Any())
+            {
+                siteMapNode.ChildNodes.AddRange(childSiteMapNode.ChildNodes);
+            }
+
+            rootNode.ChildNodes.Add(siteMapNode);
         }
 
-        // Load SiteMap
-        TextReader textReader = new StringReader(project.MenuXml);
-        var document = new XmlDocument();
-        document.Load(textReader);
-
-        var siteMap = new XmlSiteMap();
-        AddXmlNode(document.FirstChild, siteMap.RootNode);
-
-        //SiteMapManager.SiteMaps.Remove(FieldConstants.Project);
-        ////SiteMapManager.SiteMaps.Add(new KeyValuePair<string, SiteMapBase>(FieldConstants.Project, siteMap));
-        //var sitemapName = User.Identity.GetUserId();
-        //SiteMapManager.SiteMaps.Add(new KeyValuePair<string, SiteMapBase>(sitemapName, siteMap));
-
-
-        var sitemapName = User.Identity.GetUserId();
-
-        // Remove existing entry if it exists
-        SiteMapManager.SiteMaps.Remove(sitemapName);
-
-        // Now add the new sitemap
-        SiteMapManager.SiteMaps.Add(new KeyValuePair<string, SiteMapBase>(sitemapName, siteMap));
-
-        // Pass sitemap root node to view for menu display
-        ViewBag.SiteMapRoot = siteMap.RootNode;
-
-        return View();
+        return rootNode;
     }
 
     public async Task<ActionResult> About()

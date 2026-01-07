@@ -15,13 +15,13 @@ public class CornoModel : ICornoModel
         return null;
     }
 
-    public virtual bool UpdateDetails(CornoModel newModel)
-    {
-        return false;
-    }
+    //public virtual bool UpdateDetails(CornoModel newModel)
+    //{
+    //    return false;
+    //}
 
-    public virtual void Copy(CornoModel other)
-    {
+    //public virtual void Copy(CornoModel other)
+    //{
 
-    }
+    //}
 }

@@ -11,7 +11,6 @@ using Corno.Web.Repository.Interfaces;
 using Corno.Web.Services.File.Interfaces;
 using Corno.Web.Services.Interfaces;
 using Corno.Web.Services.Masters.Interfaces;
-using Corno.Web.Services.Progress.Interfaces;
 using Corno.Web.Windsor;
 using Mapster;
 
@@ -237,6 +236,9 @@ public class BaseItemService : MasterService<Item>, IBaseItemService
         return qcCheck.ToBoolean();
     }
 
+    // OLD METHOD - REMOVED: ImportAsync with IBaseProgressService
+    // This should be updated to use the new common import module
+    /*
     public override async Task ImportAsync(string filePath, IBaseProgressService progressService,
         string miscMaster = null)
     {
@@ -277,6 +279,7 @@ public class BaseItemService : MasterService<Item>, IBaseItemService
             LogHandler.LogError(exception);
         }
     }
+    */
 
     /*public override void Export(string filePath, IBaseProgressService progressService)
     {

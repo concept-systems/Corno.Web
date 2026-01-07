@@ -1,10 +1,12 @@
-using System.Data.Entity;
-using System.Data.Entity.ModelConfiguration;
 using Corno.Web.Areas.Admin.Models;
 using Corno.Web.Models;
 using Corno.Web.Models.Base;
 using Corno.Web.Models.Masters;
+using Corno.Web.Models.Sales;
 using Microsoft.AspNet.Identity.EntityFramework;
+using System.Data.Entity;
+using System.Data.Entity.ModelConfiguration;
+using Corno.Web.Models.HealthCheck;
 
 namespace Corno.Web.Windsor.Context;
 
@@ -35,11 +37,22 @@ public class CornoDbContext : BaseDbContext
 
         modelBuilder.Entity<AspNetLoginHistory>().ToTable("AspNetLoginHistories");
 
+        // Login Module Entities
+        modelBuilder.Entity<Menu>().ToTable("Menus");
+        modelBuilder.Entity<PermissionType>().ToTable("PermissionTypes");
+        modelBuilder.Entity<AccessControl>().ToTable("AccessControls");
+        modelBuilder.Entity<AuditLog>().ToTable("AuditLogs");
+        modelBuilder.Entity<PasswordResetToken>().ToTable("PasswordResetTokens");
+
         // Masters
         modelBuilder.Entity<Project>().ToTable("Project");
         modelBuilder.Entity<MiscMaster>().ToTable("MiscMaster");
 
         modelBuilder.Entity<Process>().ToTable("Process");
+
+        // Health Check
+        modelBuilder.Entity<HealthCheckReport>().ToTable($"HealthCheckReports");
+        modelBuilder.Entity<HealthCheckSummary>().ToTable("HealthCheckSummary");
     }
 }
 

@@ -15,10 +15,12 @@
                 //.EditorViewData(new { DataSource = miscMasterService.GetViewModelList() })
                 //.EditorTemplateName(@"/Corno/MultiColumnComboBoxInt")
                 //.EditorTemplateName(@"/Subject/_CategoryComboBox")
+                .HtmlAttributes(new { style = "text-align:left;" })
                 .Width(180);
             columns.Bound(p => p.Quantity).Title("Quantity")
                 .ClientTemplate("#= Quantity #" +
                                 "<input type='hidden' name='ProductPacketDtos[#= index(data)#].Quantity' value='#= Quantity #'   />")
+                .HtmlAttributes(new { style = "text-align:right;" })
                 //.EditorTemplateName("Number")
                 .Width(50);
             /*columns.Bound(p => p.Quantity)
@@ -28,6 +30,11 @@
             {
                 command.Edit();
                 command.Destroy();
+                command.Custom("Print")
+                    .Click("onPrintBom")
+                    .Text("Print")
+                    .IconClass("k-icon k-i-print")
+                    .HtmlAttributes(new { @class = "k-button k-button-solid k-button-solid-success" });
             }).Width(200);
         })
         .ToolBar(toolbar => toolbar.Create())

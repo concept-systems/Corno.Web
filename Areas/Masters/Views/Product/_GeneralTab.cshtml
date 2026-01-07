@@ -10,29 +10,28 @@
 }
 
 
-
 <div class="row">
     <div class="col-12 col-sm-6">
-        @Html.EditorFor(m => m.UnitId, @"Corno/MultiColumnComboBoxInt",
+        @*@Html.EditorFor(m => m.UnitId, @"Corno/MultiColumnComboBoxInt",
             new
             {
-                DataSource = miscMasterService.GetViewModelList(m => m.MiscType == MiscMasterConstants.Unit),
+                DataSource = miscMasterService.GetViewModelListAsync(m => m.MiscType == MiscMasterConstants.Unit),
                 Name = "Unit :"
             })
         <br />
         @Html.EditorFor(m => m.ProductCategoryId, @"Corno/MultiColumnComboBoxInt",
             new
             {
-                DataSource = miscMasterService.GetViewModelList(m => m.MiscType == MiscMasterConstants.ProductCategory),
+                DataSource = miscMasterService.GetViewModelListAsync(m => m.MiscType == MiscMasterConstants.ProductCategory),
                 Name = "Category :"
             })
         <br />
         @Html.EditorFor(m => m.BrandId, @"Corno/MultiColumnComboBoxInt",
             new
             {
-                DataSource = miscMasterService.GetViewModelList(),
+                DataSource = miscMasterService.GetViewModelListAsync(),
                 Name = "Brand :"
-            })
+            })*@
         <br />
         <!--<div class="form-group row">
             @Html.LabelFor(m => m.Comment, "Comment :",
@@ -46,12 +45,12 @@
     </div>
 
     <div class="col-12 col-sm-6">
-        @Html.EditorFor(m => m.ProductTypeId, @"Corno/MultiColumnComboBoxInt",
+       @* @Html.EditorFor(m => m.ProductTypeId, @"Corno/MultiColumnComboBoxInt",
             new
             {
-                DataSource = miscMasterService.GetViewModelList(m => m.MiscType == MiscMasterConstants.ProductType),
+                DataSource = miscMasterService.GetViewModelListAsync(m => m.MiscType == MiscMasterConstants.ProductType),
                 Name = "Type :"
-            })
+            })*@
         <br />
         <div class="form-group row">
             @Html.LabelFor(m => m.StockQuantity, "StockQuantity :", new { @class = "col-12 col-sm-4" })

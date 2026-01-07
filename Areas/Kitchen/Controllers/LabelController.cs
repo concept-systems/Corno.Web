@@ -14,9 +14,11 @@ using Corno.Web.Attributes;
 using Corno.Web.Controllers;
 using Corno.Web.Extensions;
 using Corno.Web.Globals;
+using Corno.Web.Globals.Enums;
 using Corno.Web.Logger;
 using Corno.Web.Models.Packing;
 using Corno.Web.Models.Plan;
+using Corno.Web.Windsor;
 using Kendo.Mvc.Extensions;
 using Kendo.Mvc.UI;
 using Mapster;
@@ -27,20 +29,16 @@ namespace Corno.Web.Areas.Kitchen.Controllers;
 public class LabelController : SuperController
 {
     #region -- Constructors --
-    public LabelController(
-        IPartLabelService partLabelService,
-        IStoreKhalapurLabelService storeKhalapurLabelService,
-        IStoreShirwalLabelService storeShirwalLabelService,
-        IStiffenerLabelService stiffenerLabelService,
-        IItemService itemService,
-        IPlanService planService)
+    public LabelController()
     {
-        _partLabelService = partLabelService;
-        _storeKhalapurLabelService = storeKhalapurLabelService;
-        _storeShirwalLabelService = storeShirwalLabelService;
-        _stiffenerLabelService = stiffenerLabelService;
-        _planService = planService;
-        _itemService = itemService;
+        _labelService = Bootstrapper.Get<ILabelService>();
+        PlanService = Bootstrapper.Get<IPlanService>();
+        ItemService = Bootstrapper.Get<IItemService>();
+
+        PartLabelService = Bootstrapper.Get<IPartLabelService>();
+        StoreKhalapurLabelService = Bootstrapper.Get<IStoreKhalapurLabelService>();
+        StoreShirwalLabelService = Bootstrapper.Get< IStoreShirwalLabelService>();
+        StiffenerLabelService = Bootstrapper.Get<IStiffenerLabelService>();
 
         // Configure Mapster for all label types
         TypeAdapterConfig<LabelViewDto, Label>
@@ -65,12 +63,14 @@ public class LabelController : SuperController
     #endregion
 
     #region -- Data Members --
-    private readonly IPartLabelService _partLabelService;
-    private readonly IStoreKhalapurLabelService _storeKhalapurLabelService;
-    private readonly IStoreShirwalLabelService _storeShirwalLabelService;
-    private readonly IStiffenerLabelService _stiffenerLabelService;
-    private readonly IPlanService _planService;
-    private readonly IItemService _itemService;
+
+    private readonly ILabelService _labelService;
+    protected readonly IPartLabelService PartLabelService;
+    protected readonly IStoreKhalapurLabelService StoreKhalapurLabelService;
+    protected readonly IStoreShirwalLabelService StoreShirwalLabelService;
+    protected readonly IStiffenerLabelService StiffenerLabelService;
+    protected readonly IPlanService PlanService;
+    protected readonly IItemService ItemService;
     #endregion
 
     #region -- Private Methods --
@@ -80,7 +80,7 @@ public class LabelController : SuperController
             plan.WarehouseOrderNo.Equals(warehouseOrderNo))
             return plan;
 
-        plan = await _planService.GetByWarehouseOrderNoAsync(warehouseOrderNo).ConfigureAwait(false);
+        plan = await PlanService.GetByWarehouseOrderNoAsync(warehouseOrderNo).ConfigureAwait(false);
         Session[FieldConstants.Plan] = plan ?? throw new Exception($"Warehouse order {warehouseOrderNo} not found");
 
         return plan;
@@ -91,7 +91,7 @@ public class LabelController : SuperController
         if (Session[FieldConstants.Plans] is List<Plan> plans &&
             plans.Any(d => !d.LotNo.Equals(lotNo)))
             return plans;
-        plans = (await _planService.GetAsync<Plan>(p => p.LotNo == lotNo &&
+        plans = (await PlanService.GetAsync<Plan>(p => p.LotNo == lotNo &&
                                       p.PlanItemDetails.Any(d =>
                                           d.DrawingNo == drawingNo), p => p).ConfigureAwait(false)).ToList();
         Session[FieldConstants.Plans] = plans;
@@ -100,38 +100,18 @@ public class LabelController : SuperController
     }
     #endregion
 
-    #region -- Index Action --
-    public ActionResult Index()
+        #region -- Index Action --
+    public virtual ActionResult Index()
     {
         return View(new LabelViewDto());
     }
 
-    public async Task<ActionResult> GetAllLabelsIndexViewDto([DataSourceRequest] DataSourceRequest request)
+    public virtual async Task<ActionResult> GetIndexViewDto([DataSourceRequest] DataSourceRequest request)
     {
         try
         {
-            // Since all services query the same Label table, we can use any service's GetQuery
-            // But to get all labels regardless of type, we'll use one service's query
-            // All services inherit from ILabelService which provides GetQuery()
-            var query = _partLabelService.GetQuery().AsNoTracking();
-
-            var data = from label in query
-                select new LabelIndexDto
-                {
-                    Id = label.Id,
-                    LabelDate = label.LabelDate,
-                    LotNo = label.LotNo,
-                    WarehouseOrderNo = label.WarehouseOrderNo,
-                    Position = label.Position,
-                    OrderQuantity = label.OrderQuantity ?? 0,
-                    Quantity = label.Quantity ?? 0,
-                    Status = label.Status,
-                    LabelType = label.LabelType,
-                    CarcassCode = label.CarcassCode,
-                    AssemblyCode = label.AssemblyCode,
-                    Barcode = label.Barcode
-                };
-            var result = await data.ToDataSourceResultAsync(request).ConfigureAwait(false);
+            var result = await _labelService.GetIndexDataSourceAsync(request)
+                .ConfigureAwait(false);
             return Json(result, JsonRequestBehavior.AllowGet);
         }
         catch (Exception exception)
@@ -142,62 +122,49 @@ public class LabelController : SuperController
         }
     }
 
-    public async Task<ActionResult> View(int? id, string labelType = null)
+    public virtual async Task<ActionResult> View(int? id, string labelType = null)
     {
         try
         {
             if (id == null)
                 throw new Exception("Invalid Id");
 
-            LabelViewDto dto = null;
-
-            // Determine which service to use based on labelType or try to detect from label
-            if (string.IsNullOrEmpty(labelType))
-            {
-                // Try to get label from any service to determine type
-                var label = _partLabelService.GetQuery().FirstOrDefault(l => l.Id == id) ??
-                           _storeKhalapurLabelService.GetQuery().FirstOrDefault(l => l.Id == id) ??
-                           _storeShirwalLabelService.GetQuery().FirstOrDefault(l => l.Id == id) ??
-                           _stiffenerLabelService.GetQuery().FirstOrDefault(l => l.Id == id);
-
-                if (label != null)
-                {
-                    labelType = label.LabelType;
-                }
-            }
-
-            // Get DTO from appropriate service based on label type
+            // Parse labelType string to LabelType enum
+            LabelType? parsedLabelType = null;
             if (!string.IsNullOrEmpty(labelType))
             {
-                switch (labelType.ToLower())
+                if (Enum.TryParse<LabelType>(labelType, true, out var parsedType))
                 {
-                    case "partlabel":
-                    case "part":
-                        dto = await _partLabelService.CreateViewDtoAsync(id).ConfigureAwait(false);
-                        break;
-                    case "storekhalapur":
-                    case "store khalapur":
-                        // StoreKhalapur doesn't have CreateViewDtoAsync, try PartLabel as fallback
-                        dto = await _partLabelService.CreateViewDtoAsync(id).ConfigureAwait(false);
-                        break;
-                    case "storeshirwal":
-                    case "store shirwal":
-                        dto = await _storeShirwalLabelService.CreateViewDtoAsync(id).ConfigureAwait(false);
-                        break;
-                    case "stiffenerlabel":
-                    case "stiffener":
-                        dto = await _stiffenerLabelService.CreateViewDtoAsync(id).ConfigureAwait(false);
-                        break;
+                    parsedLabelType = parsedType;
                 }
             }
 
-            // Fallback: try PartLabel first
-            if (dto == null)
+            var dto = await _labelService.CreateViewDtoAsync(id, parsedLabelType).ConfigureAwait(false);
+            
+            // Determine the view path based on the labelType
+            string viewPath = null;
+            
+            if (parsedLabelType.HasValue)
             {
-                dto = await _partLabelService.CreateViewDtoAsync(id).ConfigureAwait(false);
+                switch (parsedLabelType.Value)
+                {
+                    case LabelType.Part:
+                        viewPath = "~/Areas/Kitchen/Views/PartLabel/View.cshtml";
+                        break;
+                    case LabelType.StoreKhalapur:
+                        viewPath = "~/Areas/Kitchen/Views/StoreKhalapur/View.cshtml";
+                        break;
+                    case LabelType.StoreShirwal:
+                        viewPath = "~/Areas/Kitchen/Views/StoreShirwal/View.cshtml";
+                        break;
+                    case LabelType.Stiffener:
+                        viewPath = "~/Areas/Kitchen/Views/StiffenerLabel/View.cshtml";
+                        break;
+                }
             }
-
-            return View(dto);
+            
+            // If a specific view path was determined, return that view; otherwise use default view resolution
+            return viewPath != null ? View(viewPath, dto) : View(dto);
         }
         catch (Exception exception)
         {
@@ -225,13 +192,13 @@ public class LabelController : SuperController
         try
         {
             var plan = await GetPlanAsync(dto.WarehouseOrderNo).ConfigureAwait(false);
-            var labels = await _partLabelService.CreateLabelsAsync(dto, plan).ConfigureAwait(false);
-            Session[FieldConstants.Label] = await _partLabelService.CreateLabelReportAsync(labels, false).ConfigureAwait(false);
-            await _partLabelService.UpdateDatabaseAsync(labels, plan).ConfigureAwait(false);
+            var labels = await PartLabelService.CreateLabelsAsync(dto, plan).ConfigureAwait(false);
+            Session[FieldConstants.Label] = await PartLabelService.CreateLabelReportAsync(labels, false).ConfigureAwait(false);
+            await PartLabelService.UpdateDatabaseAsync(labels, plan).ConfigureAwait(false);
             dto.Clear();
             ModelState.Clear();
 
-            var report = await _partLabelService.CreateLabelReportAsync(labels, false).ConfigureAwait(false);
+            var report = await PartLabelService.CreateLabelReportAsync(labels, false).ConfigureAwait(false);
             return File(report.ToDocumentBytes(), "application/pdf");
         }
         catch (Exception exception)
@@ -251,8 +218,8 @@ public class LabelController : SuperController
         try
         {
             var plan = await GetPlanAsync(dto.WarehouseOrderNo).ConfigureAwait(false);
-            var labels = await _partLabelService.CreateLabelsAsync(dto, plan).ConfigureAwait(false);
-            var report = await _partLabelService.CreateLabelReportAsync(labels, false).ConfigureAwait(false);
+            var labels = await PartLabelService.CreateLabelsAsync(dto, plan).ConfigureAwait(false);
+            var report = await PartLabelService.CreateLabelReportAsync(labels, false).ConfigureAwait(false);
             return File(report.ToDocumentBytes(), "application/pdf");
         }
         catch (Exception exception)
@@ -272,7 +239,7 @@ public class LabelController : SuperController
                 return Json(null, JsonRequestBehavior.AllowGet);
 
             var plan = await GetPlanAsync(warehouseOrderNo).ConfigureAwait(false);
-            var pendingItems = await _partLabelService.GetPendingItemsAsync(plan).ConfigureAwait(false);
+            var pendingItems = await PartLabelService.GetPendingItemsAsync(plan).ConfigureAwait(false);
 
             var itemsList = pendingItems.Cast<object>().ToList();
             var queryableItems = itemsList.AsQueryable();
@@ -290,7 +257,7 @@ public class LabelController : SuperController
     {
         try
         {
-            var result = await Task.Run(() => _partLabelService.GetIndexDataSource(request)).ConfigureAwait(false);
+            var result = await Task.Run(() => PartLabelService.GetIndexDataSourceAsync(request)).ConfigureAwait(false);
             return Json(result, JsonRequestBehavior.AllowGet);
         }
         catch (Exception exception)
@@ -330,9 +297,9 @@ public class LabelController : SuperController
         try
         {
             var plan = await GetPlanAsync(dto.WarehouseOrderNo).ConfigureAwait(false);
-            var labels = await _storeKhalapurLabelService.CreateLabelsAsync(dto, plan).ConfigureAwait(false);
-            Session[FieldConstants.Label] = await _storeKhalapurLabelService.CreateLabelReportAsync(labels, false).ConfigureAwait(false);
-            await _storeKhalapurLabelService.UpdateDatabaseAsync(labels, plan).ConfigureAwait(false);
+            var labels = await StoreKhalapurLabelService.CreateLabelsAsync(dto, plan).ConfigureAwait(false);
+            Session[FieldConstants.Label] = await StoreKhalapurLabelService.CreateLabelReportAsync(labels, false).ConfigureAwait(false);
+            await StoreKhalapurLabelService.UpdateDatabaseAsync(labels, plan).ConfigureAwait(false);
             dto.PrintToPrinter = true;
             dto.Clear();
             ModelState.Clear();
@@ -354,8 +321,8 @@ public class LabelController : SuperController
         try
         {
             var plan = await GetPlanAsync(dto.WarehouseOrderNo).ConfigureAwait(false);
-            var labels = await _storeKhalapurLabelService.CreateLabelsAsync(dto, plan).ConfigureAwait(false);
-            Session[FieldConstants.Label] = await _storeKhalapurLabelService.CreateLabelReportAsync(labels, false).ConfigureAwait(false);
+            var labels = await StoreKhalapurLabelService.CreateLabelsAsync(dto, plan).ConfigureAwait(false);
+            Session[FieldConstants.Label] = await StoreKhalapurLabelService.CreateLabelReportAsync(labels, false).ConfigureAwait(false);
             dto.PrintToPrinter = false;
         }
         catch (Exception exception)
@@ -369,19 +336,19 @@ public class LabelController : SuperController
     {
         try
         {
-            var query = _storeKhalapurLabelService.GetQuery().AsNoTracking();
+            var query = StoreKhalapurLabelService.GetQuery().AsNoTracking();
             var data = from label in query
-                select new LabelIndexDto
-                {
-                    Id = label.Id,
-                    LabelDate = label.LabelDate,
-                    LotNo = label.LotNo,
-                    WarehouseOrderNo = label.WarehouseOrderNo,
-                    Position = label.Position,
-                    OrderQuantity = label.OrderQuantity ?? 0,
-                    Quantity = label.Quantity ?? 0,
-                    Status = label.Status
-                };
+                       select new LabelIndexDto
+                       {
+                           Id = label.Id,
+                           LabelDate = label.LabelDate,
+                           LotNo = label.LotNo,
+                           WarehouseOrderNo = label.WarehouseOrderNo,
+                           Position = label.Position,
+                           OrderQuantity = label.OrderQuantity ?? 0,
+                           Quantity = label.Quantity ?? 0,
+                           Status = label.Status
+                       };
             var result = await data.ToDataSourceResultAsync(request).ConfigureAwait(false);
             return Json(result, JsonRequestBehavior.AllowGet);
         }
@@ -397,7 +364,7 @@ public class LabelController : SuperController
     {
         try
         {
-            var lotNos = await _planService.GetPendingLotNosAsync(dueDate).ConfigureAwait(false);
+            var lotNos = await PlanService.GetPendingLotNosAsync(dueDate).ConfigureAwait(false);
             return Json(lotNos, JsonRequestBehavior.AllowGet);
         }
         catch (Exception exception)
@@ -410,7 +377,7 @@ public class LabelController : SuperController
     {
         try
         {
-            var data = await _planService.GetPendingWarehouseOrdersAsync(lotNo).ConfigureAwait(false);
+            var data = await PlanService.GetPendingWarehouseOrdersAsync(lotNo).ConfigureAwait(false);
             return Json(data, JsonRequestBehavior.AllowGet);
         }
         catch (Exception exception)
@@ -424,7 +391,7 @@ public class LabelController : SuperController
         try
         {
             var plan = await GetPlanAsync(warehouseOrderNo).ConfigureAwait(false);
-            var families = await _planService.GetPendingFamiliesAsync(plan).ConfigureAwait(false);
+            var families = await PlanService.GetPendingFamiliesAsync(plan).ConfigureAwait(false);
             return Json(families, JsonRequestBehavior.AllowGet);
         }
         catch (Exception exception)
@@ -442,7 +409,7 @@ public class LabelController : SuperController
         try
         {
             var plan = await GetPlanAsync(warehouseOrderNo).ConfigureAwait(false);
-            var items = await _storeKhalapurLabelService.GetPendingItemsAsync(plan, family).ConfigureAwait(false);
+            var items = await StoreKhalapurLabelService.GetPendingItemsAsync(plan, family).ConfigureAwait(false);
 
             return Json((await items.ToDataSourceResultAsync(request).ConfigureAwait(false)).Data);
         }
@@ -478,9 +445,9 @@ public class LabelController : SuperController
         try
         {
             var plan = await GetPlanAsync(dto.WarehouseOrderNo).ConfigureAwait(false);
-            var labels = await _storeShirwalLabelService.CreateLabelsAsync(dto, plan).ConfigureAwait(false);
-            Session[FieldConstants.Label] = await _storeShirwalLabelService.CreateLabelReportAsync(labels, false).ConfigureAwait(false);
-            await _storeShirwalLabelService.UpdateDatabaseAsync(labels, plan).ConfigureAwait(false);
+            var labels = await StoreShirwalLabelService.CreateLabelsAsync(dto, plan).ConfigureAwait(false);
+            Session[FieldConstants.Label] = await StoreShirwalLabelService.CreateLabelReportAsync(labels, false).ConfigureAwait(false);
+            await StoreShirwalLabelService.UpdateDatabaseAsync(labels, plan).ConfigureAwait(false);
             dto.PrintToPrinter = true;
             dto.Clear();
             ModelState.Clear();
@@ -502,8 +469,8 @@ public class LabelController : SuperController
         try
         {
             var plan = await GetPlanAsync(dto.WarehouseOrderNo).ConfigureAwait(false);
-            var labels = await _storeShirwalLabelService.CreateLabelsAsync(dto, plan).ConfigureAwait(false);
-            Session[FieldConstants.Label] = await _storeShirwalLabelService.CreateLabelReportAsync(labels, false).ConfigureAwait(false);
+            var labels = await StoreShirwalLabelService.CreateLabelsAsync(dto, plan).ConfigureAwait(false);
+            Session[FieldConstants.Label] = await StoreShirwalLabelService.CreateLabelReportAsync(labels, false).ConfigureAwait(false);
             dto.PrintToPrinter = false;
         }
         catch (Exception exception)
@@ -518,7 +485,7 @@ public class LabelController : SuperController
         try
         {
             var plan = await GetPlanAsync(warehouseOrderNo).ConfigureAwait(false);
-            var families = await _planService.GetPendingFamiliesAsync(plan).ConfigureAwait(false);
+            var families = await PlanService.GetPendingFamiliesAsync(plan).ConfigureAwait(false);
             return Json(families, JsonRequestBehavior.AllowGet);
         }
         catch (Exception exception)
@@ -531,20 +498,7 @@ public class LabelController : SuperController
     {
         try
         {
-            var query = _storeShirwalLabelService.GetQuery().AsNoTracking();
-            var data = from label in query
-                select new LabelIndexDto
-                {
-                    Id = label.Id,
-                    LabelDate = label.LabelDate,
-                    LotNo = label.LotNo,
-                    WarehouseOrderNo = label.WarehouseOrderNo,
-                    Position = label.Position,
-                    OrderQuantity = label.OrderQuantity ?? 0,
-                    Quantity = label.Quantity ?? 0,
-                    Status = label.Status
-                };
-            var result = await data.ToDataSourceResultAsync(request).ConfigureAwait(false);
+            var result = await Task.Run(() => StoreShirwalLabelService.GetIndexDataSourceAsync(request)).ConfigureAwait(false);
             return Json(result, JsonRequestBehavior.AllowGet);
         }
         catch (Exception exception)
@@ -581,9 +535,9 @@ public class LabelController : SuperController
         try
         {
             var plans = await GetPlansAsync(dto.LotNo, dto.DrawingNo).ConfigureAwait(false);
-            var labels = await _stiffenerLabelService.CreateLabelsAsync(dto, plans).ConfigureAwait(false);
-            Session[FieldConstants.Label] = await _stiffenerLabelService.CreateLabelReportAsync(labels, false).ConfigureAwait(false);
-            await _stiffenerLabelService.UpdateDatabaseAsync(labels, new Plan()).ConfigureAwait(false);
+            var labels = await StiffenerLabelService.CreateLabelsAsync(dto, plans).ConfigureAwait(false);
+            Session[FieldConstants.Label] = await StiffenerLabelService.CreateLabelReportAsync(labels, false).ConfigureAwait(false);
+            await StiffenerLabelService.UpdateDatabaseAsync(labels, new Plan()).ConfigureAwait(false);
             dto.PrintToPrinter = true;
         }
         catch (Exception exception)
@@ -603,8 +557,8 @@ public class LabelController : SuperController
         try
         {
             var plans = await GetPlansAsync(dto.LotNo, dto.DrawingNo).ConfigureAwait(false);
-            var labels = await _stiffenerLabelService.CreateLabelsAsync(dto, plans).ConfigureAwait(false);
-            Session[FieldConstants.Label] = await _stiffenerLabelService.CreateLabelReportAsync(labels, false).ConfigureAwait(false);
+            var labels = await StiffenerLabelService.CreateLabelsAsync(dto, plans).ConfigureAwait(false);
+            Session[FieldConstants.Label] = await StiffenerLabelService.CreateLabelReportAsync(labels, false).ConfigureAwait(false);
             dto.PrintToPrinter = false;
         }
         catch (Exception exception)
@@ -639,7 +593,7 @@ public class LabelController : SuperController
     {
         try
         {
-            var plans = (await _planService.GetAsync<Plan>(p => DbFunctions.TruncateTime(p.DueDate) == DbFunctions.TruncateTime(dueDate)
+            var plans = (await PlanService.GetAsync<Plan>(p => DbFunctions.TruncateTime(p.DueDate) == DbFunctions.TruncateTime(dueDate)
                                               && p.PlanItemDetails.Any(d => (d.OrderQuantity ?? 0) > (d.PrintQuantity ?? 0)),
                 p => p).ConfigureAwait(false)).ToList();
 
@@ -658,20 +612,7 @@ public class LabelController : SuperController
     {
         try
         {
-            var query = _stiffenerLabelService.GetQuery().AsNoTracking();
-            var data = from label in query
-                select new LabelIndexDto
-                {
-                    Id = label.Id,
-                    LabelDate = label.LabelDate,
-                    LotNo = label.LotNo,
-                    WarehouseOrderNo = label.WarehouseOrderNo,
-                    Position = label.Position,
-                    OrderQuantity = label.OrderQuantity ?? 0,
-                    Quantity = label.Quantity ?? 0,
-                    Status = label.Status
-                };
-            var result = await data.ToDataSourceResultAsync(request).ConfigureAwait(false);
+            var result = await Task.Run(() => StiffenerLabelService.GetIndexDataSourceAsync(request)).ConfigureAwait(false);
             return Json(result, JsonRequestBehavior.AllowGet);
         }
         catch (Exception exception)
@@ -680,15 +621,6 @@ public class LabelController : SuperController
             ModelState.AddModelError("Error", exception.Message);
             return Json(new DataSourceResult { Errors = ModelState });
         }
-    }
-    #endregion
-
-    #region -- Common Actions --
-    public ActionResult LoadPartialView(string partialViewName)
-    {
-        // This method loads partial views for report viewer
-        // The partialViewName is typically "Partials/ReportViewer_New"
-        return PartialView(partialViewName, Session[FieldConstants.Label]);
     }
     #endregion
 }

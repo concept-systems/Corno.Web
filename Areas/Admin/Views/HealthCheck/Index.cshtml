@@ -1,0 +1,274 @@
+@using Corno.Web.Areas.Admin.Dto.HealthCheck
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@model HealthCheckDashboardDto
+
+@{
+    Layout = "~/Views/Shared/_AppLayout.cshtml";
+    ViewBag.BoxTitle = "System Health Check";
+}
+
+<div class="health-check-container" style="padding: 20px;">
+    <!-- Summary Cards -->
+    <div class="k-hstack k-gap-4" style="margin-bottom: 30px; flex-wrap: wrap;">
+        <div class="k-card k-card-type-rich" style="flex: 1; min-width: 200px; max-width: 250px;">
+            <div class="k-card-body">
+                <div class="k-hstack k-gap-2">
+                    <div class="k-avatar k-avatar-solid k-avatar-primary k-avatar-lg">
+                        <span class="k-icon k-i-check"></span>
+                    </div>
+                    <div class="k-vstack">
+                        <div class="k-text-muted" style="font-size: 12px;">Overall Status</div>
+                        <div class="k-text-primary" style="font-size: 20px; font-weight: bold;" id="overallStatus">
+                            @(Model?.LatestSummary?.OverallStatus ?? "Unknown")
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="k-card k-card-type-rich" style="flex: 1; min-width: 200px; max-width: 250px;">
+            <div class="k-card-body">
+                <div class="k-hstack k-gap-2">
+                    <div class="k-avatar k-avatar-solid k-avatar-danger k-avatar-lg">
+                        <span class="k-icon k-i-warning"></span>
+                    </div>
+                    <div class="k-vstack">
+                        <div class="k-text-muted" style="font-size: 12px;">Critical Issues</div>
+                        <div class="k-text-danger" style="font-size: 24px; font-weight: bold;" id="criticalCount">
+                            @(Model?.CriticalIssues ?? 0)
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="k-card k-card-type-rich" style="flex: 1; min-width: 200px; max-width: 250px;">
+            <div class="k-card-body">
+                <div class="k-hstack k-gap-2">
+                    <div class="k-avatar k-avatar-solid k-avatar-warning k-avatar-lg">
+                        <span class="k-icon k-i-information"></span>
+                    </div>
+                    <div class="k-vstack">
+                        <div class="k-text-muted" style="font-size: 12px;">Warnings</div>
+                        <div class="k-text-warning" style="font-size: 24px; font-weight: bold;" id="warningCount">
+                            @(Model?.WarningIssues ?? 0)
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="k-card k-card-type-rich" style="flex: 1; min-width: 200px; max-width: 250px;">
+            <div class="k-card-body">
+                <div class="k-hstack k-gap-2">
+                    <div class="k-avatar k-avatar-solid k-avatar-success k-avatar-lg">
+                        <span class="k-icon k-i-check-circle"></span>
+                    </div>
+                    <div class="k-vstack">
+                        <div class="k-text-muted" style="font-size: 12px;">Auto-Fixed</div>
+                        <div class="k-text-success" style="font-size: 24px; font-weight: bold;" id="autoFixedCount">
+                            @(Model?.AutoFixedCount ?? 0)
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="k-card k-card-type-rich" style="flex: 1; min-width: 200px; max-width: 250px;">
+            <div class="k-card-body">
+                <div class="k-hstack k-gap-2">
+                    <div class="k-avatar k-avatar-solid k-avatar-base k-avatar-lg">
+                        <span class="k-icon k-i-clock"></span>
+                    </div>
+                    <div class="k-vstack">
+                        <div class="k-text-muted" style="font-size: 12px;">Last Check</div>
+                        <div class="k-text-base" style="font-size: 14px; font-weight: bold;" id="lastCheckDate">
+                            @(Model?.LastCheckDate.ToString("MM/dd/yyyy HH:mm") ?? "Never")
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="k-hstack k-gap-2" style="margin-bottom: 20px;">
+        <button type="button" id="btnRunHealthCheck" class="k-button k-button-md k-button-solid k-button-primary">
+            <span class="k-icon k-i-refresh"></span>
+            <span>Run Health Check Now</span>
+        </button>
+        <button type="button" id="btnViewDataIntegrity" class="k-button k-button-md k-button-solid-base">
+            <span class="k-icon k-i-database"></span>
+            <span>View Data Integrity Issues</span>
+        </button>
+        <button type="button" id="btnRefresh" class="k-button k-button-md k-button-solid-base">
+            <span class="k-icon k-i-reload"></span>
+            <span>Refresh</span>
+        </button>
+    </div>
+
+    <!-- Health Check Reports Grid -->
+    <div class="k-card">
+        <div class="k-card-header">
+            <h3 class="k-card-title">Health Check Reports</h3>
+        </div>
+        <div class="k-card-body">
+            <!-- Filters -->
+            <div class="k-hstack k-gap-4" style="margin-bottom: 20px; flex-wrap: wrap;">
+                <div class="k-form-field">
+                    <label class="k-form-label">From Date:</label>
+                    @(Html.Kendo().DatePicker()
+                        .Name("fromDate")
+                        .Value(DateTime.Now.AddDays(-7))
+                        .HtmlAttributes(new { style = "width: 150px;" })
+                    )
+                </div>
+                <div class="k-form-field">
+                    <label class="k-form-label">To Date:</label>
+                    @(Html.Kendo().DatePicker()
+                        .Name("toDate")
+                        .Value(DateTime.Now)
+                        .HtmlAttributes(new { style = "width: 150px;" })
+                    )
+                </div>
+                <div class="k-form-field">
+                    <label class="k-form-label">Status:</label>
+                    @(Html.Kendo().DropDownList()
+                        .Name("statusFilter")
+                        .DataTextField("Text")
+                        .DataValueField("Value")
+                        .BindTo(new List<SelectListItem>
+                        {
+                            new SelectListItem { Text = "All", Value = "" },
+                            new SelectListItem { Text = "Healthy", Value = "Healthy" },
+                            new SelectListItem { Text = "Warning", Value = "Warning" },
+                            new SelectListItem { Text = "Critical", Value = "Critical" }
+                        })
+                        .Value("")
+                        .HtmlAttributes(new { style = "width: 150px;" })
+                    )
+                </div>
+                <div class="k-form-field" style="align-self: flex-end;">
+                    <button type="button" id="btnFilter" class="k-button k-button-md k-button-solid k-button-primary">
+                        <span class="k-icon k-i-filter"></span>
+                        <span>Filter</span>
+                    </button>
+                </div>
+            </div>
+
+            @(Html.Kendo().Grid<HealthCheckReportDto>()
+                .Name("healthCheckGrid")
+                .ApplyIndexSettings(enableExcel: true, enablePdf: true, enableSearch: true)
+                .Events(events => events.ApplyCommonEvents())
+                .Columns(columns =>
+                {
+                    columns.Bound(m => m.CheckDate)
+                        .Title("Check Date")
+                        .Width(150)
+                        .Format("{0:MM/dd/yyyy HH:mm}");
+                    columns.Bound(m => m.CheckType)
+                        .Title("Check Type")
+                        .Width(200);
+                    columns.Bound(m => m.Status)
+                        .Title("Status")
+                        .Width(100)
+                        .ClientTemplate("#= getStatusTemplate(data.Status) #");
+                    columns.Bound(m => m.Message)
+                        .Title("Message")
+                        .Width(300);
+                    columns.Bound(m => m.ExecutionTimeMs)
+                        .Title("Time (ms)")
+                        .Width(100);
+                    columns.Bound(m => m.AutoFixed)
+                        .Title("Auto-Fixed")
+                        .Width(100)
+                        .ClientTemplate("#= data.AutoFixed ? '<span class=\\'k-badge k-badge-success\\'>Yes</span>' : '<span class=\\'k-badge\\'>No</span>' #");
+                })
+                .DataSource(dataSource => dataSource
+                    .Ajax()
+                    .Read(read => read.Action("GetHealthCheckReports", "HealthCheck", new { area = "Admin" })
+                        .Data("getHealthCheckFilterData"))
+                    .PageSize(20)
+                    .Sort(sort => sort.Add(m => m.CheckDate).Descending())
+                )
+            )
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $("#btnRunHealthCheck").on("click", function() {
+            var btn = $(this);
+            btn.prop("disabled", true).html('<span class="k-icon k-i-loading"></span> Running...');
+            
+            $.ajax({
+                url: '@Url.Action("RunManualHealthCheck", "HealthCheck", new { area = "Admin" })',
+                type: "POST",
+                success: function(response) {
+                    if (response.success) {
+                        kendo.alert(response.message);
+                        refreshDashboard();
+                        $("#healthCheckGrid").data("kendoGrid").dataSource.read();
+                    } else {
+                        kendo.alert("Error: " + (response.message || "Unknown error"));
+                    }
+                },
+                error: function() {
+                    kendo.alert("Error running health check");
+                },
+                complete: function() {
+                    btn.prop("disabled", false).html('<span class="k-icon k-i-refresh"></span> Run Health Check Now');
+                }
+            });
+        });
+
+        $("#btnViewDataIntegrity").on("click", function() {
+            window.location.href = '@Url.Action("DataIntegrity", "HealthCheck", new { area = "Admin" })';
+        });
+
+        $("#btnRefresh").on("click", function() {
+            refreshDashboard();
+            $("#healthCheckGrid").data("kendoGrid").dataSource.read();
+        });
+
+        $("#btnFilter").on("click", function() {
+            $("#healthCheckGrid").data("kendoGrid").dataSource.read();
+        });
+    });
+
+    function getHealthCheckFilterData() {
+        var fromDate = $("#fromDate").data("kendoDatePicker")?.value();
+        var toDate = $("#toDate").data("kendoDatePicker")?.value();
+        return {
+            fromDate: fromDate ? kendo.toString(fromDate, "yyyy-MM-dd") : null,
+            toDate: toDate ? kendo.toString(toDate, "yyyy-MM-dd") : null,
+            status: $("#statusFilter").data("kendoDropDownList")?.value() || null
+        };
+    }
+
+    function getStatusTemplate(status) {
+        var badgeClass = "k-badge";
+        if (status === "Critical") badgeClass += " k-badge-danger";
+        else if (status === "Warning") badgeClass += " k-badge-warning";
+        else if (status === "Healthy") badgeClass += " k-badge-success";
+        
+        return '<span class="' + badgeClass + '">' + status + '</span>';
+    }
+
+    function refreshDashboard() {
+        $.ajax({
+            url: '@Url.Action("GetLatestSummary", "HealthCheck", new { area = "Admin" })',
+            type: "POST",
+            success: function(summary) {
+                if (summary) {
+                    $("#overallStatus").text(summary.OverallStatus || "Unknown");
+                    $("#criticalCount").text(summary.CriticalChecks || 0);
+                    $("#warningCount").text(summary.WarningChecks || 0);
+                }
+            }
+        });
+    }
+</script>
+

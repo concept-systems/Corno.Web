@@ -11,6 +11,4 @@ public interface IStoreKhalapurLabelService : ILabelService
 {
     Task<List<StoreLabelCrudDetailDto>> GetPendingItemsAsync(Plan plan, string family);
     Task<List<Label>> CreateLabelsAsync(StoreLabelCrudDto dto, Plan plan);
-    Task<BaseReport> CreateLabelReportAsync(List<Label> labels, bool bDuplicate);
-    Task UpdateDatabaseAsync(List<Label> labels, Plan plan);
 }

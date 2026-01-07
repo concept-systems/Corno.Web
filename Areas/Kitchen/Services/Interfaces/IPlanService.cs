@@ -11,10 +11,10 @@ using Kendo.Mvc.UI;
 
 namespace Corno.Web.Areas.Kitchen.Services.Interfaces;
 
-public interface IPlanService : IBasePlanService, IFileImportService<BmImportDto>
+public interface IPlanService : IBasePlanService
 {
     Task UpdatePackQuantitiesAsync(Plan plan);
-    Task UpdateQuantitiesAsync(Plan plan);
+    Task<bool> UpdateQuantitiesAsync(Plan plan);
     Task IncreasePlanQuantityAsync(Plan plan, PlanItemDetail planDetail, double quantity, string newStatus);
     Task<IEnumerable<string>> GetFamiliesAsync(int locationId, List<PlanItemDetail> planItemDetails = null);
     Task<IEnumerable<string>> GetFamiliesAsync(int locationId, Plan plan);

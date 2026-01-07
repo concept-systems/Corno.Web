@@ -1,0 +1,293 @@
+﻿@using System.Web.Mvc.Html
+@using Corno.Web.Globals
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@model Corno.Web.Areas.Euro.Dto.Label.PartLabelCrudDto
+
+@{
+    Layout = "~/Views/Shared/_LayoutBase.cshtml";
+}
+
+@{
+    ViewBag.BoxTitle = "Create New Part Label";
+    ViewBag.SubmitAction = "Create";
+}
+
+@{
+    ViewBag.MainMenu = "Transaction";
+    ViewBag.MainHeader = "Part Label";
+    ViewBag.CurrentSitemap = "Part Label";
+    ViewBag.Title = "Part Label";
+    ViewBag.Area = "Euro";
+    ViewBag.Controller = "PartLabel";
+}
+
+@section sectionBaseFooter
+{
+    <div class="k-actions k-actions-horizontal k-actions-end">
+        @Html.Partial("Buttons/_BackButton")
+        @Html.Partial("Buttons/_PreviewButton")
+        @Html.Partial("Buttons/_PrintButton")
+    </div>
+}
+
+@(Html.Kendo().TileLayout()
+    .Name("tileLayout")
+    .Columns(2)
+    .RowsHeight("100%")
+    .ColumnsWidth("100%")
+    .Containers(c => {
+         c.Add()
+             .BodyTemplateId("partial-view")
+             .Header(h => h.Text("Header Info"))
+             .ColSpan(1)
+             .RowSpan(4);
+         c.Add()
+             .BodyTemplateId("template-items-Info")
+             .Header(h => h.Text("Items Info"))
+             .ColSpan(1)
+             .RowSpan(4);
+    })
+    .Reorderable(true)
+    .Resizable(true))
+
+<script id="partial-view" type="text/x-kendo-template">
+    <div class="col-12">
+          <!-- Placeholder for the partial view -->
+          @*<div id="partialViewContainer" style="height: 100%"></div>*@
+    </div>
+</script>
+<script id="template-items-Info" type="text/x-kendo-template">
+  <div class=" k-content">
+         @*@Html.AntiForgeryToken()
+         @Html.ValidationSummary(false, "", new { @class = "text-danger" })*@
+         <table class="table k-table k-table-alt-row w-100 partlabel-table">
+            <tbody>
+                <tr>
+                    <td>Production Order :</td>
+                    <td>
+                        @(Html.Kendo().TextBoxFor(m => m.ProductionOrderNo)
+                            .HtmlAttributes(new
+                            {
+                                required = "required",
+                                @class = "w-100"
+                            }).ToClientTemplate())
+                    </td>
+                </tr>
+                <tr>
+                    <td>Item :</td>
+                    <td>
+                        @(Html.Kendo().MultiColumnComboBoxFor(m => m.Position)
+                            .Value(Model.Position)
+                            .DataTextField(FieldConstants.Name)
+                            .DataValueField(FieldConstants.Position)
+                            .HtmlAttributes(new { required = "required", @class = "w-100", data_multicolumn_filter = "true" })
+                            .Filter(FilterType.Contains)
+                            .Placeholder("Select ...")
+                            .Suggest(true)
+                            .Events(e => e.Select("OnItemSelect"))
+                            .Columns(columns =>
+                            {
+                                columns.Add().Field(FieldConstants.Position).Title(FieldConstants.Position).Width("80px");
+                                columns.Add().Field(FieldConstants.ItemCode).Title(FieldConstants.ItemCode).Width("150px");
+                                columns.Add().Field(FieldConstants.Name).Title(FieldConstants.Name).Width("150px");
+                                columns.Add().Field(FieldConstants.OrderQuantity).Title(FieldConstants.OrderQuantity).Width("80px");
+                                columns.Add().Field(FieldConstants.Family).Title(FieldConstants.Family).Width("100px");
+                            })
+                            .DataSource(dataSource => dataSource
+                                .Read(read => { read.Action("GetItems", "PartLabel").Data("getItemsParameters"); })
+                                .ServerFiltering(true)
+                            )
+                            .AutoBind(false)
+                            .CascadeFrom(FieldConstants.ProductionOrderNo).ToClientTemplate())
+                    </td>
+                </tr>
+                <tr>
+                    <td>Quantity :</td>
+                    <td>
+                        @(Html.Kendo().NumericTextBoxFor(m => m.Quantity)
+                            .Decimals(0)
+                            .Min(0)
+                            .Format("n0")
+                            .HtmlAttributes(new { required = "required", @class = "form-control w-100" }).ToClientTemplate())
+                    </td>
+                </tr>
+                <tr>
+                    <td>Item Code :</td>
+                    <td id="tdItemCode"></td>
+                </tr>
+                <tr>
+                    <td>Position :</td>
+                    <td id="tdPosition">
+                    </td>
+                </tr>
+                <tr>
+                    <td>Item Name :</td>
+                    <td id="tdItemName"></td>
+                </tr>
+                <tr>
+                    <td>Order Quantity</td>
+                    <td id="tdOrderQuantity"></td>
+                </tr>
+                <tr>
+                    <td>Print Quantity</td>
+                    <td id="tdPrintQuantity"></td>
+                </tr>
+            </tbody>
+        </table>
+</div>
+</script>
+
+<style>
+    /* PartLabel specific responsive table styles */
+    .partlabel-table {
+        width: 100%;
+        table-layout: auto;
+    }
+
+        .partlabel-table td {
+            padding: 8px;
+            word-wrap: break-word;
+        }
+
+            .partlabel-table td:first-child {
+                font-weight: 600;
+                white-space: nowrap;
+                min-width: 120px;
+            }
+
+    /* Responsive buttons */
+    .partlabel-actions {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+        .partlabel-actions .k-button {
+            flex: 1 1 auto;
+            min-width: 120px;
+        }
+
+    /* Responsive breakpoints */
+    @@media (max-width: 992px) {
+        .partlabel-table td:first-child {
+            min-width: 100px;
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .partlabel-table {
+            font-size: 0.9em;
+        }
+
+            .partlabel-table td {
+                padding: 6px 4px;
+                display: block;
+                width: 100%;
+                border-bottom: 1px solid #e5e5e5;
+            }
+
+                .partlabel-table td:first-child {
+                    font-weight: 700;
+                    background: #f8f9fa;
+                    padding-top: 10px;
+                    padding-bottom: 4px;
+                    border-bottom: 2px solid #dee2e6;
+                }
+
+                .partlabel-table td:last-child {
+                    padding-bottom: 10px;
+                }
+
+            .partlabel-table tr {
+                display: block;
+                margin-bottom: 10px;
+                border: 1px solid #e5e5e5;
+                border-radius: 4px;
+                padding: 0;
+            }
+
+            .partlabel-table tbody {
+                display: block;
+            }
+
+        .partlabel-actions {
+            flex-direction: column;
+        }
+
+            .partlabel-actions .k-button {
+                width: 100%;
+                min-width: unset;
+            }
+    }
+
+    @@media (max-width: 576px) {
+        .partlabel-table {
+            font-size: 0.85em;
+        }
+
+            .partlabel-table td {
+                padding: 5px 3px;
+            }
+    }
+</style>
+
+<script>
+    // 🔁 Reusable helper to build FormData
+    function buildFormData() {
+        const formData = new FormData();
+        formData.append("ProductionOrderNo", $("#ProductionOrderNo").val());
+        formData.append("Position", $("#Position").val());
+        formData.append("Quantity", $("#Quantity").val());
+
+        return formData;
+    }
+
+    function onPrint(e) {
+        e.preventDefault();
+        const formData = buildFormData();
+        fetchAndPrint('/PartLabel/Print', formData, onPrintSuccess);
+    }
+
+    function onPreview(e) {
+        e.preventDefault();
+        const formData = buildFormData();
+        fetchAndPreviewPdf('/PartLabel/Preview', formData, "Part Label");
+    }
+
+    function onPrintSuccess() {
+        console.log('print success.');
+
+        // Reload the MultiColumnComboBox
+        const positionComboBox = $("#Position").data("kendoMultiColumnComboBox");
+        if (positionComboBox) {
+            positionComboBox.dataSource.read(); // Reload data
+            positionComboBox.value("");         // Clear selection
+        }
+
+        // Clear NumericTextBox
+        $("#Quantity").data("kendoNumericTextBox").value(null);
+
+        // Clear display fields
+        $("#tdItemCode").html("");
+        $("#tdItemName").html("");
+        $("#tdPosition").html("");
+        $("#tdOrderQuantity").html("");
+        $("#tdPrintQuantity").html("");
+    }
+
+    function OnItemSelect(e) {
+        $("#tdItemCode").html(e.dataItem.ItemCode);
+        $("#tdItemName").html(e.dataItem.Name);
+        $("#tdPosition").html(e.dataItem.Position);
+        $("#tdOrderQuantity").html(e.dataItem.OrderQuantity);
+        $("#tdPrintQuantity").html(e.dataItem.PrintQuantity);
+    }
+
+    function getItemsParameters() {
+        // This function adds ProductionOrderNo to the request
+        // The filter is preserved by the helper script's parameterMap override
+        return {
+            productionOrderNo: $('#ProductionOrderNo').val()
+        };
+    }
+</script>

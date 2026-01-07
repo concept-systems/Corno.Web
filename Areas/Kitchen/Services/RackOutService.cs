@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Transactions;
 using System.Web;
 using Corno.Web.Areas.Kitchen.Dto.Rack_Out;
 using Corno.Web.Areas.Kitchen.Services.Interfaces;
@@ -41,6 +42,10 @@ public sealed class RackOutService : BaseRackOutService, IRackOutService
     {
         const string newStatus = StatusConstants.RackOut;
         var oldStatus = new[] { StatusConstants.RackIn, StatusConstants.RackOut };
+        using var scope = new TransactionScope(TransactionScopeOption.Required,
+            new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted },
+            TransactionScopeAsyncFlowOption.Enabled);
+
         var label = await _labelService.FirstOrDefaultAsync(d => d.Barcode == dto.CartonBarcode, d => d).ConfigureAwait(false);
         if (!oldStatus.Contains(label.Status))
             throw new Exception($"Required Rack In. Current Status {label.Status}.");
@@ -67,6 +72,9 @@ public sealed class RackOutService : BaseRackOutService, IRackOutService
 
         await planService.UpdateAsync(plan).ConfigureAwait(false);
         await _labelService.UpdateAndSaveAsync(label).ConfigureAwait(false);
+
+        scope.Complete();
+
         // Update view data
         dto.RackOutDetails.Add(new CartonRackOutViewDto
         {

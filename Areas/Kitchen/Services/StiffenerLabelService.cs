@@ -1,17 +1,14 @@
-﻿using Corno.Web.Areas.Admin.Services.Interfaces;
+using Corno.Web.Areas.Admin.Services.Interfaces;
 using Corno.Web.Areas.Kitchen.Dto.Label;
 using Corno.Web.Areas.Kitchen.Dto.StiffenerLabel;
-using Corno.Web.Areas.Kitchen.Labels;
 using Corno.Web.Areas.Kitchen.Services.Interfaces;
+using Corno.Web.Extensions;
 using Corno.Web.Globals;
 using Corno.Web.Models.Packing;
 using Corno.Web.Models.Plan;
-using Corno.Web.Reports;
 using Corno.Web.Repository.Interfaces;
 using Corno.Web.Services.File.Interfaces;
 using Corno.Web.Services.Masters.Interfaces;
-using Corno.Web.Windsor;
-using Mapster;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -60,6 +57,16 @@ public class StiffenerLabelService : LabelService, IStiffenerLabelService
 
     #region -- Private Methods --
 
+    /// <summary>
+    /// Gets the next serial number for a given warehouse order number
+    /// SerialNo should be unique for every WarehouseOrderNo
+    /// </summary>
+    private async Task<int> GetNextSerialNoAsync(string warehouseOrderNo)
+    {
+        var maxSerialNo = await MaxAsync(l => l.WarehouseOrderNo == warehouseOrderNo, l => l.SerialNo ?? 0).ConfigureAwait(false);
+        return maxSerialNo + 1;
+    }
+
     private async Task<List<Label>> GenerateLabelsAsync(StiffenerLabelCrudDto dto, Plan plan)
     {
         // 1. Create Label
@@ -68,10 +75,12 @@ public class StiffenerLabelService : LabelService, IStiffenerLabelService
             throw new Exception($"No item found for drawingNo '{dto.DrawingNo}' in plan");
 
         var labels = new List<Label>();
+        var serialNo = await GetNextSerialNoAsync(plan.WarehouseOrderNo);
+        
         for (var index = 0; index < planItemDetail.OrderQuantity; index++)
         {
-            await Task.Delay(1).ConfigureAwait(false);
-            var barcode = $"{DateTime.Now:ddMMyyyyhhmmssffff}";
+            // Generate barcode as "CRN" + serialNo padded to 6 digits
+            var barcode = $"CRN{serialNo.ToString().PadLeft(6, '0')}";
             var label = new Label
             {
                 Code = barcode,
@@ -97,7 +106,7 @@ public class StiffenerLabelService : LabelService, IStiffenerLabelService
                 Quantity = 1,
 
                 Barcode = barcode,
-                SerialNo = plan.SerialNo,
+                SerialNo = serialNo,
                 Reserved1 = planItemDetail.Reserved1,
 
                 Status = NewStatus,
@@ -116,8 +125,8 @@ public class StiffenerLabelService : LabelService, IStiffenerLabelService
             });
 
             labels.Add(label);
+            serialNo++; // Increment serial number for next label
         }
-
         return labels;
     }
     #endregion
@@ -148,67 +157,29 @@ public class StiffenerLabelService : LabelService, IStiffenerLabelService
         ValidateDto(dto);
 
         var labels = new List<Label>();
+        
+        // Group plans by WarehouseOrderNo to get unique serial numbers per warehouse order
+        var plansByWarehouseOrder = plans.GroupBy(p => p.WarehouseOrderNo);
 
-        foreach (var plan in plans)
+        foreach (var warehouseOrderGroup in plansByWarehouseOrder)
         {
-            var generatedLabels = await GenerateLabelsAsync(dto, plan).ConfigureAwait(false);
-            labels.AddRange(generatedLabels);
+            var warehouseOrderNo = warehouseOrderGroup.Key;
+            // Get the next serial number for this warehouse order number
+            var currentSerialNo = await GetNextSerialNoAsync(warehouseOrderNo).ConfigureAwait(false);
+
+            foreach (var plan in warehouseOrderGroup)
+            {
+                var planItemDetail = plan.PlanItemDetails.FirstOrDefault(d => d.DrawingNo == dto.DrawingNo);
+                if (planItemDetail != null)
+                {
+                    var generatedLabels = await GenerateLabelsAsync(dto, plan).ConfigureAwait(false);
+                    labels.AddRange(generatedLabels);
+                }
+            }
         }
 
         return labels;
     }
-
-    public async Task<BaseReport> CreateLabelReportAsync(List<Label> labels, bool bDuplicate)
-    {
-        var labelRpt = new PartLabelRpt(labels, bDuplicate);
-        return await Task.FromResult<BaseReport>(labelRpt).ConfigureAwait(false);
-    }
-
-    public async Task UpdateDatabaseAsync(List<Label> labels, Plan plan)
-    {
-        if (null == plan)
-            throw new Exception("Invalid Plan");
-        foreach (var label in labels)
-        {
-            var planItemDetail = plan.PlanItemDetails.FirstOrDefault(d =>
-                d.Position == label.Position);
-            if (null == planItemDetail) continue;
-            planItemDetail.PrintQuantity ??= 0;
-            planItemDetail.PrintQuantity += label.Quantity;
-        }
-
-        // 2. Update Database
-        var planService = Bootstrapper.Get<IPlanService>();
-        await planService.UpdateAndSaveAsync(plan).ConfigureAwait(false);
-        await AddRangeAndSaveAsync(labels).ConfigureAwait(false);
-    }
-
-    public async Task<LabelViewDto> CreateViewDtoAsync(int? id)
-    {
-        var label = await GetByIdAsync(id).ConfigureAwait(false);
-        if (null == label)
-            throw new Exception($"Label with Id '{id}' not found.");
-
-        // Create dto
-        var dto = label.Adapt<LabelViewDto>();
-
-        // Create label report
-        var item = await _itemService.GetViewModelAsync(label.ItemId ?? 0).ConfigureAwait(false);
-        label.NotMapped = new NotMapped
-        {
-            ItemCode = item?.Code,
-            ItemName = item?.Description
-        };
-        var userIds = dto.LabelViewDetailDto.Select(d => d.CreatedBy).ToList();
-        var users = await _userService.GetAsync(p => userIds.Contains(p.Id), p => p).ConfigureAwait(false);
-
-        dto.LabelViewDetailDto.ForEach(d =>
-            d.UserName = users.FirstOrDefault(x => x.Id == d.CreatedBy)?.UserName);
-
-        dto.LabelReport = await CreateLabelReportAsync(new List<Label> { label }, true).ConfigureAwait(false);
-        return dto;
-    }
-
 
     #endregion
 }

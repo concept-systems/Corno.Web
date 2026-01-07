@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,12 +30,27 @@ public interface IUserService : ICornoService<AspNetUser>
 
     Task ChangePasswordAsync(string userName, string newPassword);
     Task<bool> IsAdministratorAsync(string userId);
-
+    Task<IList<string>> GetUserRolesAsync(string userId);
 
     Task<UserCrudDto> GetViewModelWithRolesAsync(string id);
     Task<AspNetUser> CreateAsync(UserCrudDto dto);
     Task<AspNetUser> EditAsync(UserCrudDto dto);
     Task<AspNetUser> ChangePasswordAsync(UserCrudDto viewModel);
+    Task ChangePasswordAsync(string userId, string oldPassword, string newPassword);
+    
+    // Profile Management Methods
+    Task<ProfileDto> GetProfileAsync(string userId);
+    Task UpdateProfileAsync(string userId, ProfileDto dto);
+    
+    // Session Management Methods
+    Task<bool> HasActiveSessionAsync(string userId);
+    Task<AspNetLoginHistory> GetActiveSessionAsync(string userId);
+    Task<List<AspNetLoginHistory>> GetActiveSessionsAsync(string userId);
+    Task InvalidateAllSessionsAsync(string userId);
+    Task InvalidateSessionAsync(string userId, string sessionId);
+    Task UpdateLoginHistoryAsync(string userName, string ipAddress, LoginResult loginResult);
+    Task UpdateLogoutHistoryAsync(string userId);
+
 
     #endregion
 }

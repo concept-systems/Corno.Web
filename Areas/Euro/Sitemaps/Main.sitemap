@@ -1,0 +1,8 @@
+<siteMapNode title="" url="">
+	<siteMapNode name="Labels" title="Labels" web="true" windows="true" roles="administrator">
+		<siteMapNode name="Import" title="Import" icon="Label" web="true" windows="true" controller="ItemLabel" action="Index" area="Euro" roles="administrator" />
+	</siteMapNode>
+</siteMapNode>
+
+
+

@@ -11,7 +11,6 @@ using Corno.Web.Models.Masters;
 using Corno.Web.Repository.Interfaces;
 using Corno.Web.Services.File.Interfaces;
 using Corno.Web.Services.Interfaces;
-using Corno.Web.Services.Progress.Interfaces;
 using Corno.Web.Windsor;
 
 namespace Corno.Web.Services;
@@ -200,6 +199,9 @@ public class MasterService<TEntity> : BaseService<TEntity>, IMasterService<TEnti
         return entity;
     }
 
+    // OLD METHOD - REMOVED: ImportAsync with IBaseProgressService
+    // This should be updated to use the new common import module
+    /*
     public override async Task ImportAsync(string filePath, IBaseProgressService progressService,
         string miscType = null)
     {
@@ -237,8 +239,8 @@ public class MasterService<TEntity> : BaseService<TEntity>, IMasterService<TEnti
                         var photoField = entity.GetType().GetProperty(FieldConstants.Photo);
                         if (null != photoField)
                         {
-                            /*var data = ImageHelper.GetBytes(imagePath);
-                            photoField.SetValue(entity, data);*/
+                            //var data = ImageHelper.GetBytes(imagePath);
+                            //photoField.SetValue(entity, data);
                         }
                     }
                 }
@@ -254,8 +256,9 @@ public class MasterService<TEntity> : BaseService<TEntity>, IMasterService<TEnti
             throw;
         }
     }
+    */
 
-    public virtual async Task ExportAsync(string filePath, IBaseProgressService progressService)
+    public virtual async Task ExportAsync(string filePath)
     {
         var excelFileService = Bootstrapper.Get<IExcelFileService<TEntity>>();
         var records = await GetAsync<TEntity>().ConfigureAwait(false);

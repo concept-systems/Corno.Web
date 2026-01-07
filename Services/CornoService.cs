@@ -6,7 +6,6 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Corno.Web.Repository.Interfaces;
 using Corno.Web.Services.Interfaces;
-using Corno.Web.Services.Progress.Interfaces;
 
 namespace Corno.Web.Services;
 

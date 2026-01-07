@@ -1,23 +1,27 @@
-﻿using Corno.Web.Areas.Kitchen.Dto.Kitting;
+using Corno.Web.Areas.Kitchen.Dto.Kitting;
 using Corno.Web.Areas.Kitchen.Dto.Label;
 using Corno.Web.Areas.Kitchen.Dto.Sorting;
+using Corno.Web.Globals.Enums;
 using Corno.Web.Models.Packing;
+using Corno.Web.Models.Plan;
+using Corno.Web.Reports;
 using Corno.Web.Services.Interfaces;
-using Corno.Web.Services.Progress.Interfaces;
 using Kendo.Mvc.UI;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading.Tasks;
 
 namespace Corno.Web.Areas.Kitchen.Services.Interfaces;
 
 public interface ILabelService : IBaseService<Label>
 {
-    Task PerformKitting(KittingCrudDto dto, string userId);
-    Task PerformSorting(SortingCrudDto dto, string userId);
+    Task PerformKittingAsync(KittingCrudDto dto, string userId);
+    Task PerformSortingAsync(SortingCrudDto dto, string userId);
 
-    Task<List<SalvaginiExcelDto>> Import(Stream fileStream, string filePath,
-        string newStatus, IBaseProgressService progressService, string userId);
+    // OLD METHOD REMOVED: ImportAsync with progress service
+    // This functionality is now in LabelBusinessImportService
 
-    Task<DataSourceResult> GetIndexDataSource(DataSourceRequest request);
+    Task<DataSourceResult> GetIndexDataSourceAsync(DataSourceRequest request);
+    Task<LabelViewDto> CreateViewDtoAsync(int? id, LabelType? labelType = null);
+    Task<BaseReport> CreateLabelReportAsync(List<Label> labels, bool bDuplicate, LabelType? labelType = null);
+    Task UpdateDatabaseAsync(List<Label> labels, Plan plan);
 }

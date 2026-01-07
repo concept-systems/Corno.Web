@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-using Corno.Web.Services.Progress.Interfaces;
 
 namespace Corno.Web.Services.Interfaces;
 
@@ -30,8 +29,10 @@ public interface IBaseService<TEntity> : ICornoService<TEntity>
     #endregion
 
     #region -- Public Import Methods --
-    Task ImportAsync(string filePath, IBaseProgressService progressService,
-        string miscMaster = null);
+    // OLD METHOD - REMOVED: ImportAsync with IBaseProgressService
+    // This should be updated to use the new common import module
+    // Task ImportAsync(string filePath, IBaseProgressService progressService,
+    //     string miscMaster = null);
     #endregion
 
     #region -- Corno Methods --

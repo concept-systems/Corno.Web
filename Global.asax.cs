@@ -45,13 +45,15 @@ public class MvcApplication : System.Web.HttpApplication
         FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
         RouteConfig.RegisterRoutes(RouteTable.Routes);
         BundleConfig.RegisterBundles(BundleTable.Bundles);
-        //ReportsControllerConfiguration.RegisterRoutes(GlobalConfiguration.Configuration);
 
         // Register
         Bootstrapper.Initialize();
         
         // Mapster
         MapsterConfig.RegisterMappings();
+        
+        // Start Health Check Scheduler
+        //HealthCheckConfig.Start();
     }
 
     protected void Application_BeginRequest(object sender, EventArgs e)
@@ -71,6 +73,9 @@ public class MvcApplication : System.Web.HttpApplication
     {
         /*var androidService = Bootstrapper.Get<IAndroidService>();
         androidService.Stop();*/
+        
+        // Stop Health Check Scheduler
+        HealthCheckConfig.Stop();
     }
 
     void Application_Error(object sender, EventArgs e)

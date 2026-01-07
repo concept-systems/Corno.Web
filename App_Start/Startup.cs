@@ -28,7 +28,8 @@ public partial class Startup
         {
             AuthenticationType = DefaultAuthenticationTypes.ApplicationCookie,
             LoginPath = new PathString("/Account/Login"),
-            ExpireTimeSpan = TimeSpan.FromMinutes(30)
+            ExpireTimeSpan = TimeSpan.FromMinutes(10),
+            SlidingExpiration = true
             /*Provider = new CookieAuthenticationProvider
             {
                 // Enables the application to validate the security stamp when the user logs in.

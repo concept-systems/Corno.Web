@@ -4,7 +4,6 @@ using Corno.Web.Controllers;
 using Corno.Web.Globals;
 using Corno.Web.Models.Masters;
 using Corno.Web.Services.Interfaces;
-using Corno.Web.Services.Progress.Interfaces;
 using Kendo.Mvc.Extensions;
 using Kendo.Mvc.UI;
 using System;
@@ -19,25 +18,23 @@ namespace Corno.Web.Areas.Masters.Controllers;
 public class MiscMasterController : SuperController
 {
     #region -- Constructors --
-    public MiscMasterController(IMiscMasterService miscMasterService,
-        IWebProgressService progressService)
+    public MiscMasterController(IMiscMasterService miscMasterService)
     {
         _miscMasterService = miscMasterService;
-        _progressService = progressService;
     }
     #endregion
 
     #region -- Data Members --
     private readonly IMiscMasterService _miscMasterService;
-    private readonly IWebProgressService _progressService;
     #endregion
 
     #region -- Actions --
     public async Task<ActionResult> Index(string miscType)
     {
         ViewBag.MiscType = miscType;
-        var data = await _miscMasterService.GetViewModelListAsync(miscType).ConfigureAwait(false);
-        return View(data);
+        return View();
+        //var data = await _miscMasterService.GetViewModelListAsync(miscType).ConfigureAwait(false);
+        //return View(data);
 
         /*if (string.IsNullOrEmpty(miscType))
             throw new Exception("Invalid Misc Type.");
@@ -116,9 +113,7 @@ public class MiscMasterController : SuperController
     public async Task<ActionResult> Edit(MiscMasterDto model)
     {
         if (!ModelState.IsValid)
-        {
             return View(model);
-        }
         try
         {
             if (model.MiscType == null)
@@ -298,8 +293,9 @@ public class MiscMasterController : SuperController
             fileBase?.SaveAs(filePath);
 
             // Import file
-            _progressService.SetWebProgress();
-            await _miscMasterService.ImportAsync(filePath, _progressService).ConfigureAwait(false);
+            // TODO: Update MiscMasterService.ImportAsync to use new common import module
+            // await _miscMasterService.ImportAsync(filePath).ConfigureAwait(false);
+            throw new NotImplementedException("Import functionality needs to be updated to use the new common import module");
         }
         catch (Exception exception)
         {
@@ -347,7 +343,7 @@ public class MiscMasterController : SuperController
     {
         try
         {
-            var query = (IQueryable<MiscMaster>)(await _miscMasterService.GetAsync<MiscMaster>(p => p.MiscType == miscType, p => p).ConfigureAwait(false)).AsQueryable();
+            var query = _miscMasterService.GetQuery().Where(p => p.MiscType == miscType);
             var data = from miscMaster in query
                        select new MiscMasterIndexModel
                        {
@@ -358,10 +354,7 @@ public class MiscMasterController : SuperController
                            Status = miscMaster.Status
                        };
             var result = await data.ToDataSourceResultAsync(request).ConfigureAwait(false);
-
             return Json(result, JsonRequestBehavior.AllowGet);
-
-
         }
         catch (Exception exception)
         {

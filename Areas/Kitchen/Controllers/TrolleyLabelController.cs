@@ -13,6 +13,7 @@ using Corno.Web.Globals;
 using Corno.Web.Models.Packing;
 using Corno.Web.Models.Plan;
 using Corno.Web.Attributes;
+using Corno.Web.Globals.Enums;
 using Mapster;
 using Kendo.Mvc.Extensions;
 
@@ -101,7 +102,7 @@ public class TrolleyLabelController : SuperController
             // Create Labels
             var labels = await _trolleyLabelService.CreateLabelsAsync(dto, plan).ConfigureAwait(false);
             // Create Label Reports
-            Session[FieldConstants.Label] = await _trolleyLabelService.CreateLabelReportAsync(labels, false).ConfigureAwait(false);
+            Session[FieldConstants.Label] = await _trolleyLabelService.CreateLabelReportAsync(labels, false, LabelType.Trolley).ConfigureAwait(false);
             // Save in database
             await _trolleyLabelService.UpdateDatabaseAsync(labels, plan).ConfigureAwait(false);
             dto.PrintToPrinter = true;

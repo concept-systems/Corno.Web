@@ -65,43 +65,44 @@ public class Plan : TransactionModel
 
     public string System { get; set; }
     public string Reserved1 { get; set; }
+    public string Status { get; set; } // Packed, InProgress, etc.
 
     public List<PlanItemDetail> PlanItemDetails { get; set; }
     public List<PlanPacketDetail> PlanPacketDetails { get; set; }
     #endregion
 
-    #region -- Public Methods --
-    public override bool UpdateDetails(CornoModel newModel)
-    {
-        if (newModel is not Plan newPlan) return false;
+    //#region -- Public Methods --
+    //public override bool UpdateDetails(CornoModel newModel)
+    //{
+    //    if (newModel is not Plan newPlan) return false;
 
-        // Update existing entries
-        foreach (var planItemDetail in PlanItemDetails)
-        {
-            var newPlanItemDetail = newPlan.PlanItemDetails.FirstOrDefault(d =>
-                d.Id == planItemDetail.Id);
-            planItemDetail.Copy(newPlanItemDetail);
-        }
-        // Add new entries
-        var newItemDetails = newPlan.PlanItemDetails.Where(d => d.Id <= 0).ToList();
-        PlanItemDetails.AddRange(newItemDetails);
-        // Remove items from list1 that are not in list2
-        PlanItemDetails.RemoveAll(x => newPlan.PlanItemDetails.All(y => y.Id != x.Id));
+    //    // Update existing entries
+    //    foreach (var planItemDetail in PlanItemDetails)
+    //    {
+    //        var newPlanItemDetail = newPlan.PlanItemDetails.FirstOrDefault(d =>
+    //            d.Id == planItemDetail.Id);
+    //        planItemDetail.Copy(newPlanItemDetail);
+    //    }
+    //    // Add new entries
+    //    var newItemDetails = newPlan.PlanItemDetails.Where(d => d.Id <= 0).ToList();
+    //    PlanItemDetails.AddRange(newItemDetails);
+    //    // Remove items from list1 that are not in list2
+    //    PlanItemDetails.RemoveAll(x => newPlan.PlanItemDetails.All(y => y.Id != x.Id));
 
-        // Update existing entries
-        foreach (var planPacketDetail in PlanPacketDetails)
-        {
-            var newPlanPacketDetail = newPlan.PlanPacketDetails.FirstOrDefault(d =>
-                d.Id == planPacketDetail.Id);
-            planPacketDetail.Copy(newPlanPacketDetail);
-        }
-        // Add New Entries
-        var newPacketDetails = newPlan.PlanPacketDetails.Where(d => d.Id <= 0).ToList();
-        PlanPacketDetails.AddRange(newPacketDetails);
-        // Remove items from list1 that are not in list2
-        PlanPacketDetails.RemoveAll(x => newPlan.PlanPacketDetails.All(y => y.Id != x.Id));
+    //    // Update existing entries
+    //    foreach (var planPacketDetail in PlanPacketDetails)
+    //    {
+    //        var newPlanPacketDetail = newPlan.PlanPacketDetails.FirstOrDefault(d =>
+    //            d.Id == planPacketDetail.Id);
+    //        planPacketDetail.Copy(newPlanPacketDetail);
+    //    }
+    //    // Add New Entries
+    //    var newPacketDetails = newPlan.PlanPacketDetails.Where(d => d.Id <= 0).ToList();
+    //    PlanPacketDetails.AddRange(newPacketDetails);
+    //    // Remove items from list1 that are not in list2
+    //    PlanPacketDetails.RemoveAll(x => newPlan.PlanPacketDetails.All(y => y.Id != x.Id));
 
-        return true;
-    }
-    #endregion
+    //    return true;
+    //}
+    //#endregion
 }

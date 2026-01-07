@@ -27,43 +27,43 @@ public class Customer : PartyBase
     public List<CustomerProductDetail> CustomerProductDetails { get; set; }
     #endregion
 
-    #region -- Methods --
-    public override bool UpdateDetails(CornoModel cornoModel)
-    {
-        if (cornoModel is not Customer customer) return false;
+    //#region -- Methods --
+    //public override bool UpdateDetails(CornoModel cornoModel)
+    //{
+    //    if (cornoModel is not Customer customer) return false;
 
-        foreach (var productDetail in customer.CustomerProductDetails)
-        {
-            var existingDetail = CustomerProductDetails.FirstOrDefault(d =>
-                d.Id == productDetail.Id);
-            if (null == existingDetail)
-            {
-                CustomerProductDetails.Add(productDetail);
-                continue;
-            }
+    //    foreach (var productDetail in customer.CustomerProductDetails)
+    //    {
+    //        var existingDetail = CustomerProductDetails.FirstOrDefault(d =>
+    //            d.Id == productDetail.Id);
+    //        if (null == existingDetail)
+    //        {
+    //            CustomerProductDetails.Add(productDetail);
+    //            continue;
+    //        }
 
-            existingDetail.Copy(productDetail);
-        }
+    //        existingDetail.Copy(productDetail);
+    //    }
 
-        // Remove items from list1 that are not in list2
-        CustomerProductDetails.RemoveAll(x => customer.CustomerProductDetails.All(y => y.Id != x.Id));
+    //    // Remove items from list1 that are not in list2
+    //    CustomerProductDetails.RemoveAll(x => customer.CustomerProductDetails.All(y => y.Id != x.Id));
 
-        foreach (var userDetail in customer.CustomerUserDetails)
-        {
-            var existingDetail = CustomerUserDetails.FirstOrDefault(d =>
-                d.Id == userDetail.Id);
-            if (null == existingDetail)
-            {
-                CustomerUserDetails.Add(userDetail);
-                continue;
-            }
+    //    foreach (var userDetail in customer.CustomerUserDetails)
+    //    {
+    //        var existingDetail = CustomerUserDetails.FirstOrDefault(d =>
+    //            d.Id == userDetail.Id);
+    //        if (null == existingDetail)
+    //        {
+    //            CustomerUserDetails.Add(userDetail);
+    //            continue;
+    //        }
 
-            existingDetail.Copy(userDetail);
-        }
-        // Remove items from list1 that are not in list2
-        CustomerUserDetails.RemoveAll(x => customer.CustomerUserDetails.All(y => y.Id != x.Id));
+    //        existingDetail.Copy(userDetail);
+    //    }
+    //    // Remove items from list1 that are not in list2
+    //    CustomerUserDetails.RemoveAll(x => customer.CustomerUserDetails.All(y => y.Id != x.Id));
         
-        return true;
-    }
-    #endregion
+    //    return true;
+    //}
+    //#endregion
 }

@@ -10,7 +10,6 @@ using Corno.Web.Globals;
 using Corno.Web.Models.Masters;
 using Corno.Web.Services.Interfaces;
 using Corno.Web.Services.Masters.Interfaces;
-using Corno.Web.Services.Progress.Interfaces;
 using Kendo.Mvc.Extensions;
 using Kendo.Mvc.UI;
 
@@ -20,7 +19,7 @@ public class CustomerController : SuperController
 {
     #region -- Constructors --
     public CustomerController(ICustomerService customerService, IBaseItemService itemService, IProductService productService,
-        IWebProgressService progressService, IMiscMasterService miscMasterService)
+        IMiscMasterService miscMasterService)
     {
         _productService = productService;
         _miscMasterService = miscMasterService;

@@ -30,33 +30,33 @@ public class Grn : TransactionModel
     public List<GrnDetail> GrnDetails { get; set; }
     #endregion
 
-    #region -- Public Methods --
-    public override bool UpdateDetails(CornoModel newModel)
-    {
-        if (newModel is not Grn newGrn) return false;
+    //#region -- Public Methods --
+    //public override bool UpdateDetails(CornoModel newModel)
+    //{
+    //    if (newModel is not Grn newGrn) return false;
 
-        var toDelete = new List<GrnDetail>();
-        foreach (var grnDetail in GrnDetails)
-        {
-            var newGrnDetail = newGrn.GrnDetails.FirstOrDefault(d =>
-                d.Id == grnDetail.Id);
-            //if (null == newPlanItemDetail)
-            //{
-            //    toDelete.Add(planItemDetail);
-            //    continue;
-            //}
+    //    var toDelete = new List<GrnDetail>();
+    //    foreach (var grnDetail in GrnDetails)
+    //    {
+    //        var newGrnDetail = newGrn.GrnDetails.FirstOrDefault(d =>
+    //            d.Id == grnDetail.Id);
+    //        //if (null == newPlanItemDetail)
+    //        //{
+    //        //    toDelete.Add(planItemDetail);
+    //        //    continue;
+    //        //}
 
-            grnDetail.Copy(newGrnDetail);
-        }
+    //        grnDetail.Copy(newGrnDetail);
+    //    }
 
-        // Add new entries
-        var newGrnDetails = newGrn.GrnDetails.Where(d => d.Id <= 0).ToList();
-        GrnDetails.AddRange(newGrnDetails);
-        // Delete existing entries
-        foreach (var grnDetail in toDelete)
-            GrnDetails.Remove(grnDetail);
+    //    // Add new entries
+    //    var newGrnDetails = newGrn.GrnDetails.Where(d => d.Id <= 0).ToList();
+    //    GrnDetails.AddRange(newGrnDetails);
+    //    // Delete existing entries
+    //    foreach (var grnDetail in toDelete)
+    //        GrnDetails.Remove(grnDetail);
 
-        return true;
-    }
-    #endregion
+    //    return true;
+    //}
+    //#endregion
 }

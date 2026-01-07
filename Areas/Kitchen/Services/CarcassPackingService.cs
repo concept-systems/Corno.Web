@@ -1,4 +1,5 @@
 ﻿using Corno.Web.Areas.Kitchen.Dto.Carcass;
+using Corno.Web.Areas.Kitchen.Helper;
 using Corno.Web.Areas.Kitchen.Services.Interfaces;
 using Corno.Web.Extensions;
 using Corno.Web.Globals;
@@ -13,6 +14,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Corno.Web.Logger;
+using System.Transactions;
 using Telerik.Reporting;
 
 
@@ -21,7 +23,7 @@ namespace Corno.Web.Areas.Kitchen.Services;
 public class CarcassPackingService : CartonService, ICarcassPackingService
 {
     #region -- Constructors --
-    public CarcassPackingService(IGenericRepository<Carton> genericRepository, 
+    public CarcassPackingService(IGenericRepository<Carton> genericRepository,
         ICartonService cartonService, ILabelService labelService, IMiscMasterService miscMasterService)
     : base(genericRepository, labelService, miscMasterService)
     {
@@ -75,6 +77,10 @@ public class CarcassPackingService : CartonService, ICarcassPackingService
     {
         const string newStatus = StatusConstants.Packed;
 
+        using var scope = new TransactionScope(TransactionScopeOption.Required,
+            new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted },
+            TransactionScopeAsyncFlowOption.Enabled);
+
         // Update plan
         var plan = dto.Plan;
         var barcodes = carton.CartonDetails.Select(d => d.Barcode).ToList();
@@ -88,7 +94,7 @@ public class CarcassPackingService : CartonService, ICarcassPackingService
         carton.CartonNo = await MaxAsync(p => p.WarehouseOrderNo == carton.WarehouseOrderNo, p => p.CartonNo)
                           + 1;
         carton.CartonNo = await GetNextCartonNoAsync(carton.WarehouseOrderNo).ConfigureAwait(false);
-        carton.CartonBarcode = GetCartonBarcode(carton.WarehouseOrderNo, carton.CartonNo ?? 0);
+        carton.CartonBarcode = await GetCartonBarcodeAsync(carton.WarehouseOrderNo, carton.CartonNo ?? 0).ConfigureAwait(false);
 
         carton.SoNo = plan.SoNo;
         carton.Code = "Web";
@@ -133,6 +139,8 @@ public class CarcassPackingService : CartonService, ICarcassPackingService
 
         await AddAsync(carton).ConfigureAwait(false);
         await SaveAsync().ConfigureAwait(false);
+
+        scope.Complete();
     }
     #endregion
 
@@ -264,8 +272,12 @@ public class CarcassPackingService : CartonService, ICarcassPackingService
         }
 
         // Check for SubAssembly.
-        var labels =  label.Status != StatusConstants.SubAssembled ? [label] :
+        var labels = label.Status != StatusConstants.SubAssembled ? [label] :
             await GetSubAssemblyLabelsAsync(label.WarehouseOrderNo, label.AssemblyCode).ConfigureAwait(false);
+
+        // Validate subassembled labels for families 22 & 23
+        if (label.Status == StatusConstants.SubAssembled)
+            LabelFamilyValidationHelper.ValidateSubAssembledLabelsForFamilies2223(labels, dto.Plan);
 
         foreach (var record in labels)
         {
@@ -309,7 +321,7 @@ public class CarcassPackingService : CartonService, ICarcassPackingService
         await UpdateDatabase(dto, carton, userId).ConfigureAwait(false);
 
         // Create Label
-        var reportBook = await CreateLabelReport(carton, dto.Plan,  false).ConfigureAwait(false);
+        var reportBook = await CreateLabelReport(carton, dto.Plan, false).ConfigureAwait(false);
         return reportBook;
     }
 
@@ -330,56 +342,6 @@ public class CarcassPackingService : CartonService, ICarcassPackingService
         return reportBook;
     }
 
-    public async Task<CarcassViewDto> View(int? id)
-    {
-        var carton = await _cartonService.GetByIdAsync(id).ConfigureAwait(false);
-        if (null == carton)
-            throw new Exception($"Label with Id '{id}' not found.");
-
-        var planService = Bootstrapper.Get<IPlanService>();
-        var plan = await planService.GetByWarehouseOrderNoAsync(carton.WarehouseOrderNo).ConfigureAwait(false);
-
-        var dto = new CarcassViewDto
-        {
-            Id = carton.Id,
-            WarehouseOrderNo = carton.WarehouseOrderNo,
-            SoNo = carton.SoNo,
-            LotNo = plan?.LotNo,
-            DueDate = plan?.DueDate,
-            OrderQuantity = plan?.OrderQuantity,
-            PrintQuantity = plan?.PrintQuantity,
-
-            CarcassDetailsDtos = carton.CartonDetails.Select(d =>
-            {
-                var planItemDetail = plan?.PlanItemDetails.FirstOrDefault(x => x.Position == d.Position);
-                return new CarcassDetailsDto
-                {
-                    Position = d.Position,
-                    WarehousePosition = d.WarehousePosition,
-                    AssemblyCode = planItemDetail?.AssemblyCode,
-                    CarcassCode = planItemDetail?.CarcassCode,
-                    //NetWeight = d.NetWeight,
-                    //Tolerance = d.Tolerance,
-                    Quantity = d.Quantity,
-                    OrderQuantity = d.OrderQuantity ?? 0
-                };
-            }).ToList(),
-            CarcassRackingDetailDtos = carton.CartonRackingDetails.Select(d => new CarcassRackingDetailDto
-            {
-                ScanDate = d.ScanDate,
-                PalletNo = d.PalletNo,
-                RackNo = d.RackNo,
-                Status = d.Status
-            }).ToList(),
-
-            ReportBook = await CreateLabelReport(carton, plan, false).ConfigureAwait(false) // Make sure this method is accessible
-        };
-
-        // Convert report to Base64 for inline preview similar to PartLabel
-        dto.Base64 = dto.ReportBook?.ToBase64();
-
-        return dto;
-    }
 
     #endregion
 }

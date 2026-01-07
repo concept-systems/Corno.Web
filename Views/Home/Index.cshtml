@@ -11,6 +11,56 @@
     var rootNodes = siteMapRoot?.ChildNodes?.Where(n => n.RouteValues.ContainsKey("web") && n.RouteValues["web"]?.ToString() == "true").ToList() ?? new List<SiteMapNode>();
 }
 
+@if (!string.IsNullOrEmpty(ViewBag.ErrorMessage as string))
+{
+    <div id="errorAlert" class="k-alert k-alert-error k-alert-solid k-alert-border k-alert-rounded-md" style="margin: 20px; padding: 20px;">
+        <div class="k-alert-content">
+            <div class="k-alert-title" style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">
+                <span class="k-icon k-i-warning"></span> Error
+            </div>
+            <div class="k-alert-message" style="margin-bottom: 15px;">
+                @ViewBag.ErrorMessage
+            </div>
+            <div class="k-hstack k-gap-2" style="flex-wrap: wrap;">
+                <button type="button" id="btnReloadPage" class="k-button k-button-md k-button-rectangle k-rounded-md k-button-solid k-button-primary">
+                    <span class="k-icon k-i-reload"></span>
+                    <span>Reload Page</span>
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (ViewBag.ShowMigrationPrompt == true)
+{
+    <div id="migrationPrompt" class="migration-prompt k-alert k-alert-info k-alert-solid k-alert-border k-alert-rounded-md" style="margin: 20px; padding: 20px;">
+        <div class="k-alert-content">
+            <div class="k-alert-title" style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">
+                Menu Migration Required
+            </div>
+            <div class="k-alert-message" style="margin-bottom: 15px;">
+                No menus found in the database. You can migrate menus from the XML sitemap or add default login module menus.
+                <br />
+                <strong>Choose an option below:</strong>
+            </div>
+            <div class="k-hstack k-gap-2" style="flex-wrap: wrap;">
+                <button type="button" id="btnMigrateMenus" class="k-button k-button-md k-button-rectangle k-rounded-md k-button-solid k-button-primary">
+                    <span class="k-icon k-i-upload"></span>
+                    <span>Migrate from Sitemap</span>
+                </button>
+                <button type="button" id="btnAddLoginMenus" class="k-button k-button-md k-button-rectangle k-rounded-md k-button-solid k-button-base">
+                    <span class="k-icon k-i-plus"></span>
+                    <span>Add Login Menus</span>
+                </button>
+                <button type="button" id="btnDismissPrompt" class="k-button k-button-md k-button-rectangle k-rounded-md k-button-flat k-button-flat-base">
+                    <span>Dismiss</span>
+                </button>
+            </div>
+            <div id="migrationStatus" style="margin-top: 15px; display: none;"></div>
+        </div>
+    </div>
+}
+
 <div class="">
     <div class="home-menu-toolbar mt-2">
         <div class="home-menu-search-wrapper k-textbox k-input k-input-solid k-input-md">
@@ -49,10 +99,15 @@
                         var area = menuItem.RouteValues.ContainsKey("area") ? menuItem.RouteValues["area"]?.ToString() : "";
                         var controller = menuItem.ControllerName ?? "";
                         var action = menuItem.ActionName ?? "Index";
-                        var miscType = menuItem.Attributes.ContainsKey(FieldConstants.MiscType.ToLower()) ? menuItem.Attributes[FieldConstants.MiscType.ToLower()]?.ToString() : null;
+                        // Read MiscType from route values (added in HomeController.ConvertMenusToSiteMapAsync)
+                        var miscType = menuItem.RouteValues.ContainsKey(FieldConstants.MiscType)
+                            ? menuItem.RouteValues[FieldConstants.MiscType]?.ToString()
+                            : menuItem.RouteValues.ContainsKey(FieldConstants.MiscType.ToLower())
+                                ? menuItem.RouteValues[FieldConstants.MiscType.ToLower()]?.ToString()
+                                : null;
                         var reportName = menuItem.RouteValues.ContainsKey("reportName") ? menuItem.RouteValues["reportName"]?.ToString() : "";
                         var url = string.IsNullOrEmpty(area)
-                            ? Url.Action(action, controller)
+                            ? Url.Action(action, controller, new { miscType, reportName })
                             : Url.Action(action, controller, new { area, miscType, reportName });
 
                         var iconAttr = menuItem.Attributes.ContainsKey("icon") ? menuItem.Attributes["icon"]?.ToString() : null;
@@ -442,6 +497,104 @@
 
                 // Initial layout state
                 applyHomeMenuFilter();
+            });
+
+            // Error alert handlers
+            $(document).ready(function() {
+                $("#btnReloadPage").on("click", function() {
+                    window.location.reload();
+                });
+            });
+
+            // Migration prompt handlers
+            $(document).ready(function() {
+                $("#btnMigrateMenus").on("click", function() {
+                    var $btn = $(this);
+                    var $status = $("#migrationStatus");
+                    
+                    $btn.prop("disabled", true).html('<span class="k-icon k-i-loading"></span> Migrating...');
+                    $status.html("").show();
+                    
+                    $.ajax({
+                        url: '@Url.Action("MigrateFromXml", "Menu", new { area = "Admin" })',
+                        type: "POST",
+                        data: { projectName: "@ViewBag.ProjectName" },
+                        success: function(response) {
+                            if (response.success) {
+                                $status.html('<div class="k-alert k-alert-success" style="padding: 10px; margin-top: 10px;">' +
+                                    '<strong>Success!</strong> ' + response.message + 
+                                    '<br/>Created: ' + response.createdMenus + ', Updated: ' + response.updatedMenus +
+                                    '</div>');
+                                
+                                // Reload page after 2 seconds to show menus
+                                setTimeout(function() {
+                                    window.location.reload();
+                                }, 2000);
+                            } else {
+                                $status.html('<div class="k-alert k-alert-error" style="padding: 10px; margin-top: 10px;">' +
+                                    '<strong>Error:</strong> ' + (response.message || "Migration failed") +
+                                    '</div>');
+                                $btn.prop("disabled", false).html('<span class="k-icon k-i-upload"></span> Migrate from Sitemap');
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            $status.html('<div class="k-alert k-alert-error" style="padding: 10px; margin-top: 10px;">' +
+                                '<strong>Error:</strong> ' + (xhr.responseJSON?.message || error || "An error occurred during migration") +
+                                '</div>');
+                            $btn.prop("disabled", false).html('<span class="k-icon k-i-refresh"></span> Migrate Menus from XML');
+                        }
+                    });
+                });
+                
+                // Handle "Add Login Menus" button
+                $("#btnAddLoginMenus").on("click", function() {
+                    var $btn = $(this);
+                    var $status = $("#migrationStatus");
+                    
+                    $btn.prop("disabled", true).html('<span class="k-icon k-i-loading"></span> Adding Login Menus...');
+                    $status.html("").show();
+                    
+                    $.ajax({
+                        url: '@Url.Action("CreateDefaultMenus", "Menu", new { area = "Admin" })',
+                        type: "POST",
+                        success: function(response) {
+                            if (response.success) {
+                                $status.html('<div class="k-alert k-alert-success" style="padding: 10px; margin-top: 10px;">' +
+                                    '<strong>Success!</strong> ' + response.message + 
+                                    '<br/>Created: ' + response.createdMenus + ', Updated: ' + (response.updatedMenus || 0) +
+                                    (response.skippedMenus > 0 ? ', Skipped: ' + response.skippedMenus : '') +
+                                    '</div>');
+                                
+                                // Reload page after 2 seconds to show menus
+                                setTimeout(function() {
+                                    window.location.reload();
+                                }, 2000);
+                            } else {
+                                $status.html('<div class="k-alert k-alert-error" style="padding: 10px; margin-top: 10px;">' +
+                                    '<strong>Error:</strong> ' + (response.message || "Failed to add login menus") +
+                                    (response.errors && response.errors.length > 0 ? '<br/>' + response.errors.join('<br/>') : '') +
+                                    '</div>');
+                                $btn.prop("disabled", false).html('<span class="k-icon k-i-plus"></span> Add Login Menus');
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            $status.html('<div class="k-alert k-alert-error" style="padding: 10px; margin-top: 10px;">' +
+                                '<strong>Error:</strong> ' + (xhr.responseJSON?.message || error || "An error occurred while adding login menus") +
+                                '</div>');
+                            $btn.prop("disabled", false).html('<span class="k-icon k-i-plus"></span> Add Login Menus');
+                        }
+                    });
+                });
+                
+                $("#btnDismissPrompt").on("click", function() {
+                    $.ajax({
+                        url: '@Url.Action("DismissMigrationPrompt", "Home")',
+                        type: "POST",
+                        success: function() {
+                            $("#migrationPrompt").fadeOut();
+                        }
+                    });
+                });
             });
         })(jQuery);
     </script>

@@ -1,0 +1,157 @@
+@using Corno.Web.Areas.Admin.Dto
+@using Kendo.Mvc.UI
+@model MenuDto
+
+@{
+    ViewBag.Index = "Index";
+    ViewBag.Create = "Create";
+    ViewBag.Edit = "Edit";
+    ViewBag.Details = "Details";
+    ViewBag.Delete = "Delete";
+    
+    Page.Title = "Menu";
+    ViewBag.MainMenu = "Admin";
+    ViewBag.CurrentSitemap = "Menu";
+    ViewBag.Controller = "Menu";
+}
+
+@if (Model != null && Model.Id > 0)
+{
+    @Html.HiddenFor(m => m.Id)
+}
+
+<!-- Toggle button visible on mobile to open the responsive panel -->
+<button id="menuPanelToggle" class="k-button k-button-md k-rounded-md k-button-solid k-button-solid-primary rp-toggle" type="button">
+    <span class="k-icon k-i-menu"></span>
+    Show Details
+</button>
+
+@(Html.Kendo().ResponsivePanel()
+    .Name("menuPanel")
+    .Orientation(ResponsivePanelOrientation.Top)
+    .Breakpoint(100)
+    .ToggleButton("#menuPanelToggle")
+    .HtmlAttributes(new { style = "margin-bottom: 20px;" })
+    .Content(@<text>
+        <div class="responsive-panel-container">
+            <!-- Basic Information Section -->
+            <div class="k-widget k-panel mb-4">
+                <h3 class="k-panel-title">Basic Information</h3>
+                <div class="k-panel-content">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="k-form-field">
+                                @Html.LabelFor(m => m.MenuName, new { @class = "k-form-label" })
+                                @Html.TextBoxFor(m => m.MenuName, new { @class = "k-textbox k-input-md", required = "required" })
+                                @Html.ValidationMessageFor(m => m.MenuName, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="k-form-field">
+                                @Html.LabelFor(m => m.DisplayName, new { @class = "k-form-label" })
+                                @Html.TextBoxFor(m => m.DisplayName, new { @class = "k-textbox k-input-md", required = "required" })
+                                @Html.ValidationMessageFor(m => m.DisplayName, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="k-form-field">
+                                @Html.LabelFor(m => m.ParentMenuId, new { @class = "k-form-label" })
+                                @(Html.Kendo().DropDownListFor(m => m.ParentMenuId)
+                                    .Name("ParentMenuId")
+                                    .DataTextField("DisplayName")
+                                    .DataValueField("Id")
+                                    .OptionLabel("-- Select Parent Menu (Optional) --")
+                                    .DataSource(source => source
+                                        .Read(read => read.Action("GetMenusForDropdown", "Menu", new { area = "Admin", excludeMenuId = Model.Id > 0 ? (int?)Model.Id : null }))
+                                    )
+                                    .HtmlAttributes(new { style = "width: 100%;" })
+                                )
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="k-form-field">
+                                @Html.LabelFor(m => m.DisplayOrder, new { @class = "k-form-label" })
+                                @(Html.Kendo().NumericTextBoxFor(m => m.DisplayOrder)
+                                    .Name("DisplayOrder")
+                                    .Min(0)
+                                    .HtmlAttributes(new { style = "width: 100%;" })
+                                )
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="k-form-field">
+                                @Html.LabelFor(m => m.Description, new { @class = "k-form-label" })
+                                @Html.TextAreaFor(m => m.Description, new { @class = "k-textbox k-input-md", rows = 3 })
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Details Section -->
+            <div class="k-widget k-panel mb-4">
+                <h3 class="k-panel-title">Navigation Details</h3>
+                <div class="k-panel-content">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="k-form-field">
+                                @Html.LabelFor(m => m.ControllerName, new { @class = "k-form-label" })
+                                @Html.TextBoxFor(m => m.ControllerName, new { @class = "k-textbox k-input-md", placeholder = "e.g., User, Role" })
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="k-form-field">
+                                @Html.LabelFor(m => m.ActionName, new { @class = "k-form-label" })
+                                @Html.TextBoxFor(m => m.ActionName, new { @class = "k-textbox k-input-md", placeholder = "e.g., Index, Create" })
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="k-form-field">
+                                @Html.LabelFor(m => m.Area, new { @class = "k-form-label" })
+                                @Html.TextBoxFor(m => m.Area, new { @class = "k-textbox k-input-md", placeholder = "e.g., Admin" })
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="k-form-field">
+                                @Html.LabelFor(m => m.IconClass, new { @class = "k-form-label" })
+                                @Html.TextBoxFor(m => m.IconClass, new { @class = "k-textbox k-input-md", placeholder = "e.g., k-i-home, k-i-user" })
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Section -->
+            <div class="k-widget k-panel mb-4">
+                <h3 class="k-panel-title">Status</h3>
+                <div class="k-panel-content">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="k-form-field">
+                                @Html.CheckBoxFor(m => m.IsVisible)
+                                @Html.LabelFor(m => m.IsVisible, "Visible in Menu", new { @class = "k-checkbox-label" })
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="k-form-field">
+                                @Html.CheckBoxFor(m => m.IsActive)
+                                @Html.LabelFor(m => m.IsActive, "Active", new { @class = "k-checkbox-label" })
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </text>
+    )
+)
+

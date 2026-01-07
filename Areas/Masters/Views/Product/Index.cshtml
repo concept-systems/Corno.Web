@@ -35,86 +35,64 @@
         .ApplyIndexSettings(customToolbar: toolbar =>
         {
             toolbar.Custom()
+                .Text("<span class='k-icon k-i-import'></span> Bom Import")
+                .HtmlAttributes(new { @class = "k-grid-import k-button-import-outlined", style = "float: right;", onclick = "onImportClick(event); return false;" });
+            toolbar.Custom()
                 .Text("<span class='k-icon k-i-import'></span> Import")
                 .HtmlAttributes(new { @class = "k-grid-import k-button-import-outlined", style = "float: right;", onclick = $"window.location.href='{Url.Action("Import", "Product", new { area = ViewBag.Area })}'; return false;" });
             toolbar.Custom()
                 .Text("<span class='k-icon k-i-plus'></span> Add New")
-                .HtmlAttributes(new { @class = "k-grid-add-new k-button-add-new-outlined", style = "float: right;", onclick = $"window.location.href='{Url.Action(ViewBag.Create, ViewBag.Controller, new { area = ViewBag.Area })}'; return false;" });
+                .HtmlAttributes(new { @class = "k-grid-add-new k-button-add-new-outlined", style = "float: right;", onclick = "onAddNewClick(event); return false;" });
+            /*toolbar.Custom()
+                .Text("<span class='k-icon k-i-plus'></span> Add New")
+                .HtmlAttributes(new { @class = "k-grid-add-new k-button-add-new-outlined", style = "float: right;", onclick = $"window.location.href='{Url.Action(ViewBag.Create, ViewBag.Controller, new { area = ViewBag.Area })}'; return false;" });*/
         }) // 👈 Apply index settings (full height, responsive)
         .Events(events => events.ApplyCommonEvents())
-    //.HtmlAttributes(new { @class = "w-100" })
-    .Columns(columns =>
-    {
-        //columns.Template(@<text></text>).ClientTemplate("#=resColTemplate(data)#").Title("Items").Media("(max-width: 450px)");
-        //columns.Select()
-        //    .HtmlAttributes(new { style = "text-align: center" })
-        //    .Width(10);
-        columns.Bound(m => m.Id)
-            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
-            .HtmlAttributes(new { style = "text-align: center" })
-            .Title("Id")
-            //.Media("(min-width: 150)")
-            .Width(15);
-        columns.Bound(m => m.Code)
-            //.HtmlAttributes(new { style = "text-align: center" })
-            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
-            .Title("Code")
-            .Width(20);
-        columns.Bound(m => m.Name)
-            //.HtmlAttributes(new { style = "text-align: center" })
-            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
-            .Title("Name")
-            .Width(30);
-        columns.Bound(m => m.Status).Width(20).Title("Status")
-            .HtmlAttributes(new { style = "text-align: center" })
-            .ClientTemplate(
-                "<span class='badge' style='background-color: " +
-                "# if (Status == \"Active\") { #" +
-                "green" +
-                "# } else if (Status == \"Deleted\") { #" +
-                "red" +
-                "# } else { #" +
-                "transparent" +
-                "# } #" +
-                "; color: " +
-                "# if (Status == \"Active\" || Status == \"Deleted\") { #" +
-                "white" +
-                "# } else { #" +
-                "black" +
-                "# } #" +
-                "; text-align: center; display: inline-block;'>" +
-                "#= Status #</span>"
-            )
-            .HtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
-            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
-            .Width(10);
-        columns.Command(command =>
+        .Columns(columns =>
         {
-            command.Custom("Edit").Text("")
-                .Text("<i class='k-icon k-i-edit k-text-info k-icon-20'></i>")
-                .HtmlAttributes(new { @class = "k-grid-edit" })
-                .Click("onEditClick")
-                .Visible("function(dataItem) { return dataItem.Status === 'Active'; }");
-            // Show only if Status is "Active";
-            command.Custom("Delete").Text("")
-                .Text("<i class='k-icon k-i-delete k-icon-md k-text-error k-icon-20'></i>")
-                .HtmlAttributes(new { @class = "k-grid-delete" })
-                .Click("onDeleteClick")
-                .Visible("function(dataItem) { return dataItem.Status === 'Active'; }");
+            columns.Bound(m => m.Id)
+                .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                .HtmlAttributes(new { style = "text-align: center" });
+            columns.Bound(m => m.Code)
+                .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                .Align(TextAlign.Left);
+            columns.Bound(m => m.Name)
+                .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                .Align(TextAlign.Left);
+            columns.AddStatusColumn();
+            columns.Command(command =>
+            {
+                command.Custom("Edit").Text("")
+                    .Text("<i class='k-icon k-i-edit k-text-info k-icon-20'></i>")
+                    .HtmlAttributes(new { @class = "k-grid-edit" })
+                    .Click("onEditClick")
+                    .Visible("function(dataItem) { return dataItem.Status === 'Active'; }");
+                // Show only if Status is "Active";
+                command.Custom("Delete").Text("")
+                    .Text("<i class='k-icon k-i-delete k-icon-md k-text-error k-icon-20'></i>")
+                    .HtmlAttributes(new { @class = "k-grid-delete" })
+                    .Click("onDeleteClick")
+                    .Visible("function(dataItem) { return dataItem.Status === 'Active'; }");
+                command.Custom("Print").Text("")
+                    .Text("<i class='k-icon k-icon k-i-print k-icon-md k-icon-20'></i>")
+                    .HtmlAttributes(new { @class = "k-icon k-i-print k-button k-button-solid k-button-solid-success k-button-icon" })
+                    .Click("onPrintBom")
+                    .Visible("function(dataItem) { return dataItem.Status === 'Active'; }");
+            })
+                .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                .HtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+                .Title("Actions");
         })
-            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
-            .HtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
-            .Title("Actions")
-            .Width(8);
-    })
-    .DataSource(dataSource => dataSource
-        .Ajax()
-        .PageSize(20)
-        .Read(read => read.Action("GetIndexViewModels", "Product"))
-        .Sort(sort => sort.Add(FieldConstants.Id).Descending()) // Initial sort by Id in ascending order
-        .Model(model => model.Id(FieldConstants.Id))
-    ))
+        .DataSource(dataSource => dataSource
+            .Ajax()
+            .PageSize(20)
+            .Read(read => read.Action("GetIndexViewModels", "Product"))
+            .Sort(sort => sort.Add(FieldConstants.Id).Descending()) // Initial sort by Id in ascending order
+            .Model(model => model.Id(FieldConstants.Id))
+        ))
 </div>
+
+@Html.Partial("Partials/_Quantity", Model)
 
 <script type="text/javascript">
     function onEditClick(e) {
@@ -137,34 +115,93 @@
     }
 </style>
 
-@*Mobile compability*@
-@*<script id="responsive-column-template" type="text/x-kendo-template">
-    <strong>Id</strong>
-    <p class="col-template-val">#=data.Id#</p>
-
-    <strong>Code</strong>
-    <p class="col-template-val">#=data.Code#</p>
-
-    <strong>Name</strong>
-    <p class="col-template-val">#=data.Name#</p>
-
-    <strong>Status</strong>
-    <p class="col-template-val">#=data.Status#</p>
-
-    <strong>Actions</strong>
-    <p class="col-template-val">#=data.Action#</p>
-</script>
-
 <script>
-    var resColTemplate;
+     function onAddNewClick(e) {
+     e.preventDefault();
+     window.location.href = '@Url.Action("Create", "Product", new {area = "Masters"})';
+    }
 
-    $(document).ready(function () {
-        resColTemplate = kendo.template($("#responsive-column-template").html());
+    function onImportClick(e) {
+        e.preventDefault();
+        window.location.href = '@Url.Action("Import", "Product", new { area = "Masters" })';
+    }
+
+    @*var printBomProductId = null;
+    var quantityWindow = null;
+
+    function onPrintBom(e) {
+        e.preventDefault();
+        var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+        if (!dataItem || dataItem.Id === undefined) {
+            bootbox.alert("Cannot determine the product Id.");
+            return;
+        }
+        printBomProductId = dataItem.Id;
+
+        if (!quantityWindow) {
+            quantityWindow = $("#quantityWindow").kendoWindow({
+                width: "340px",
+                title: "Print BOM Labels",
+                modal: true,
+                visible: false,
+                resizable: false,
+                actions: []
+            }).data("kendoWindow");
+        }
+        $("#quantityInput").val(0);
+        quantityWindow.center().open();
+    }
+
+    $(document).on("click", "#quantityOkBtn", function () {
+        var quantity = parseInt($("#quantityInput").val(), 10);
+        if (isNaN(quantity) || quantity < 1) {
+            alert("Please enter a valid quantity.");
+            return;
+        }
+        var url = '@Url.Action("PrintBom", "Product", new { area = "Masters" })';
+        const formData = new FormData();
+        formData.append("ProductId", printBomProductId);
+        formData.append("Quantity", quantity);
+        quantityWindow.close();
+        fetchAndPreviewPdf(url, formData, "Part Label");
     });
+
+    $(document).on("click", "#quantityCancelBtn", function () {
+        quantityWindow.close();
+    });*@
+
+
 </script>
 
-<style>
-    .col-template-val {
-        margin: 0 0 1em .5em;
-    }
-</style>*@
+
+
+@*<script>
+        function onImportClick(e) {
+            e.preventDefault();
+            window.location.href = '@Url.Action("Import", "Product", new { area = "Masters" })';
+        }
+
+        function onPrintBom(e) {
+            e.preventDefault();
+
+            // Get the clicked row
+            var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+            // Check if dataItem and its ID exist
+            if (!dataItem || dataItem.id === undefined) {
+                bootbox.alert("Cannot determine the product Id.");
+                return;
+            }
+
+            // Determine the correct Id property (Id or id)
+            var productId = dataItem.Id;
+
+            // Build form data
+            const formData = new FormData();
+            formData.append("ProductId", productId);
+            formData.append("Quantity", 1);
+
+            var url = '@Url.Action("PrintBom", "Product", new {area = "Masters"})';
+            console.log("Url : " + url + ", Product Id : " + productId)
+            fetchAndPreviewPdf(url, formData, "Part Label");
+        }
+    </script>*@

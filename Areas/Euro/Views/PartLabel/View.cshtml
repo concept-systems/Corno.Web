@@ -1,0 +1,12 @@
+﻿@using System.Web.Mvc.Html
+@model Corno.Web.Areas.Euro.Dto.Label.LabelViewDto
+
+@{
+    Layout = "~/Views/Shared/_AppLayout.cshtml";
+    ViewBag.BoxTitle = "View Label";
+    ViewBag.SubmitButtonText = "Print";
+    ViewBag.ControllerName = "PartLabel";
+    ViewBag.UseReportViewer = false;
+}
+
+@Html.Partial("~/Areas/Euro/Views/Shared/_LabelView.cshtml", Model)

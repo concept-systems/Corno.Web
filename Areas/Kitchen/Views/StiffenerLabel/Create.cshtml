@@ -4,29 +4,565 @@
 @model Corno.Web.Areas.Kitchen.Dto.StiffenerLabel.StiffenerLabelCrudDto
 
 @{
-    Layout = "~/Views/Shared/_LayoutCrud.cshtml";
+    Layout = "~/Views/Shared/_LayoutBase.cshtml";
 }
 
 @{
     ViewBag.BoxTitle = "Create New Stiffener Label";
     ViewBag.SubmitAction = "Create";
 }
-@section sectionCrudHeader
+
+@{
+    ViewBag.MainMenu = "Transaction";
+    ViewBag.MainHeader = "Stiffener Label";
+    ViewBag.CurrentSitemap = "Stiffener Label";
+    ViewBag.Title = "Stiffener Label";
+    ViewBag.Area = "Kitchen";
+    ViewBag.Controller = "StiffenerLabel";
+}
+
+@section sectionBaseFooter
 {
-    <div class="k-card-actions k-card-actions-horizontal k-card-actions-end">
-        @(Html.Kendo().Button()
-            .Name("btnList")
-            .Content("List")
-            .ApplyStandardSettingsWithType(ButtonType.Info, "arrow-left", ComponentSize.Medium)
-            .Events(e => e.Click("onBack")))
+    <div class="k-actions k-actions-horizontal k-actions-end">
+        @Html.Partial("Buttons/_BackButton")
+        @Html.Partial("Buttons/_PreviewButton")
+        @Html.Partial("Buttons/_PrintButton")
     </div>
 }
 
-@Html.Partial("_StiffenerLabel", Model)
+@(Html.Kendo().TileLayout()
+    .Name("tileLayout")
+    .Columns(2)
+    .RowsHeight("100%")
+    .ColumnsWidth("100%")
+    .Containers(c => {
+         c.Add()
+             .BodyTemplateId("partial-view")
+             .Header(h => h.Text("Positions Information"))
+             .ColSpan(1)
+             .RowSpan(4);
+         c.Add()
+             .BodyTemplateId("template-items-Info")
+             .Header(h => h.Text("User Input"))
+             .ColSpan(1)
+             .RowSpan(4);
+    })
+    .Reorderable(true)
+    .Resizable(true))
+
+<script id="partial-view" type="text/x-kendo-template">
+        <div class="col-12" style="height: 100%; display: flex; flex-direction: column;">
+            <div id="gridContainer" style="display: none; flex: 1; overflow: hidden;">
+                <div id="positionsGrid" style="height: 100%;"></div>
+            </div>
+        </div>
+</script>
+<script id="template-items-Info" type="text/x-kendo-template">
+  <div class=" k-content">
+         <table class="table k-table k-table-alt-row w-100 stiffenerlabel-table">
+            <tbody>
+                <tr>
+                    <td>Due Date :</td>
+                    <td>
+                        @(Html.Kendo().DatePickerFor(m => m.DueDate)
+                            .Format("yyyy-MM-dd")
+                            .Events(e => e.Change("onChange"))
+                            .HtmlAttributes(new { required = "required", @class = "w-100" }).ToClientTemplate())
+                    </td>
+                </tr>
+                <tr>
+                    <td>Lot No :</td>
+                    <td>
+                        @(Html.Kendo().MultiColumnComboBoxFor(m => m.LotNo)
+                            .DataTextField(FieldConstants.LotNo)
+                            .DataValueField(FieldConstants.LotNo)
+                            .HtmlAttributes(new { required = "required", @class = "w-100" })
+                            .Filter(FilterType.Contains)
+                            .Placeholder("Select ...")
+                            .Suggest(true)
+                            .Events(e => e.Change("onLotNoChange"))
+                            .Columns(columns => { columns.Add().Field(FieldConstants.LotNo).Title(FieldConstants.LotNo); })
+                            .DataSource(dataSource => dataSource
+                                .Read(read => { read.Action("GetLotNos", "StiffenerLabel").Data("getLotParameters"); })
+                                .ServerFiltering(true)
+                            )
+                            .AutoBind(false)
+                            .CascadeFrom(FieldConstants.DueDate).ToClientTemplate())
+                    </td>
+                </tr>
+                <tr>
+                    <td>Drawing No :</td>
+                    <td>
+                        @(Html.Kendo().MultiColumnComboBoxFor(m => m.DrawingNo)
+                            .DataTextField(FieldConstants.DrawingNo)
+                            .DataValueField(FieldConstants.DrawingNo)
+                            .HtmlAttributes(new { required = "required", @class = "w-100" })
+                            .Filter(FilterType.Contains)
+                            .Placeholder("Select ...")
+                            .Suggest(true)
+                            .Events(e => e.Select("onDrawingNoSelect").Change("onDrawingNoChange"))
+                            .Columns(columns => { columns.Add().Field(FieldConstants.DrawingNo).Title(FieldConstants.DrawingNo); })
+                            .DataSource(dataSource => dataSource
+                                .Read(read => { read.Action("GetDrawingNo", "StiffenerLabel").Data("getDrawingNoParameters"); })
+                                .ServerFiltering(true)
+                            )
+                            .AutoBind(false)
+                            .CascadeFrom(FieldConstants.LotNo).ToClientTemplate())
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+</div>
+</script>
+
+<style>
+    /* Positions grid header text wrapping */
+    #positionsGrid .k-grid-header th {
+        white-space: normal !important;
+        word-wrap: break-word;
+        line-height: 1.4;
+        vertical-align: middle;
+        padding: 8px;
+    }
+
+    /* Positions grid footer styling */
+    #positionsGrid .k-footer-template {
+        background-color: #f8f9fa !important;
+        border-top: 2px solid #dee2e6 !important;
+    }
+
+    #positionsGrid .k-footer-template td {
+        border: 1px solid #e5e5e5 !important;
+        padding: 8px !important;
+    }
+    
+    /* Group header styling */
+    #positionsGrid .k-grouping-row {
+        background-color: #e3f2fd !important;
+        font-weight: bold;
+    }
+    
+    #positionsGrid .k-grouping-row .k-group-cell {
+        padding: 8px !important;
+        font-size: 14px;
+    }
+
+    /* StiffenerLabel specific responsive table styles */
+    .stiffenerlabel-table {
+        width: 100%;
+        table-layout: auto;
+    }
+
+        .stiffenerlabel-table td {
+            padding: 8px;
+            word-wrap: break-word;
+        }
+
+            .stiffenerlabel-table td:first-child {
+                font-weight: 600;
+                white-space: nowrap;
+                min-width: 120px;
+            }
+
+    /* Responsive buttons */
+    .stiffenerlabel-actions {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+        .stiffenerlabel-actions .k-button {
+            flex: 1 1 auto;
+            min-width: 120px;
+        }
+
+    /* Responsive breakpoints */
+    @@media (max-width: 992px) {
+        .stiffenerlabel-table td:first-child {
+            min-width: 100px;
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .stiffenerlabel-table {
+            font-size: 0.9em;
+        }
+
+            .stiffenerlabel-table td {
+                padding: 6px 4px;
+                display: block;
+                width: 100%;
+                border-bottom: 1px solid #e5e5e5;
+            }
+
+                .stiffenerlabel-table td:first-child {
+                    font-weight: 700;
+                    background: #f8f9fa;
+                    padding-top: 10px;
+                    padding-bottom: 4px;
+                    border-bottom: 2px solid #dee2e6;
+                }
+
+                .stiffenerlabel-table td:last-child {
+                    padding-bottom: 10px;
+                }
+
+            .stiffenerlabel-table tr {
+                display: block;
+                margin-bottom: 10px;
+                border: 1px solid #e5e5e5;
+                border-radius: 4px;
+                padding: 0;
+            }
+
+            .stiffenerlabel-table tbody {
+                display: block;
+            }
+
+        .stiffenerlabel-actions {
+            flex-direction: column;
+        }
+
+            .stiffenerlabel-actions .k-button {
+                width: 100%;
+                min-width: unset;
+            }
+    }
+
+    @@media (max-width: 576px) {
+        .stiffenerlabel-table {
+            font-size: 0.85em;
+        }
+
+            .stiffenerlabel-table td {
+                padding: 5px 3px;
+            }
+    }
+</style>
 
 <script>
-    function onBack() {
-        window.location.href = '@Url.Action("Index", "StiffenerLabel", new { area = "Kitchen" })';
-        /* history.back();*/
+    // 🔁 Reusable helper to build FormData
+    function buildFormData() {
+        const formData = new FormData();
+        formData.append("DueDate", $("#DueDate").val());
+        formData.append("LotNo", $("#LotNo").val());
+        formData.append("DrawingNo", $("#DrawingNo").val());
+
+        return formData;
+    }
+
+    function onPrint(e) {
+        e.preventDefault();
+        const formData = buildFormData();
+        fetchAndPrint('/StiffenerLabel/Print', formData, onPrintSuccess);
+    }
+
+    function onPreview(e) {
+        e.preventDefault();
+        const formData = buildFormData();
+        fetchAndPreviewPdf('/StiffenerLabel/Preview', formData, "Stiffener Label");
+    }
+
+    function onPrintSuccess() {
+        console.log('print success.');
+
+        // Clear positions grid
+        clearPositionsGrid();
+
+        // Clear in reverse cascade order: DrawingNo -> LotNo -> DueDate
+        const drawingNoComboBox = $("#DrawingNo").data("kendoMultiColumnComboBox");
+        if (drawingNoComboBox) {
+            drawingNoComboBox.value("");
+            drawingNoComboBox.text("");
+        }
+
+        const lotNoComboBox = $("#LotNo").data("kendoMultiColumnComboBox");
+        if (lotNoComboBox) {
+            lotNoComboBox.value("");
+            lotNoComboBox.text("");
+        }
+
+        // Clear DatePicker
+        const dueDatePicker = $("#DueDate").data("kendoDatePicker");
+        if (dueDatePicker) {
+            dueDatePicker.value(null);
+        }
+    }
+
+    function onChange(e) {
+        var cmblotNo = $("#LotNo").data("kendoMultiColumnComboBox");
+        if (cmblotNo) {
+            cmblotNo.value(null);
+            cmblotNo.text("");
+            cmblotNo.dataSource.read();
+        }
+        
+        // Clear positions grid when DueDate changes
+        clearPositionsGrid();
+    }
+
+    function onLotNoChange(e) {
+        var lotNo = e.sender.value();
+        if (!lotNo || lotNo === "") {
+            clearPositionsGrid();
+        }
+    }
+
+    function getLotParameters() {
+        return {
+            dueDate: $('#DueDate').val()
+        };
+    }
+
+    function getDrawingNoParameters() {
+        return {
+            lotNo: $('#LotNo').val()
+        };
+    }
+
+    function onDrawingNoSelect(e) {
+        var lotNo = $('#LotNo').val();
+        var drawingNo = e.dataItem ? e.dataItem.DrawingNo : null;
+        
+        if (lotNo && drawingNo) {
+            loadPositionsGrid(lotNo, drawingNo);
+        } else {
+            clearPositionsGrid();
+        }
+    }
+
+    function onDrawingNoChange(e) {
+        var drawingNo = e.sender.value();
+        if (!drawingNo || drawingNo === "") {
+            clearPositionsGrid();
+        }
+    }
+
+    function loadPositionsGrid(lotNo, drawingNo) {
+        $.ajax({
+            url: '/StiffenerLabel/GetPositions',
+            type: 'GET',
+            data: {
+                lotNo: lotNo,
+                drawingNo: drawingNo
+            },
+            success: function (data) {
+                if (data && data.length > 0) {
+                    var grid = $("#positionsGrid").data("kendoGrid");
+                    if (grid) {
+                        grid.dataSource.data(data);
+                        updateGridTotals(data);
+                    } else {
+                        initializePositionsGrid(data);
+                    }
+                    $('#gridContainer').show();
+                } else {
+                    $('#gridContainer').hide();
+                }
+            },
+            error: function () {
+                console.error('Failed to load positions.');
+                $('#gridContainer').hide();
+            }
+        });
+    }
+
+    function initializePositionsGrid(data) {
+        $("#positionsGrid").kendoGrid({
+            dataSource: {
+                data: data,
+                group: {
+                    field: "WarehouseOrderNo",
+                    dir: "asc",
+                    aggregates: []
+                }
+            },
+            groupable: {
+                messages: {
+                    empty: "Drag a column header and drop it here to group by that column"
+                }
+            },
+            height: "calc(100vh - 380px)",
+            scrollable: {
+                virtual: false
+            },
+            sortable: true,
+            resizable: {
+                columns: true
+            },
+            persistSelection: true,
+            reorderable: {
+                columns: true
+            },
+            filterable: {
+                mode: "row"
+            },
+            groupable: true,
+            htmlAttributes: {
+                "class": "k-grid-responsive"
+            },
+            columns: [
+                {
+                    field: "Position",
+                    title: "Position",
+                    width: "100px",
+                    headerAttributes: { 
+                        style: "text-align: center; white-space: normal; word-wrap: break-word;" 
+                    },
+                    attributes: { style: "text-align: center; white-space: nowrap;" }
+                },
+                {
+                    field: "ItemCode",
+                    title: "Item<br/>Code",
+                    width: "120px",
+                    headerAttributes: { 
+                        style: "text-align: left; white-space: normal; word-wrap: break-word;" 
+                    },
+                    attributes: { style: "text-align: left; white-space: nowrap;" }
+                },
+                {
+                    field: "Name",
+                    title: "Item<br/>Name",
+                    width: "200px",
+                    headerAttributes: { 
+                        style: "text-align: left; white-space: normal; word-wrap: break-word;" 
+                    },
+                    attributes: { style: "text-align: left; white-space: nowrap;" }
+                },
+                {
+                    field: "OrderQuantity",
+                    title: "Order<br/>Quantity",
+                    width: "120px",
+                    headerAttributes: { 
+                        style: "text-align: right; white-space: normal; word-wrap: break-word; padding-right: 10px;" 
+                    },
+                    attributes: { 
+                        style: "text-align: right; white-space: nowrap; padding-right: 10px;" 
+                    },
+                    format: "{0:n0}"
+                },
+                {
+                    field: "PrintQuantity",
+                    title: "Print<br/>Quantity",
+                    width: "120px",
+                    headerAttributes: { 
+                        style: "text-align: right; white-space: normal; word-wrap: break-word; padding-right: 10px;" 
+                    },
+                    attributes: { 
+                        style: "text-align: right; white-space: nowrap; padding-right: 10px;" 
+                    },
+                    format: "{0:n0}"
+                },
+                {
+                    field: "PendingQuantity",
+                    title: "Pending<br/>Quantity",
+                    width: "130px",
+                    headerAttributes: { 
+                        style: "text-align: right; white-space: normal; word-wrap: break-word; padding-right: 10px;" 
+                    },
+                    attributes: { 
+                        style: "text-align: right; white-space: nowrap; padding-right: 10px; font-weight: bold; color: #d9534f;" 
+                    },
+                    format: "{0:n0}"
+                },
+                {
+                    field: "Family",
+                    title: "Family",
+                    width: "100px",
+                    headerAttributes: { 
+                        style: "text-align: center; white-space: normal; word-wrap: break-word;" 
+                    },
+                    attributes: { style: "text-align: center; white-space: nowrap;" }
+                }
+            ],
+            dataBound: function(e) {
+                // Customize group header text to show "Order : [value]"
+                var grid = e.sender;
+                grid.tbody.find("tr.k-grouping-row").each(function() {
+                    var $row = $(this);
+                    var $cell = $row.find(".k-group-cell");
+                    var currentText = $cell.text().trim();
+                    if (currentText && currentText.indexOf("Order :") === -1) {
+                        $cell.html("Order : <strong>" + currentText + "</strong>");
+                    }
+                });
+                
+                // Get all data items (flatten grouped data if needed)
+                var allData = [];
+                var dataSource = e.sender.dataSource;
+                var view = dataSource.view();
+                
+                // If grouped, flatten the data
+                view.forEach(function(item) {
+                    if (item.aggregates || item.items) {
+                        // This is a group header, iterate through items
+                        if (item.items) {
+                            item.items.forEach(function(dataItem) {
+                                allData.push(dataItem);
+                            });
+                        }
+                    } else {
+                        // This is a regular data item
+                        allData.push(item);
+                    }
+                });
+                
+                updateGridTotals(allData);
+            }
+        });
+        
+        updateGridTotals(data);
+    }
+
+    function updateGridTotals(data) {
+        if (!data || data.length === 0) {
+            return;
+        }
+        
+        var totalOrderQty = 0;
+        var totalPrintQty = 0;
+        var totalPendingQty = 0;
+        
+        $.each(data, function (index, item) {
+            totalOrderQty += parseInt(item.OrderQuantity || 0);
+            totalPrintQty += parseInt(item.PrintQuantity || 0);
+            totalPendingQty += parseInt(item.PendingQuantity || 0);
+        });
+        
+        // Add footer row
+        var grid = $("#positionsGrid").data("kendoGrid");
+        if (grid) {
+            var footerRow = grid.tbody.find("tr.k-footer-template");
+            if (footerRow.length === 0) {
+                var footer = '<tr class="k-footer-template" style="background-color: #f8f9fa; border-top: 2px solid #dee2e6;">' +
+                    '<td colspan="3" style="text-align: right; font-weight: bold; padding-right: 10px; border: 1px solid #e5e5e5;">Total:</td>' +
+                    '<td style="text-align: right; font-weight: bold; padding-right: 10px; border: 1px solid #e5e5e5;">' + formatNumber(totalOrderQty) + '</td>' +
+                    '<td style="text-align: right; font-weight: bold; padding-right: 10px; border: 1px solid #e5e5e5;">' + formatNumber(totalPrintQty) + '</td>' +
+                    '<td style="text-align: right; font-weight: bold; padding-right: 10px; color: #d9534f; border: 1px solid #e5e5e5;">' + formatNumber(totalPendingQty) + '</td>' +
+                    '<td style="border: 1px solid #e5e5e5;"></td>' +
+                    '</tr>';
+                grid.tbody.append(footer);
+            } else {
+                footerRow.find("td").eq(3).text(formatNumber(totalOrderQty));
+                footerRow.find("td").eq(4).text(formatNumber(totalPrintQty));
+                footerRow.find("td").eq(5).text(formatNumber(totalPendingQty));
+            }
+        }
+    }
+
+    function formatNumber(value) {
+        if (value == null || value === undefined) {
+            return '0';
+        }
+        return parseInt(value).toLocaleString('en-US');
+    }
+
+    // Clear positions grid when controls are cleared
+    function clearPositionsGrid() {
+        var grid = $("#positionsGrid").data("kendoGrid");
+        if (grid) {
+            grid.dataSource.data([]);
+            grid.tbody.find("tr.k-footer-template").remove();
+        }
+        $('#gridContainer').hide();
     }
 </script>

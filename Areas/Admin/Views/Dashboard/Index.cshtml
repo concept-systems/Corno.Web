@@ -1,0 +1,148 @@
+@using Corno.Web.Areas.Admin.Dto
+@using Kendo.Mvc.UI
+@using Corno.Web.Helper
+@model DashboardDto
+
+@{
+    Layout = "~/Views/Shared/_AppLayout.cshtml";
+    ViewBag.BoxTitle = "Dashboard";
+}
+
+<div class="dashboard-container" style="padding: 20px;">
+    <div class="k-hstack k-gap-4" style="margin-bottom: 30px; flex-wrap: wrap;">
+        <!-- Statistics Cards -->
+        <div class="k-card k-card-type-rich" style="flex: 1; min-width: 200px; max-width: 300px;">
+            <div class="k-card-body">
+                <div class="k-hstack k-gap-2">
+                    <div class="k-avatar k-avatar-solid k-avatar-primary k-avatar-lg">
+                        <span class="k-icon k-i-user"></span>
+                    </div>
+                    <div class="k-vstack">
+                        <div class="k-text-muted" style="font-size: 12px;">Total Users</div>
+                        <div class="k-text-primary" style="font-size: 24px; font-weight: bold;">@(Model?.TotalUsers ?? 0)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="k-card k-card-type-rich" style="flex: 1; min-width: 200px; max-width: 300px;">
+            <div class="k-card-body">
+                <div class="k-hstack k-gap-2">
+                    <div class="k-avatar k-avatar-solid k-avatar-success k-avatar-lg">
+                        <span class="k-icon k-i-group"></span>
+                    </div>
+                    <div class="k-vstack">
+                        <div class="k-text-muted" style="font-size: 12px;">Total Roles</div>
+                        <div class="k-text-success" style="font-size: 24px; font-weight: bold;">@(Model?.TotalRoles ?? 0)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="k-card k-card-type-rich" style="flex: 1; min-width: 200px; max-width: 300px;">
+            <div class="k-card-body">
+                <div class="k-hstack k-gap-2">
+                    <div class="k-avatar k-avatar-solid k-avatar-info k-avatar-lg">
+                        <span class="k-icon k-i-check"></span>
+                    </div>
+                    <div class="k-vstack">
+                        <div class="k-text-muted" style="font-size: 12px;">Active Users</div>
+                        <div class="k-text-info" style="font-size: 24px; font-weight: bold;">@(Model?.ActiveUsers ?? 0)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="k-card k-card-type-rich" style="flex: 1; min-width: 200px; max-width: 300px;">
+            <div class="k-card-body">
+                <div class="k-hstack k-gap-2">
+                    <div class="k-avatar k-avatar-solid k-avatar-warning k-avatar-lg">
+                        <span class="k-icon k-i-menu"></span>
+                    </div>
+                    <div class="k-vstack">
+                        <div class="k-text-muted" style="font-size: 12px;">Active Sessions</div>
+                        <div class="k-text-warning" style="font-size: 24px; font-weight: bold;">@(Model?.ActiveSessions ?? 0)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="k-card" style="margin-top: 20px;">
+        <div class="k-card-header">
+            <h3 class="k-card-title">Recent Activity</h3>
+        </div>
+        <div class="k-card-body">
+            <div class="grid-container-full-height">
+                @(Html.Kendo().Grid<RecentActivityDto>()
+                    .Name("recentActivityGrid")
+                    .ApplyIndexSettings(enableExcel: false, enablePdf: false, enableSearch: false)
+                    .Events(events => events.ApplyCommonEvents())
+                    .Columns(columns =>
+                    {
+                        columns.Bound(m => m.Action)
+                            .Title("Action")
+                            .Width(100)
+                            .Align(TextAlign.Left);
+                        columns.Bound(m => m.EntityType)
+                            .Title("Entity Type")
+                            .Width(120);
+                        columns.Bound(m => m.Details)
+                            .Title("Entity/Details")
+                            .Align(TextAlign.Left);
+                        columns.Bound(m => m.UserName)
+                            .Title("User")
+                            .Width(120);
+                        columns.Bound(m => m.Timestamp)
+                            .Title("Time")
+                            .Width(150);
+                        columns.Bound(m => m.IpAddress)
+                            .Title("IP Address")
+                            .Width(120);
+                    })
+                    .DataSource(dataSource => dataSource
+                        .Ajax()
+                        .Read(read => read.Action("GetRecentActivities", "Dashboard", new { area = "Admin" }))
+                        .PageSize(10)
+                        .Sort(sort => sort.Add(m => m.Timestamp).Descending())
+                    ))
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        // Load dashboard data
+        loadDashboardData();
+        
+        // Refresh every 30 seconds
+        setInterval(loadDashboardData, 30000);
+    });
+
+    function loadDashboardData() {
+        $.ajax({
+            url: '@Url.Action("GetDashboardData", "Dashboard", new { area = "Admin" })',
+            type: "POST",
+            success: function(data) {
+                if (data) {
+                    // Update statistics
+                    $(".k-text-primary").text(data.TotalUsers || 0);
+                    $(".k-text-success").text(data.TotalRoles || 0);
+                    $(".k-text-info").text(data.ActiveUsers || 0);
+                    $(".k-text-warning").text(data.ActiveSessions || 0);
+                    
+                    // Refresh recent activity grid
+                    if ($("#recentActivityGrid").data("kendoGrid")) {
+                        $("#recentActivityGrid").data("kendoGrid").dataSource.read();
+                    }
+                }
+            },
+            error: function() {
+                console.error("Failed to load dashboard data");
+            }
+        });
+    }
+</script>
+

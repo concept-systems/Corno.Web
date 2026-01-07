@@ -13,7 +13,9 @@
     @Scripts.Render("~/bundles/modernizr")
 
     <link href="@Url.Content("~/Content/DataTables/media/css/jquery.dataTables.min.css")" rel="stylesheet" type="text/css" />
+    <link href="@Url.Content("~/Content/kendo/2023.1.117/kendo.common.min.css")" rel="stylesheet" type="text/css" />
     <link href="@Url.Content("~/Content/kendo/2023.1.117/kendo.default-turquoise.min.css")" rel="stylesheet" type="text/css" />
+    @*<link href="@Url.Content("~/Content/kendo/2023.1.117/kendo.blueopal.min.css")" rel="stylesheet" type="text/css" />*@
     <link href="@Url.Content("~/Content/css/grid.css")" rel="stylesheet" type="text/css" />
     <link href="@Url.Content("~/Content/css/errorDialog.css")" rel="stylesheet" type="text/css" />
     <link href="@Url.Content("~/Content/css/layout-responsive.css")" rel="stylesheet" type="text/css" />
@@ -23,6 +25,7 @@
     <link href="@Url.Content("~/Content/css/responsive-panel.css")" rel="stylesheet" type="text/css" />
     <link href="@Url.Content("~/Content/css/menu.css")" rel="stylesheet" type="text/css" />
     <link href="@Url.Content("~/Content/pace/themes/pace-theme-flash.css")" rel="stylesheet" />
+    <link href="@Url.Content("~/Content/css/sessionTimeout.css")" rel="stylesheet" type="text/css" />
 
     @RenderSection("styles", required: false)
 
@@ -40,6 +43,7 @@
     <script src="@Url.Content("~/Scripts/js/print.js")"></script>
     <script src="@Url.Content("~/Scripts/js/errorHandler.js")"></script>
     <script src="@Url.Content("~/Scripts/js/multicolumncomboboxHelper.js")"></script>
+    <script src="@Url.Content("~/Scripts/js/sessionTimeout.js")"></script>
 
     <script src="@Url.Content("~/Scripts/communication/serialport.js")"></script>
 

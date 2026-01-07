@@ -1,0 +1,16 @@
+﻿@using Corno.Web.Helper
+
+@{
+    Layout = "~/Views/Shared/_LayoutDetails.cshtml";
+    ViewBag.Title = "Import Plan";
+    ViewBag.BoxTitle = "Import Plan";
+    ViewBag.Area = "Nilkamal";
+    ViewBag.Controller = "Plan";
+    ViewBag.Description = "Upload an Excel file (.xls, .xlsx) to import plan data.";
+    ViewBag.AllowedExtensions = new[] { ".xls", ".xlsx" };
+    ViewBag.MaxFileSizeBytes = 10 * 1024 * 1024;
+    ViewBag.MaxFileSizeText = "10 MB";
+    ViewBag.HasGrid = true;
+}
+
+@Html.Partial("~/Views/Shared/Import/_GenericImport.cshtml")

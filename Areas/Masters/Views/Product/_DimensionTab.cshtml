@@ -32,21 +32,21 @@
             </div>
             <br/>*@
         <div class="form-group row">
-            @Html.EditorFor(m => m.ThicknessUnitId, @"Corno/MultiColumnComboBoxInt",
+           @* @Html.EditorFor(m => m.ThicknessUnitId, @"Corno/MultiColumnComboBoxInt",
                 new
                 {
-                    DataSource = miscMasterService.GetViewModelList(m => m.MiscType == MiscMasterConstants.Unit),
+                    DataSource = miscMasterService.GetViewModelListAsync(m => m.MiscType == MiscMasterConstants.Unit),
                     Name = "Thickness Unit :"
-                })
+                })*@
         </div>
         <br />
         <div class="form-group row">
-            @Html.EditorFor(m => m.LengthUnitId, @"Corno/MultiColumnComboBoxInt",
+           @* @Html.EditorFor(m => m.LengthUnitId, @"Corno/MultiColumnComboBoxInt",
                 new
                 {
-                    DataSource = miscMasterService.GetViewModelList(m => m.MiscType == MiscMasterConstants.Unit),
+                    DataSource = miscMasterService.GetViewModelListAsync(m => m.MiscType == MiscMasterConstants.Unit),
                     Name = "Length Unit :"
-                })
+                })*@
         </div>
         <br />
         <div class="form-group row">

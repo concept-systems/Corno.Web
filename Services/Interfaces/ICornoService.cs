@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-using Corno.Web.Services.Progress.Interfaces;
 
 namespace Corno.Web.Services.Interfaces;
 

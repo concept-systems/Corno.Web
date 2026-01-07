@@ -12,7 +12,6 @@ using Corno.Web.Hubs;
 using Corno.Web.Models;
 using Corno.Web.Models.Packing;
 using Corno.Web.Services.Interfaces;
-using Corno.Web.Services.Progress.Interfaces;
 using Kendo.Mvc.Extensions;
 using Kendo.Mvc.UI;
 using Microsoft.AspNet.SignalR;
@@ -25,18 +24,13 @@ public class PutToLightKittingController : SuperController
     #region -- Constructors --
     public PutToLightKittingController(ITrolleyConfigService trolleyConfigService,
         ILabelService labelService, IPlanService planService, 
-        IMiscMasterService miscMasterService, IUserService userService,
-        IBaseProgressService progressService)
+        IMiscMasterService miscMasterService, IUserService userService)
     {
         _trolleyConfigService = trolleyConfigService;
         _labelService = labelService;
         _planService = planService;
         _miscMasterService = miscMasterService;
         _userService = userService;
-        _progressService = progressService;
-
-        //progressService.SetWebProgress();
-        progressService.OnProgressChanged += OnProgressChanged;
     }
     #endregion
     #region -- Data Members --
@@ -45,7 +39,6 @@ public class PutToLightKittingController : SuperController
     private readonly IPlanService _planService;
     private readonly IMiscMasterService _miscMasterService;
     private readonly IUserService _userService;
-    private readonly IBaseProgressService _progressService;
     #endregion
 
     #region -- Actions --
@@ -169,13 +162,6 @@ public class PutToLightKittingController : SuperController
         }
     }
 
-    private void OnProgressChanged(object sender, ProgressModel progressModel)
-    {
-        /*if (progressModel.MessageType != MessageType.Info && progressModel.Maximum <= 0)
-            return;*/
-        var context = GlobalHost.ConnectionManager.GetHubContext<ProgressHub>();
-        context.Clients.All.receiveProgress(progressModel);
-    }
 
 
     #endregion

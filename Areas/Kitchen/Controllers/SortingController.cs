@@ -5,7 +5,6 @@ using Corno.Web.Controllers;
 using Corno.Web.Globals;
 using Corno.Web.Hubs;
 using Corno.Web.Models;
-using Corno.Web.Services.Progress.Interfaces;
 using Kendo.Mvc.Extensions;
 using Kendo.Mvc.UI;
 using Microsoft.AspNet.Identity;
@@ -24,19 +23,14 @@ namespace Corno.Web.Areas.Kitchen.Controllers;
 public class SortingController : SuperController
 {
     #region -- Constructors --
-    public SortingController(ILabelService labelService, IWebProgressService progressService)
+    public SortingController(ILabelService labelService)
     {
         _labelService = labelService;
-        _progressService = progressService;
-
-        //progressService.SetWebProgress();
-        progressService.OnProgressChanged += OnProgressChanged;
     }
     #endregion
 
     #region -- Data Members --
     private readonly ILabelService _labelService;
-    private readonly IWebProgressService _progressService;
     #endregion
     #region -- Actions --
     public ActionResult Index()
@@ -77,7 +71,7 @@ public class SortingController : SuperController
 
         try
         {
-            await _labelService.PerformSorting(dto, User.Identity.GetUserId()).ConfigureAwait(false);
+            await _labelService.PerformSortingAsync(dto, User.Identity.GetUserId()).ConfigureAwait(false);
         }
         catch (Exception exception)
         {
@@ -162,11 +156,9 @@ public class SortingController : SuperController
             Session[FieldConstants.Operation] = OperationConstants.Sorting;
             Session[FieldConstants.NewStatus] = StatusConstants.Sorted;
 
-            _progressService.SetWebProgress();
-
-            var importModels = _labelService.Import(file.InputStream, FieldConstants.Operation, StatusConstants.Sorted,
-                             _progressService, User.Identity.GetUserId());
-            return Json(new { success = true, importModels }, JsonRequestBehavior.AllowGet);
+            // Import is now handled by LabelImportController using the common import module
+            // Redirect to LabelImportController or return appropriate response
+            return Json(new { success = false, message = "Please use LabelImportController for import functionality" }, JsonRequestBehavior.AllowGet);
 
 
             //var importModels = _planService.Import(file.InputStream, file.FileName, _progressService,
@@ -183,13 +175,6 @@ public class SortingController : SuperController
     }
 
 
-    private void OnProgressChanged(object sender, ProgressModel progressModel)
-    {
-        /*if (progressModel.MessageType != MessageType.Info && progressModel.Maximum <= 0)
-            return;*/
-        var context = GlobalHost.ConnectionManager.GetHubContext<ProgressHub>();
-        context.Clients.All.receiveProgress(progressModel);
-    }
 
     public ActionResult GetIndexViewDto([DataSourceRequest] DataSourceRequest request)
     {

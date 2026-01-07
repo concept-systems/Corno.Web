@@ -4,25 +4,19 @@ using System.Linq;
 using Corno.Web.Areas.Kitchen.Services.Interfaces;
 using Corno.Web.Extensions;
 using Corno.Web.Globals;
-using Corno.Web.Logger;
 using Corno.Web.Models.Packing;
 using Corno.Web.Models.Plan;
 using Corno.Web.Services.Plan;
-using Corno.Web.Services.Progress.Interfaces;
 using Corno.Web.Windsor;
-using Corno.Web.Services.Masters.Interfaces;
-using Corno.Web.Services.File.Interfaces;
 using System.Collections;
 using System.Data.Entity;
-using System.IO;
 using Corno.Web.Areas.Kitchen.Dto.Label;
 using Corno.Web.Areas.Kitchen.Dto.Plan;
 using Corno.Web.Areas.Kitchen.Dto.Carton;
-using Corno.Web.Models.Masters;
+using System.Transactions;
 using Corno.Web.Services.Interfaces;
 using Mapster;
 using Corno.Web.Repository.Interfaces;
-using Corno.Web.Areas.Kitchen.Models;
 using System.Threading.Tasks;
 using MoreLinq;
 using Kendo.Mvc.Extensions;
@@ -33,14 +27,11 @@ namespace Corno.Web.Areas.Kitchen.Services;
 public class PlanService : BasePlanService, IPlanService
 {
     #region -- Constructors --
-    public PlanService(IGenericRepository<Plan> genericRepository, IExcelFileService<BmImportDto> excelFileService,
-        IPlanItemDetailService planItemDetailService,
-        IBaseItemService itemService, IMiscMasterService miscMasterService)
+    public PlanService(IGenericRepository<Plan> genericRepository,
+        IPlanItemDetailService planItemDetailService, IMiscMasterService miscMasterService)
     : base(genericRepository)
     {
-        _excelFileService = excelFileService;
         _planItemDetailService = planItemDetailService;
-        _itemService = itemService;
         _miscMasterService = miscMasterService;
 
         // Initialize Shirwal Families
@@ -63,9 +54,7 @@ public class PlanService : BasePlanService, IPlanService
 
     #region -- Data Members --
 
-    private readonly IExcelFileService<BmImportDto> _excelFileService;
     private readonly IPlanItemDetailService _planItemDetailService;
-    private readonly IBaseItemService _itemService;
     private readonly IMiscMasterService _miscMasterService;
 
     private readonly string[] _shirwalFamilies;
@@ -77,20 +66,20 @@ public class PlanService : BasePlanService, IPlanService
     {
         var userId = context.Parameters["UserId"] as string ?? "System";
         var isUpdate = context.Parameters.ContainsKey("IsUpdate") && (bool)context.Parameters["IsUpdate"];
-        
+
         // Get pre-loaded dictionaries for batch lookups
-        var warehouseDict = context.Parameters.ContainsKey("WarehouseDict") 
+        var warehouseDict = context.Parameters.ContainsKey("WarehouseDict")
             ? context.Parameters["WarehouseDict"] as Dictionary<string, int>
             : new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-        
+
         var parentItemDict = context.Parameters.ContainsKey("ParentItemDict")
             ? context.Parameters["ParentItemDict"] as Dictionary<string, int>
             : new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-        
+
         var baanItemDict = context.Parameters.ContainsKey("BaanItemDict")
             ? context.Parameters["BaanItemDict"] as Dictionary<string, int>
             : new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-        
+
         TypeAdapterConfig<BmImportDto, Plan>
             .NewConfig()
             .AfterMapping((src, dest) =>
@@ -101,7 +90,7 @@ public class PlanService : BasePlanService, IPlanService
                 dest.Status = StatusConstants.InProcess;
                 dest.ModifiedBy = userId;
                 dest.ModifiedDate = DateTime.Now;
-                
+
                 // Use pre-loaded dictionary instead of database call
                 if (!string.IsNullOrWhiteSpace(src.WarehouseCode) &&
                     warehouseDict != null &&
@@ -109,7 +98,7 @@ public class PlanService : BasePlanService, IPlanService
                 {
                     dest.WarehouseId = warehouseId;
                 }
-                
+
                 if (isUpdate) return;
                 dest.CreatedBy = userId;
                 dest.CreatedDate = DateTime.Now;
@@ -128,7 +117,7 @@ public class PlanService : BasePlanService, IPlanService
 
                 dest.Status = StatusConstants.Active;
                 dest.ProductLine = src.FinishedGoodItem;
-                
+
                 // Use pre-loaded dictionaries instead of database calls
                 if (!string.IsNullOrWhiteSpace(src.ParentItemCode) &&
                     parentItemDict != null &&
@@ -136,14 +125,14 @@ public class PlanService : BasePlanService, IPlanService
                 {
                     dest.ParentItemId = parentItemId;
                 }
-                
+
                 if (!string.IsNullOrWhiteSpace(src.BaanItemCode) &&
                     baanItemDict != null &&
                     baanItemDict.TryGetValue(src.BaanItemCode.Trim(), out var baanItemId))
                 {
                     dest.ItemId = baanItemId;
                 }
-                
+
                 dest.ModifiedBy = userId;
                 dest.ModifiedDate = DateTime.Now;
 
@@ -154,7 +143,7 @@ public class PlanService : BasePlanService, IPlanService
             });
     }
 
-    private async Task<string> GetNextLotNoAsync(string fileName)
+    /*private async Task<string> GetNextLotNoAsync(string fileName)
     {
         var lotNo = await FirstOrDefaultAsync(p => p.Reserved1 == fileName,
             p => p.LotNo).ConfigureAwait(false);
@@ -170,8 +159,8 @@ public class PlanService : BasePlanService, IPlanService
         var lotNoSerialNo = nextLotNo.Substring(nextLotNo.Length - 3).ToInt() + 1;
         nextLotNo = DateTime.Now.ToString($"ddMMyyyy{lotNoSerialNo.ToString().PadLeft(3, '0')}");
         return nextLotNo;
-    }
-    
+    }*/
+
     #endregion
 
     #region -- Public Methods --
@@ -204,28 +193,32 @@ public class PlanService : BasePlanService, IPlanService
         await UpdateAndSaveAsync(plan).ConfigureAwait(false);
     }
 
-    public async Task UpdateQuantitiesAsync(Plan plan)
+    public async Task<bool> UpdateQuantitiesAsync(Plan plan)
     {
         if (null == plan)
             throw new Exception("Invalid Plan");
+
+        using var scope = new TransactionScope(TransactionScopeOption.Required,
+            new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted },
+            TransactionScopeAsyncFlowOption.Enabled);
 
         var labelService = Bootstrapper.Get<ILabelService>();
         var cartonService = Bootstrapper.Get<ICartonService>();
 
         // Load data
         var labels = await labelService.GetAsync(l => l.WarehouseOrderNo == plan.WarehouseOrderNo, l => l).ConfigureAwait(false);
-        var cartons = await cartonService.GetAsync(c => c.WarehouseOrderNo == plan.WarehouseOrderNo, c => new { c.Id, c.CartonDetails }).ConfigureAwait(false);
-        
+        var cartons = await cartonService.GetAsync(c => c.WarehouseOrderNo == plan.WarehouseOrderNo, c => new { c.Id, c.CartonNo, c.CartonDetails }).ConfigureAwait(false);
+
         // Get packed barcodes for quick lookup (inline to work with anonymous types)
         var packedBarcodes = new HashSet<string>(
             cartons.SelectMany(c => c.CartonDetails.Select(cd => cd.Barcode))
                 .Where(b => !string.IsNullOrEmpty(b)),
             StringComparer.OrdinalIgnoreCase
         );
-        
+
         // Update label statuses based on packedBarcodes
         var modifiedLabels = UpdateLabelStatuses(labels, packedBarcodes);
-        
+
         // Calculate quantities based on updated label statuses
         CalculateQuantities(plan, labels);
 
@@ -235,7 +228,7 @@ public class PlanService : BasePlanService, IPlanService
         {
             await labelService.DeleteRangeAsync(labelsToDelete).ConfigureAwait(false);
             await labelService.SaveAsync().ConfigureAwait(false);
-            
+
             // Remove deleted labels from the local list and recalculate quantities
             var deletedLabelIds = new HashSet<int>(labelsToDelete.Select(l => l.Id));
             labels.RemoveAll(l => deletedLabelIds.Contains(l.Id));
@@ -250,6 +243,9 @@ public class PlanService : BasePlanService, IPlanService
 
         // Save changes
         await UpdateAndSaveAsync(plan).ConfigureAwait(false);
+
+        scope.Complete();
+        return true;
     }
 
     public async Task IncreasePlanQuantityAsync(Plan plan, PlanItemDetail planItemDetail, double quantity, string newStatus)
@@ -262,7 +258,7 @@ public class PlanService : BasePlanService, IPlanService
 
         await UpdateAsync(plan).ConfigureAwait(false);
     }
-    
+
 
     public async Task<IEnumerable<string>> GetFamiliesAsync(int locationId, List<PlanItemDetail> planItemDetails = null)
     {
@@ -272,12 +268,12 @@ public class PlanService : BasePlanService, IPlanService
                 return await Task.FromResult(_shirwalFamilies).ConfigureAwait(false);
             case 2: // Khalapur
                 if (null == planItemDetails)
-                    return (await _planItemDetailService.GetAsync<string>(d => !_shirwalFamilies.Contains(d.Group),
+                    return (await _planItemDetailService.GetAsync(d => !_shirwalFamilies.Contains(d.Group),
                         d => d.Group).ConfigureAwait(false)).Distinct();
                 return planItemDetails.Where(d => !_shirwalFamilies.Contains(d.Group)).Select(d => d.Group).Distinct();
             default:
                 if (null == planItemDetails)
-                    return (await _planItemDetailService.GetAsync<string>(null, d => d.Group).ConfigureAwait(false))
+                    return (await _planItemDetailService.GetAsync(null, d => d.Group).ConfigureAwait(false))
                         .Distinct();
                 return planItemDetails.Select(d => d.Group).Distinct();
         }
@@ -300,22 +296,15 @@ public class PlanService : BasePlanService, IPlanService
     public async Task<IEnumerable> GetLotNosAsync(DateTime dueDate)
     {
         var lotNos = await GetAsync(p => DbFunctions.TruncateTime(p.DueDate) == DbFunctions.TruncateTime(dueDate),
-            p => new {  p.LotNo }).ConfigureAwait(false);
+            p => new { p.LotNo }).ConfigureAwait(false);
         return lotNos.DistinctBy(p => p.LotNo);
     }
 
-    #region -- IFileImportService Implementation --
-    
-    public string[] SupportedExtensions => new[] { ".xls", ".xlsx" };
+    // IFileImportService implementation removed - now handled by FileImportService<BmImportDto>
 
-    public async Task ValidateImportDataAsync(List<BmImportDto> records, ImportSession session, ImportSessionService sessionService)
-    {
-        // Validation is done in the ImportAsync method itself
-        await Task.CompletedTask;
-    }
-
-    #endregion
-
+    // OLD METHOD - REMOVED: ImportAsync with progress service
+    // This functionality is now in PlanBusinessImportService
+    /*
     public async Task<List<BmImportDto>> ImportAsync(Stream fileStream, string filePath, IBaseProgressService progressService,
         string userId, string sessionId, ImportSessionService sessionService)
     {
@@ -343,9 +332,9 @@ public class PlanService : BasePlanService, IPlanService
             // Optimized Excel reading with better error handling
             var records = _excelFileService.Read(fileStream, 0, 6)
                 .ToList().Trim();
-            
+
             var readDuration = DateTime.Now - readStartTime;
-            
+
             if (!records.Any())
                 throw new Exception("No entries found in excel file to import. Please ensure the file contains data.");
 
@@ -362,7 +351,7 @@ public class PlanService : BasePlanService, IPlanService
 
             // Validate data
             ValidateImportData(records, session, sessionService);
-            
+
             // Count validation errors
             var validationErrorCount = records.Count(r => !string.IsNullOrEmpty(r.Status) && r.Status == "Error");
 
@@ -394,12 +383,12 @@ public class PlanService : BasePlanService, IPlanService
                 .Select(r => r.WarehouseCode.Trim())
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
-            
+
             var uniqueParentItemCodes = records.Where(r => !string.IsNullOrWhiteSpace(r.ParentItemCode))
                 .Select(r => r.ParentItemCode.Trim())
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
-            
+
             var uniqueBaanItemCodes = records.Where(r => !string.IsNullOrWhiteSpace(r.BaanItemCode))
                 .Select(r => r.BaanItemCode.Trim())
                 .Distinct(StringComparer.OrdinalIgnoreCase)
@@ -414,7 +403,7 @@ public class PlanService : BasePlanService, IPlanService
             var warehouseDict = warehouses
                 .GroupBy(w => w.Code, StringComparer.OrdinalIgnoreCase)
                 .ToDictionary(g => g.Key, g => g.First().Id, StringComparer.OrdinalIgnoreCase);
-            
+
             // Batch load existing parent items
             var existingParentItems = await _itemService.GetAsync(
                 i => uniqueParentItemCodes.Contains(i.Code),
@@ -434,7 +423,7 @@ public class PlanService : BasePlanService, IPlanService
                 .Where(code => !parentItemDict.ContainsKey(code))
                 .Select(code => new { Code = code, Name = records.FirstOrDefault(r => r.ParentItemCode?.Trim() == code)?.ParentItemName ?? code })
                 .ToList();
-            
+
             var missingBaanItems = uniqueBaanItemCodes
                 .Where(code => !baanItemDict.ContainsKey(code))
                 .Select(code => new { Code = code, Name = records.FirstOrDefault(r => r.BaanItemCode?.Trim() == code)?.BaanItemName ?? code })
@@ -453,7 +442,7 @@ public class PlanService : BasePlanService, IPlanService
                 {
                     await _itemService.AddRangeAsync(parentItemsToAdd).ConfigureAwait(false);
                     await _itemService.SaveAsync().ConfigureAwait(false);
-                    
+
                     // Update dictionaries with newly created items
                     foreach (var item in parentItemsToAdd)
                     {
@@ -476,7 +465,7 @@ public class PlanService : BasePlanService, IPlanService
                 {
                     await _itemService.AddRangeAsync(baanItemsToAdd).ConfigureAwait(false);
                     await _itemService.SaveAsync().ConfigureAwait(false);
-                    
+
                     // Update dictionaries with newly created items
                     foreach (var item in baanItemsToAdd)
                     {
@@ -501,9 +490,9 @@ public class PlanService : BasePlanService, IPlanService
 
             var context = new MapContext
             {
-                Parameters = 
-                { 
-                    ["UserId"] = userId, 
+                Parameters =
+                {
+                    ["UserId"] = userId,
                     ["IsUpdate"] = false,
                     ["WarehouseDict"] = warehouseDict,
                     ["ParentItemDict"] = parentItemDict,
@@ -580,7 +569,7 @@ public class PlanService : BasePlanService, IPlanService
                         existingPlan.PlanItemDetails = group.Adapt<List<PlanItemDetail>>();
                         plansToUpdate.Add(existingPlan);
                         updatedCount++;
-                        
+
                         // Set Status and Remark for all records in the group
                         foreach (var item in group)
                         {
@@ -597,7 +586,7 @@ public class PlanService : BasePlanService, IPlanService
                         newPlan.PlanItemDetails = group.Adapt<List<PlanItemDetail>>();
                         plansToAdd.Add(newPlan);
                         importedCount++;
-                        
+
                         // Set Status and Remark for all records in the group
                         foreach (var item in group)
                         {
@@ -607,7 +596,7 @@ public class PlanService : BasePlanService, IPlanService
                     }
 
                     processedCount += group.Count();
-                    
+
                     // Update session
                     sessionService.UpdateSession(session.SessionId, s =>
                     {
@@ -618,7 +607,7 @@ public class PlanService : BasePlanService, IPlanService
                         s.UpdatedCount = updatedCount;
                         s.ErrorCount = errorCount;
                     });
-                    
+
                     // Progress is tracked via sessionService, no need for progressService
                 }
                 catch (Exception exception)
@@ -729,7 +718,7 @@ public class PlanService : BasePlanService, IPlanService
             // Don't throw exception - allow import to continue with error records marked
             // This way users can see which records have errors in the results grid
         }
-    }
+    }*/
 
     #region -- Private Helper Methods for UpdateQuantities --
 
@@ -855,7 +844,7 @@ public class PlanService : BasePlanService, IPlanService
     private List<Label> RemoveExtraActiveLabels(Plan plan, List<Label> labels)
     {
         var labelsToDelete = new List<Label>();
-        
+
         // Group labels by position for efficient lookup
         var labelsByPosition = labels.GroupBy(l => l.Position)
             .ToDictionary(g => g.Key, g => g.ToList(), StringComparer.OrdinalIgnoreCase);
@@ -927,8 +916,8 @@ public class PlanService : BasePlanService, IPlanService
         // Populate Warehouse Name from MiscMaster (optimized - only select Name)
         if (plan.WarehouseId.HasValue)
         {
-            var warehouseName = await _miscMasterService.FirstOrDefaultAsync(m => m.Id == plan.WarehouseId.Value && 
-                    m.MiscType == MiscMasterConstants.Warehouse, 
+            var warehouseName = await _miscMasterService.FirstOrDefaultAsync(m => m.Id == plan.WarehouseId.Value &&
+                    m.MiscType == MiscMasterConstants.Warehouse,
                 m => m.Name).ConfigureAwait(false);
             dto.WarehouseName = warehouseName;
         }
@@ -974,11 +963,15 @@ public class PlanService : BasePlanService, IPlanService
     {
         var labelService = Bootstrapper.Get<ILabelService>();
         var labels = await labelService.GetAsync(p => p.WarehouseOrderNo == positionView.WarehouseOrderNo &&
-                                           p.Position == positionView.Position, 
+                                           p.Position == positionView.Position,
                 p => new
                 {
-                    p.Id, p.AssemblyCode, p.CarcassCode, p.LabelDate, 
-                    p.Barcode, p.Status
+                    p.Id,
+                    p.AssemblyCode,
+                    p.CarcassCode,
+                    p.LabelDate,
+                    p.Barcode,
+                    p.Status
 
                 }).ConfigureAwait(false);
 
@@ -995,11 +988,11 @@ public class PlanService : BasePlanService, IPlanService
         var positionLabels = labels.Select(x =>
                 new PositionDetailDto.PositionLabelDto
                 {
-                Id = x.Id,
-                LabelDate = x.LabelDate,
-                Barcode = x.Barcode,
-                Status = x.Status,
-            }).ToList();
+                    Id = x.Id,
+                    LabelDate = x.LabelDate,
+                    Barcode = x.Barcode,
+                    Status = x.Status,
+                }).ToList();
         var positionCartons = cartons.Select(x => new PositionDetailDto.PositionLabelDto
         {
             CartonNo = x.CartonNo,
@@ -1019,7 +1012,7 @@ public class PlanService : BasePlanService, IPlanService
     {
         var cartonService = Bootstrapper.Get<ICartonService>();
         var cartons = await cartonService.GetAsync(p => p.WarehouseOrderNo == positionView.WarehouseOrderNo &&
-                                             p.CartonDetails.Any(d => d.Position == positionView.Position), 
+                                             p.CartonDetails.Any(d => d.Position == positionView.Position),
                 p => new { p.Id, p.PackingDate, p.CartonNo, p.CartonBarcode, p.Status }).ConfigureAwait(false);
 
         var positionLabels = cartons.Select(x =>
@@ -1060,13 +1053,13 @@ public class PlanService : BasePlanService, IPlanService
     public async Task DeletePlanAsync(string warehouseOrderNo)
     {
         var labelService = Bootstrapper.Get<ILabelService>();
-        var packedLabel = await labelService.FirstOrDefaultAsync(p => p.WarehouseOrderNo == warehouseOrderNo && 
+        var packedLabel = await labelService.FirstOrDefaultAsync(p => p.WarehouseOrderNo == warehouseOrderNo &&
                                                                p.Status == StatusConstants.Packed, p => p).ConfigureAwait(false);
         if (null != packedLabel)
             throw new Exception("Cannot delete plan. There are labels with Packed status for this warehouse order. Please unpack the labels first.");
 
         var deleteStatus = new List<string> { StatusConstants.Active, StatusConstants.Printed };
-        var label = await labelService.FirstOrDefaultAsync(p => p.WarehouseOrderNo == warehouseOrderNo && 
+        var label = await labelService.FirstOrDefaultAsync(p => p.WarehouseOrderNo == warehouseOrderNo &&
                                                           !deleteStatus.Contains(p.Status), p => p).ConfigureAwait(false);
         if (null != label)
             throw new Exception("There are labels which are scanned for operations.");
@@ -1134,19 +1127,19 @@ public class PlanService : BasePlanService, IPlanService
         // However, with projection, EF should optimize this to use SQL GROUP BY
         SetIncludes($"{nameof(Plan.PlanItemDetails)}");
         var result = await GetAsync(p => planIds.Contains(p.Id), p => new PlanIndexDto
-            {
-                Id = p.Id,
-                WarehouseOrderNo = p.WarehouseOrderNo,
-                LotNo = p.LotNo,
-                DueDate = p.DueDate,
-                // These Sum() operations will be translated to SQL GROUP BY aggregations
-                OrderQuantity = p.PlanItemDetails.Sum(d => d.OrderQuantity ?? 0),
-                PrintQuantity = p.PlanItemDetails.Sum(d => d.PrintQuantity ?? 0),
-                BendQuantity = p.PlanItemDetails.Sum(d => d.BendQuantity ?? 0),
-                SortQuantity = p.PlanItemDetails.Sum(d => d.SortQuantity ?? 0),
-                SubAssemblyQuantity = p.PlanItemDetails.Sum(d => d.SubAssemblyQuantity ?? 0),
-                PackedQuantity = p.PlanItemDetails.Sum(d => d.PackQuantity ?? 0)
-            }, ignoreInclude: false).ConfigureAwait(false);
+        {
+            Id = p.Id,
+            WarehouseOrderNo = p.WarehouseOrderNo,
+            LotNo = p.LotNo,
+            DueDate = p.DueDate,
+            // These Sum() operations will be translated to SQL GROUP BY aggregations
+            OrderQuantity = p.PlanItemDetails.Sum(d => d.OrderQuantity ?? 0),
+            PrintQuantity = p.PlanItemDetails.Sum(d => d.PrintQuantity ?? 0),
+            BendQuantity = p.PlanItemDetails.Sum(d => d.BendQuantity ?? 0),
+            SortQuantity = p.PlanItemDetails.Sum(d => d.SortQuantity ?? 0),
+            SubAssemblyQuantity = p.PlanItemDetails.Sum(d => d.SubAssemblyQuantity ?? 0),
+            PackedQuantity = p.PlanItemDetails.Sum(d => d.PackQuantity ?? 0)
+        }, ignoreInclude: false).ConfigureAwait(false);
 
         pagedPlans.Data = result;
         return pagedPlans;
@@ -1162,21 +1155,21 @@ public class PlanService : BasePlanService, IPlanService
             null, true);
 
         var data = from label in query
-            select new LabelIndexDto
-            {
-                Id = label.Id,
-                LabelDate = label.LabelDate,
-                WarehouseOrderNo = label.WarehouseOrderNo,
-                CarcassCode = label.CarcassCode,
-                AssemblyCode = label.AssemblyCode,
-                Position = label.Position,
-                Barcode = label.Barcode,
-                LotNo = label.LotNo,
-                Family = label.Reserved1,
-                OrderQuantity = label.OrderQuantity,
-                Quantity = label.Quantity,
-                Status = label.Status
-            };
+                   select new LabelIndexDto
+                   {
+                       Id = label.Id,
+                       LabelDate = label.LabelDate,
+                       WarehouseOrderNo = label.WarehouseOrderNo,
+                       CarcassCode = label.CarcassCode,
+                       AssemblyCode = label.AssemblyCode,
+                       Position = label.Position,
+                       Barcode = label.Barcode,
+                       LotNo = label.LotNo,
+                       Family = label.Reserved1,
+                       OrderQuantity = label.OrderQuantity,
+                       Quantity = label.Quantity,
+                       Status = label.Status
+                   };
 
         var result = await data.ToDataSourceResultAsync(request).ConfigureAwait(false);
         return result;
@@ -1192,16 +1185,16 @@ public class PlanService : BasePlanService, IPlanService
             null, true).ConfigureAwait(false);
 
         var data = from carton in query
-            select new CartonIndexDto
-            {
-                Id = carton.Id,
-                PackingDate = carton.PackingDate,
-                SoNo = carton.SoNo,
-                WarehouseOrderNo = carton.WarehouseOrderNo,
-                CartonNo = carton.CartonNo.ToString(),
-                CartonBarcode = carton.CartonBarcode,
-                Status = carton.Status
-            };
+                   select new CartonIndexDto
+                   {
+                       Id = carton.Id,
+                       PackingDate = carton.PackingDate,
+                       SoNo = carton.SoNo,
+                       WarehouseOrderNo = carton.WarehouseOrderNo,
+                       CartonNo = carton.CartonNo.ToString(),
+                       CartonBarcode = carton.CartonBarcode,
+                       Status = carton.Status
+                   };
 
         var result = await data.ToDataSourceResultAsync(request).ConfigureAwait(false);
         return result;
@@ -1215,7 +1208,7 @@ public class PlanService : BasePlanService, IPlanService
     {
         var lotNos = await GetAsync<object>(p => DbFunctions.TruncateTime(p.DueDate) ==
                                           DbFunctions.TruncateTime(dueDate) &&
-                                          p.PlanItemDetails.Any(d => d.ItemType.Equals(FieldConstants.Bo) && 
+                                          p.PlanItemDetails.Any(d => d.ItemType.Equals(FieldConstants.Bo) &&
                                                                      (d.OrderQuantity ?? 0) > (d.PrintQuantity ?? 0)),
                 p => new { p.LotNo }).ConfigureAwait(false);
         return lotNos.Distinct().ToList();
@@ -1224,7 +1217,7 @@ public class PlanService : BasePlanService, IPlanService
     public async Task<IEnumerable> GetPendingWarehouseOrdersAsync(string lotNo)
     {
         var warehouseOrderNos = await GetAsync<object>(p => p.LotNo.Equals(lotNo) &&
-                                           p.PlanItemDetails.Any(d => d.ItemType.Equals(FieldConstants.Bo) && 
+                                           p.PlanItemDetails.Any(d => d.ItemType.Equals(FieldConstants.Bo) &&
                                                                       (d.OrderQuantity ?? 0) > (d.PrintQuantity ?? 0)),
                 p => new { p.WarehouseOrderNo }).ConfigureAwait(false);
         return warehouseOrderNos.Distinct().ToList();
@@ -1232,20 +1225,18 @@ public class PlanService : BasePlanService, IPlanService
 
     public async Task<IEnumerable> GetPendingFamiliesAsync(Plan plan, List<string> selectedGroups = null)
     {
-        var query = plan.PlanItemDetails.Where(d => d.ItemType.Equals(FieldConstants.Bo) && 
+        var query = plan.PlanItemDetails.Where(d => d.ItemType.Equals(FieldConstants.Bo) &&
                                                        (d.OrderQuantity ?? 0) > (d.PrintQuantity ?? 0));
-        
+
         // Apply selectedGroups filter if provided (for trolley labels)
         if (selectedGroups != null && selectedGroups.Any())
-        {
             query = query.Where(d => selectedGroups.Contains(d.Group));
-        }
-        
+
         var families = query
             .Select(p => new { Family = p.Group })
             .Distinct()
             .ToList();
-        
+
         return await Task.FromResult(families).ConfigureAwait(false);
     }
 
@@ -1254,6 +1245,18 @@ public class PlanService : BasePlanService, IPlanService
 
 
 #endregion
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

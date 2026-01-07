@@ -28,7 +28,7 @@ public partial class ThirdLabelRplWiseRpt : BaseReport
         var fromDate = report.Parameters[FieldConstants.FromDate].Value.ToDateTime();
         var toDate = report.Parameters[FieldConstants.ToDate].Value.ToDateTime();
 
-        var labelType = LabelType.SubAssembly.ToString();
+        var labelType = nameof(LabelType.SubAssembly);
 
         var labelService = Bootstrapper.Get<ILabelService>();
         var userService = Bootstrapper.Get<IUserService>();

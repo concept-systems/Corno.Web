@@ -23,7 +23,7 @@ public sealed class AspNetUser : IdentityUser, ICornoModel
     #region -- Properties --
     public string FirstName { get; set; }
     public string LastName { get; set; }
-    public int? DeviceId { get; set; }
+    //public int? DeviceId { get; set; }
 
     [NotMapped]
     public string Password { get; set; }
@@ -43,7 +43,6 @@ public sealed class AspNetUser : IdentityUser, ICornoModel
     public string UserType { get; set; }
         
     public ICollection<AspNetLoginHistory> AspNetLoginHistories { get; set; }
-    //public ICollection<AspNetUserRole> UserRoles { get; set; }
     #endregion
 
     #region -- Methods --

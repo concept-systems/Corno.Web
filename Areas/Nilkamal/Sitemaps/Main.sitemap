@@ -1,0 +1,55 @@
+﻿<siteMapNode title="" url="">
+	<siteMapNode name="Masters" title="Masters" web="true" windows="true" roles="administrator" >
+		<siteMapNode name="Units" title="Units" formname="Corno.Forms.Common.MiscMasterForm" misctype="Unit" icon="Unit" web="true" windows="true"
+		             controller="MiscMaster" action="Index" area="Masters" roles="administrator" />
+		<siteMapNode name="ProductForm" title="Products"
+		             formname="Corno.Concept.Forms.Masters.ProductForm" icon="Product" web="true" windows="true"
+		             controller="Product" action="Index" area="Masters" roles="administrator" />
+		<siteMapNode name="ItemForm" title="Items"
+		             formname="Corno.Concept.Forms.Masters.ItemForm" icon="Item" web="true" windows="true"
+		             controller="Item" action="Index" area="Masters" roles="administrator" />
+		<siteMapNode name="Packet" title="Packets"
+		             formname="Corno.Forms.Common.MiscMasterForm" misctype="PackingType" icon="PackingType" web="true" windows="true"
+		             controller="MiscMaster" action="Index" area="Masters" roles="administrator" />
+	</siteMapNode>
+	<siteMapNode name="Planning" title="Planning" web="true" windows="true" roles="administrator Planner">
+		<siteMapNode name="Plan" title="Plan"  formname="Corno.Web.Nilkamal.Forms.PlanForm" icon="Plan"
+		             web="true" windows="true" controller="Plan" action="Index" area="Nilkamal" roles="administrator Planner" />
+	</siteMapNode>
+	<siteMapNode name="Transactions" title="Transactions"  web="true" windows="true" roles="administrator Supervisors QA Planner">
+		<siteMapNode name="PartLabelForm" title="Part Label" formname="Corno.Web.Nilkamal.Forms.PartLabelForm" icon="Cutting" controller="PartLabel" action="Index" area="Nilkamal" web="true" windows="true" roles="administrator" />
+		<siteMapNode name="PacketLabelForm" title="Packet Label" formname="Corno.Web.Nilkamal.Forms.PacketLabelForm" icon="Labeling" controller="PacketLabel" action="Index" area="Nilkamal" web="true" windows="true" roles="administrator Supervisors Planner" />
+		<siteMapNode name="CartonLabelForm" title="Carton Label" formname="Corno.Web.Nilkamal.Forms.CartonLabelForm" icon="Labeling" controller="CartonLabel" action="Index" area="Nilkamal" web="true" windows="true" roles="administrator Supervisors Planner" />
+	</siteMapNode>
+	<siteMapNode name="Reports" title="Reports" web="true" windows="true" roles="administrator Supervisors QA Planner Display Screens">
+		<siteMapNode name="PanelSummaryRpt" title="Panel Summary" reportName="Corno.Web.Areas.Nilkamal.Reports.PanelSummaryRpt" controller="Report" action="ShowReport"
+		             area="Report" icon="Report" web="true" windows="true" roles="administrator Supervisors QA Planner Display Screens" />
+		<siteMapNode name="PanelLabelRpt" title="Panel Labels" reportName="Corno.Concept.Clients.Nilkamal.Mdf.Reports.PanelLabelRpt" controller="Report" action="ShowReport" area="Report" icon="Report" roles="administrator Supervisors QA Planner Display Screens" />
+		<siteMapNode name="PacketDetailRpt" title="Packet Detail" reportName="Corno.Web.Areas.Nilkamal.Reports.PacketDetailRpt" controller="Report" action="ShowReport"
+		             area="Report" icon="Report" web="true" windows="true" roles="administrator Supervisors QA Planner Display Screens" />
+		<siteMapNode name="PacketSummaryRpt" title="Packet Summary" reportName="Corno.Web.Areas.Nilkamal.Reports.PacketSummaryRpt" controller="Report" action="ShowReport" area="Report"
+		             icon="Report" web="true" windows="true" roles="administrator Supervisors QA Planner Display Screens" />
+		<siteMapNode name="ProductDetailRpt" title="Product Detail" reportName="Corno.Web.Areas.Nilkamal.Reports.ProductDetailRpt" controller="Report" action="ShowReport" area="Report"
+		             icon="Report" web="true" windows="true" roles="administrator Supervisors QA Planner Display Screens" />
+		<siteMapNode name="ProductSummaryRpt" title="Product Summary" reportName="Corno.Web.Areas.Nilkamal.Reports.ProductSummaryRpt" controller="Report" action="ShowReport"
+		             area="Report" icon="Report" web="true" windows="true" roles="administrator Supervisors QA Planner Display Screens" />
+		<siteMapNode name="PalletDetailRpt" title="Pallet Detail" reportName="Corno.Web.Areas.Nilkamal.Reports.PalletDetailRpt" auto_refresh="false" controller="Report" action="ShowReport" area="Report" icon="Report" roles="administrator Supervisors QA Planner Display Screens" />
+		<siteMapNode name="PalletSummaryRpt" title="Pallet Summary" reportName="Corno.Web.Areas.Nilkamal.Reports.PalletSummaryRpt" controller="Report" action="ShowReport" area="Report" icon="Report" roles="administrator Supervisors QA Planner Display Screens" />
+		<siteMapNode name="RejectDetailRpt" title="Reject Labels" reportName="Corno.Web.Areas.Nilkamal.Reports.RejectDetailRpt" controller="Report" action="ShowReport" area="Report" icon="Report" roles="administrator Supervisors QA Planner Display Screens" />
+		<siteMapNode name="Q1PendingRpt" title="Q1 Pending" reportName="Corno.Web.Areas.Nilkamal.Reports.Q1PendingRpt" controller="Report" action="ShowReport" area="Report" icon="Report" roles="administrator Supervisors QA Planner Display Screens" />
+	</siteMapNode>
+	<siteMapNode name="Utility" title="Utility" web="true" windows="true" roles="administrator">
+		<siteMapNode name="BackUp" title="BackUp"
+		             formname="Corno.Forms.Common.BackupRestoreForm"
+		             icon="Backup" web="true" windows="true" roles="administrator" />
+		<siteMapNode name="PlanImportForm" title="Import Plan"
+		             formname="Corno.Web.Godrej.Wood_Barcode_System.Common.Forms.PlanImportForm"
+		             icon="Import" web="true" windows="true" controller="Plan" action="Index" area="Godrej"  roles="administrator" />
+	</siteMapNode>
+	<siteMapNode name="Admin" title="Admin" web="true" windows="true" roles="administrator">
+		<siteMapNode name="Users" title="Users" formname="Corno.Forms.Login.UsersForm"
+		             icon="User" web="true" windows="true" roles="administrator" />
+		<siteMapNode name="Roles" title="Roles" formname="Corno.Forms.Login.RolesForm"
+		             icon="Role" web="true" windows="true" roles="administrator" />
+	</siteMapNode>
+</siteMapNode>

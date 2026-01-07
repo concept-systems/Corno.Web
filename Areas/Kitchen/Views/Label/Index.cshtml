@@ -3,6 +3,13 @@
 @{
     Layout = "~/Views/Shared/_AppLayout.cshtml";
     ViewBag.BoxTitle = "Labels";
+    ViewBag.ControllerName = "Label";
+    ViewBag.ViewAction = "View";
+    ViewBag.DataSourceAction = "GetIndexViewDto";
+    ViewBag.ShowAddNewButton = false;
+    ViewBag.BarcodeColumnLink = true;
+    ViewBag.WarehouseOrderColumnLink = false;
+    ViewBag.GroupByWarehouseOrder = false;
 }
 
 <div class="grid-container-full-height">
@@ -45,5 +52,5 @@
             }))
     </div>
 
-    @Html.Partial("_PartialIndex")
+    @Html.Partial("~/Areas/Kitchen/Views/Shared/_LabelIndex.cshtml")
 </div>

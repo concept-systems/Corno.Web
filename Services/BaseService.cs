@@ -1,7 +1,6 @@
 ﻿using Corno.Web.Extensions;
 using Corno.Web.Repository.Interfaces;
 using Corno.Web.Services.Interfaces;
-using Corno.Web.Services.Progress.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -145,11 +144,15 @@ public class BaseService<TEntity> : CornoService<TEntity>, IBaseService<TEntity>
 
     #region --  Import --
     #region -- Public Methods --
+    // OLD METHOD - REMOVED: ImportAsync with IBaseProgressService
+    // This should be updated to use the new common import module
+    /*
     public virtual Task ImportAsync(string filePath, IBaseProgressService progressService,
         string miscMaster = null)
     {
         throw new NotImplementedException();
     }
+    */
     #endregion
     #endregion
 

@@ -1,4 +1,4 @@
-﻿using Corno.Web.Globals;
+using Corno.Web.Globals;
 using Corno.Web.Repository.Interfaces;
 using Corno.Web.Windsor.Context;
 using Mapster;
@@ -15,6 +15,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
 using Corno.Web.Models.Base;
+using Microsoft.AspNet.Identity.EntityFramework;
 using static System.Linq.Expressions.Expression;
 
 namespace Corno.Web.Repository;
@@ -69,16 +70,105 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
         var entityType = typeof(TEntity);
         if (!KeyPropertiesCache.TryGetValue(entityType, out var keyProperties))
         {
-            keyProperties = entityType.GetProperties()
+            var keyPropertiesList = new List<PropertyInfo>();
+            
+            // First, get properties with [Key] attribute
+            var keyAttributeProperties = entityType.GetProperties()
                 .Where(p => Attribute.IsDefined(p, typeof(KeyAttribute)))
-                .ToArray();
+                .ToList();
+            keyPropertiesList.AddRange(keyAttributeProperties);
+
+            // Check if entity is derived from Identity base classes (IdentityUser, IdentityRole, etc.)
+            if (IsIdentityEntity(entityType))
+            {
+                // Get the Id property from the entity type or its base types
+                var idProperty = GetIdentityIdProperty(entityType);
+                if (idProperty != null && !keyPropertiesList.Any(p => p.Name == idProperty.Name && p.DeclaringType == idProperty.DeclaringType))
+                {
+                    keyPropertiesList.Add(idProperty);
+                }
+            }
+
+            keyProperties = keyPropertiesList.ToArray();
 
             if (!keyProperties.Any())
+            {
                 throw new Exception($"GenericRepositoryCore : No [Key] attributes found on {entityType.Name}. Composite key support requires explicit [Key] attributes.");
+            }
 
             KeyPropertiesCache[entityType] = keyProperties;
         }
         return keyProperties;
+    }
+
+    /// <summary>
+    /// Checks if the entity type is derived from Identity base classes
+    /// </summary>
+    private static bool IsIdentityEntity(Type entityType)
+    {
+        var currentType = entityType;
+        while (currentType != null && currentType != typeof(object))
+        {
+            // Check for non-generic Identity types (IdentityUser, IdentityRole)
+            if (typeof(IdentityUser).IsAssignableFrom(currentType) ||
+                typeof(IdentityRole).IsAssignableFrom(currentType))
+            {
+                return true;
+            }
+            
+            // Check for generic Identity types
+            if (currentType.IsGenericType)
+            {
+                var genericTypeDef = currentType.GetGenericTypeDefinition();
+                
+                // Check if it's a generic Identity type
+                if (genericTypeDef == typeof(IdentityUser<,,,>) ||
+                    genericTypeDef == typeof(IdentityRole<,>) ||
+                    genericTypeDef == typeof(IdentityUserLogin<>) ||
+                    genericTypeDef == typeof(IdentityUserRole<>) ||
+                    genericTypeDef == typeof(IdentityUserClaim<>))
+                {
+                    return true;
+                }
+                
+                // Check if any base type or interface is a generic Identity type
+                var baseType = currentType.BaseType;
+                if (baseType != null && baseType.IsGenericType)
+                {
+                    var baseGenericTypeDef = baseType.GetGenericTypeDefinition();
+                    if (baseGenericTypeDef == typeof(IdentityUser<,,,>) ||
+                        baseGenericTypeDef == typeof(IdentityRole<,>) ||
+                        baseGenericTypeDef == typeof(IdentityUserLogin<>) ||
+                        baseGenericTypeDef == typeof(IdentityUserRole<>) ||
+                        baseGenericTypeDef == typeof(IdentityUserClaim<>))
+                    {
+                        return true;
+                    }
+                }
+            }
+            
+            currentType = currentType.BaseType;
+        }
+        
+        return false;
+    }
+
+    /// <summary>
+    /// Gets the Id property from Identity entity types
+    /// </summary>
+    private static PropertyInfo GetIdentityIdProperty(Type entityType)
+    {
+        var currentType = entityType;
+        while (currentType != null && currentType != typeof(object))
+        {
+            var idProperty = currentType.GetProperty("Id", BindingFlags.Public | BindingFlags.Instance);
+            if (idProperty != null && idProperty.CanRead)
+            {
+                return idProperty;
+            }
+            currentType = currentType.BaseType;
+        }
+        return null;
     }
 
     public virtual async Task UpdateAsync(TEntity entityToUpdate)
@@ -106,6 +196,16 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
             var attachedEntry = _dbContext.Entry(attachedEntity); // Re-fetch the entry
 
             attachedEntry.CurrentValues.SetValues(entityToUpdate);
+
+            //// Fix FK/navigation conflicts for ALL entities - USE attachedEntry, not entry!
+            //var parentMenuIdProperty = attachedEntry.Property("ParentMenuId");
+            //if (parentMenuIdProperty != null)
+            //{
+            //    var newFkValue = entityToUpdate.GetType().GetProperty("ParentMenuId")?.GetValue(entityToUpdate);
+            //    parentMenuIdProperty.CurrentValue = newFkValue;
+            //    parentMenuIdProperty.IsModified = true;  // FORCE UPDATE
+            //}
+
             if (_cachedIncludeProperties != null && _cachedIncludeProperties.Length > 0)
             {
                 foreach (var include in _cachedIncludeProperties)
@@ -121,7 +221,7 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
             //var isUpdated = (attachedEntry.Entity as CornoModel)?.UpdateDetails(entityToUpdate as CornoModel);
             //if (false == (isUpdated ?? false))
             {
-                entityToUpdate.Adapt(attachedEntry.Entity);
+                //entityToUpdate.Adapt(attachedEntry.Entity);
 
                 // Automatically sync all detail collections for any master-detail entity
                 await SyncDetailCollectionsAsync(attachedEntry.Entity, entityToUpdate, attachedEntry);
@@ -183,6 +283,12 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
     private void SyncDetailCollections(object attachedEntity, object entityToUpdate, DbEntityEntry attachedEntry)
     {
         var entityType = attachedEntity.GetType();
+        // Use the base type for reflection to avoid proxy type issues
+        if (entityType.BaseType != null && entityType.Namespace != null && entityType.Namespace.Contains("DynamicProxies"))
+        {
+            entityType = entityType.BaseType;
+        }
+
         var properties = GetCollectionProperties(entityType);
 
         foreach (var property in properties)
@@ -195,11 +301,11 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
             if (!typeof(BaseModel).IsAssignableFrom(elementType))
                 continue;
 
-            // Get collection values
-            var attachedCollection = property.GetValue(attachedEntity) as ICollection<BaseModel>;
-            var newCollection = property.GetValue(entityToUpdate) as ICollection<BaseModel>;
+            // Get collection values using reflection - don't cast to ICollection<BaseModel> due to covariance issues
+            var attachedCollectionObj = property.GetValue(attachedEntity, null);
+            var newCollectionObj = property.GetValue(entityToUpdate, null);
 
-            if (attachedCollection == null || newCollection == null)
+            if (attachedCollectionObj == null || newCollectionObj == null)
                 continue;
 
             // Load the collection if not already loaded
@@ -217,8 +323,8 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
                 continue;
             }
 
-            // Sync the collection
-            SyncCollection(attachedCollection, newCollection, elementType, property.Name);
+            // Sync the collection - pass the actual collection objects
+            SyncCollection(attachedCollectionObj, newCollectionObj, elementType, property.Name);
         }
     }
 
@@ -229,6 +335,12 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
     private async Task SyncDetailCollectionsAsync(object attachedEntity, object entityToUpdate, DbEntityEntry attachedEntry)
     {
         var entityType = attachedEntity.GetType();
+        // Use the base type for reflection to avoid proxy type issues
+        if (entityType.BaseType != null && entityType.Namespace != null && entityType.Namespace.Contains("DynamicProxies"))
+        {
+            entityType = entityType.BaseType;
+        }
+
         var properties = GetCollectionProperties(entityType);
 
         foreach (var property in properties)
@@ -236,11 +348,11 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
             // Get element type (already validated in GetCollectionProperties)
             IsCollectionType(property.PropertyType, out var elementType);
 
-            // Get collection values
-            var attachedCollection = property.GetValue(attachedEntity) as ICollection<BaseModel>;
-            var newCollection = property.GetValue(entityToUpdate) as ICollection<BaseModel>;
+            // Get collection values using reflection - don't cast to ICollection<BaseModel> due to covariance issues
+            var attachedCollectionObj = property.GetValue(attachedEntity, null);
+            var newCollectionObj = property.GetValue(entityToUpdate, null);
 
-            if (attachedCollection == null || newCollection == null)
+            if (attachedCollectionObj == null || newCollectionObj == null)
                 continue;
 
             // Load the collection if not already loaded
@@ -258,8 +370,8 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
                 continue;
             }
 
-            // Sync the collection
-            SyncCollection(attachedCollection, newCollection, elementType, property.Name);
+            // Sync the collection - pass the actual collection objects
+            SyncCollection(attachedCollectionObj, newCollectionObj, elementType, property.Name);
         }
     }
 
@@ -303,18 +415,34 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
     /// <summary>
     /// Syncs a collection by handling Add, Update, and Delete operations
     /// </summary>
-    private void SyncCollection(ICollection<BaseModel> existingCollection, ICollection<BaseModel> newCollection, Type elementType, string collectionName)
+    private void SyncCollection(object existingCollectionObj, object newCollectionObj, Type elementType, string collectionName)
     {
+        if (existingCollectionObj == null || newCollectionObj == null) return;
+
+        // Convert to IEnumerable for processing
+        var existingCollection = existingCollectionObj as IEnumerable;
+        var newCollection = newCollectionObj as IEnumerable;
+
         if (existingCollection == null || newCollection == null) return;
 
-        var newById = newCollection.Where(d => d.Id > 0).ToDictionary(d => d.Id);
-        var existingById = existingCollection.Where(d => d.Id > 0).ToDictionary(d => d.Id);
+        // Cast to BaseModel for ID-based operations
+        var existingItems = existingCollection.Cast<BaseModel>().ToList();
+        var newItems = newCollection.Cast<BaseModel>().ToList();
+
+        var newById = newItems.Where(d => d.Id > 0).ToDictionary(d => d.Id);
+        var existingById = existingItems.Where(d => d.Id > 0).ToDictionary(d => d.Id);
+
+        // Get the actual ICollection interface to add/remove items using reflection
+        var collectionType = existingCollectionObj.GetType();
+        var removeMethod = collectionType.GetMethod("Remove");
+        var addMethod = collectionType.GetMethod("Add");
 
         // 1. Delete items that are in existing but not in new
-        var itemsToDelete = existingCollection.Where(e => e.Id > 0 && !newById.ContainsKey(e.Id)).ToList();
+        var itemsToDelete = existingItems.Where(e => e.Id > 0 && !newById.ContainsKey(e.Id)).ToList();
         foreach (var itemToDelete in itemsToDelete)
         {
-            existingCollection.Remove(itemToDelete);
+            removeMethod?.Invoke(existingCollectionObj, new object[] { itemToDelete });
+
             // Mark for deletion in Entity Framework using reflection
             var entry = _dbContext.Entry(itemToDelete);
             if (entry.State == EntityState.Detached)
@@ -334,7 +462,7 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
         }
 
         // 2. Update existing items
-        foreach (var existingItem in existingCollection.Where(e => e.Id > 0).ToList())
+        foreach (var existingItem in existingItems.Where(e => e.Id > 0))
         {
             if (newById.TryGetValue(existingItem.Id, out var newItem))
             {
@@ -343,7 +471,7 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
         }
 
         // 3. Add new items (Id <= 0) or items that don't exist in the current collection
-        var itemsToAdd = newCollection.Where(n => n.Id <= 0 || !existingById.ContainsKey(n.Id)).ToList();
+        var itemsToAdd = newItems.Where(n => n.Id <= 0 || !existingById.ContainsKey(n.Id)).ToList();
         foreach (var itemToAdd in itemsToAdd)
         {
             // Create a new instance of the element type and map values using Mapster
@@ -351,7 +479,7 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
             {
                 // Copy values from the incoming object into the newly created entity
                 itemToAdd.Adapt(newItem);
-                existingCollection.Add(newItem);
+                addMethod?.Invoke(existingCollectionObj, new object[] { newItem });
             }
         }
     }
@@ -375,6 +503,7 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
             if (filter != null)
                 query = query.Where(filter);
 
+            // Don't apply includes when select projection is used to avoid N+1 and performance issues
             if (!ignoreInclude && _cachedIncludeProperties != null && _cachedIncludeProperties.Length > 0)
             {
                 query = _cachedIncludeProperties.Aggregate(query, (current, includeProperty) => current.Include(includeProperty));
@@ -640,337 +769,9 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
         var sql = $"{procedureName} {string.Join(", ", parameters.Select((p, i) => $"@p{i}"))}";
         return await _dbContext.Database.SqlQuery<T>(sql, parameters).ToListAsync();
     }
+
+    public async Task<int> ExecuteSqlCommandAsync(string sql, params object[] parameters)
+    {
+        return await _dbContext.Database.ExecuteSqlCommandAsync(sql, parameters);
+    }
 }
-
-
-/*
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Data.Entity;
-using System.Data.Entity.Core.Metadata.Edm;
-using System.Data.Entity.Core.Objects;
-using System.Data.Entity.Infrastructure;
-using System.Data.Entity.Validation;
-using System.Data.SqlClient;
-using System.Linq;
-using System.Linq.Expressions;
-using Corno.Web.Globals;
-using Corno.Web.Logger;
-using Corno.Web.Models;
-using Corno.Web.Repository.Interfaces;
-using Corno.Web.Windsor;
-using Corno.Web.Windsor.Context;
-using Mapster;
-
-namespace Corno.Web.Repository;
-
-public class GenericRepository<TEntity> : IGenericRepository<TEntity>
-    where TEntity : class, new()
-{
-    #region -- Constructor --
-
-    public GenericRepository(BaseDbContext dbContext)
-    {
-        _dbContext = dbContext;
-        _dbSet = _dbContext.Set<TEntity>();
-        _includeProperties = string.Empty;
-    }
-
-    #endregion
-
-    #region -- Data Members --
-
-    //private readonly IUnitOfWork _unitOfWork;
-    private readonly BaseDbContext _dbContext;
-    private readonly DbSet<TEntity> _dbSet;
-
-    private string _includeProperties;
-
-    //private bool _disposed;
-
-    #endregion
-
-    #region -- Private Methods --
-
-    private static void DetachAll(DbContext dbContext)
-    {
-        foreach (var dbEntityEntry in dbContext.ChangeTracker.Entries())
-            if (dbEntityEntry.Entity != null)
-                dbEntityEntry.State = EntityState.Detached;
-    }
-
-    private static DbContext RefreshEntities(DbContext dbContext, Type entityType)
-    {
-        DetachAll(dbContext);
-
-        var objectContext = ((IObjectContextAdapter)dbContext).ObjectContext;
-        var refreshableObjects = objectContext.ObjectStateManager
-            .GetObjectStateEntries(EntityState.Added | EntityState.Deleted | EntityState.Modified |
-                                   EntityState.Unchanged)
-            .Where(x => entityType == null || x.Entity.GetType() == entityType)
-            .Where(entry => entry.EntityKey != null)
-            .Select(e => e.Entity)
-            .ToArray();
-
-        objectContext.Refresh(RefreshMode.StoreWins, refreshableObjects);
-
-        return dbContext;
-    }
-
-    private static DbContext RefreshAllEntities(DbContext dbContext)
-    {
-        return RefreshEntities(dbContext, null); //null entityType is a wild card
-    }
-
-    private string GetStringProperty(MetadataItem entitySet, string propertyName)
-    {
-        if (entitySet == null)
-            throw new ArgumentNullException(nameof(entitySet));
-        if (!entitySet.MetadataProperties.TryGetValue(propertyName, false, out var property))
-            return string.Empty;
-        if (property?.Value is string str && !string.IsNullOrEmpty(str))
-            return str;
-        return string.Empty;
-    }
-
-    private string GetTableName<T>()
-        where T : class
-    {
-        var entitySet = GetEntitySet<T>(_dbContext);
-        if (entitySet == null)
-            throw new Exception("Unable to find entity set '{0}' in edm metadata " + typeof(T).Name);
-        var tableName = /*GetStringProperty(entitySet, "Schema") + "." + #1#
-            GetStringProperty(entitySet, "Table");
-        return tableName;
-    }
-
-    private Exception GetTableDetails(Exception exception)
-    {
-        if (exception.InnerException?.GetType() == typeof(SqlException))
-            return new Exception("Table : " + GetTableName<TEntity>() + "\n\n" +
-                                 exception.InnerException?.Message);
-        return exception;
-    }
-
-    #endregion
-
-    #region -- Public Methods --
-
-    public void SetIncludes(string includes)
-    {
-        _includeProperties = includes;
-    }
-
-    public bool HasIncludes()
-    {
-        return !string.IsNullOrEmpty(_includeProperties);
-    }
-
-
-    public void RefreshAllEntities()
-    {
-        RefreshAllEntities(_dbContext);
-    }
-
-    public bool HasChanges()
-    {
-
-        return _dbContext.ChangeTracker.HasChanges();
-    }
-
-    public TEntity Create()
-    {
-        var entity = _dbSet.Create();
-        return entity;
-    }
-
-    public IQueryable<TEntity> List()
-    {
-        IQueryable<TEntity> query = _dbSet.AsNoTracking();
-        return query;
-    }
-
-    public IQueryable<TEntity> GetQuery()
-    {
-        return _dbSet.AsQueryable().AsNoTracking();
-    }
-
-    public virtual IQueryable<TDest> Get<TDest>(Expression<Func<TEntity, bool>> filter = null,
-        Expression<Func<TEntity, TDest>> select = null,
-        Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null)
-    {
-        try
-        {
-            // Check database connection
-            _dbContext.CheckDatabaseConnection();
-
-            var query = _dbSet.AsQueryable().AsNoTracking();
-
-            if (filter != null)
-                query = query.Where(filter);
-
-            if (_cachedIncludeProperties != null && _cachedIncludeProperties.Length > 0)
-                query = _cachedIncludeProperties.Aggregate(query, (current, includeProperty) => current.Include(includeProperty));
-
-            if (orderBy != null)
-            {
-                if (select == null)
-                    return (IQueryable<TDest>)orderBy(query.Select(d => d));
-
-                return orderBy(query).Select(select);
-            }
-
-            if (select == null)
-                return (IQueryable<TDest>)query.Select(d => d);
-            return query.Select(select);
-        }
-        catch (Exception exception)
-        {
-            throw GetTableDetails(exception);
-        }
-    }
-    public int Count(Func<TEntity, bool> predicate)
-    {
-        return _dbSet.AsNoTracking().Where(predicate).Count();
-    }
-
-    public int Min(Expression<Func<TEntity, bool>> filter, Func<TEntity, int?> predicate)
-    {
-        return _dbSet.AsNoTracking().Where(filter).AsEnumerable().Min(predicate) ?? 0;
-    }
-
-    public int Max(Expression<Func<TEntity, bool>> filter, Func<TEntity, int?> predicate)
-    {
-        if (null == filter)
-            return _dbSet.AsNoTracking().Max(predicate) ?? 0;
-        return _dbSet.AsNoTracking().Where(filter).AsEnumerable().Max(predicate) ?? 0;
-    }
-
-    public int Missing(Expression<Func<TEntity, bool>> filter, Func<TEntity, int?> predicate)
-    {
-        return _dbSet.AsNoTracking().Where(filter).AsEnumerable().Max(predicate) ?? 0;
-    }
-
-    public virtual TEntity GetById(object id, bool bTracking = false)
-    {
-        return _dbSet.Find(id);
-    }
-
-    public IQueryable<TEntity> Find(Func<TEntity, bool> predicate)
-    {
-        return _dbSet.AsNoTracking().Where(predicate) as IQueryable<TEntity>;
-    }
-
-    public virtual void Add(TEntity entity)
-    {
-        _dbSet.Add(entity);
-    }
-
-    public virtual void AddRange(IEnumerable<TEntity> entities)
-    {
-        _dbSet.AddRange(entities);
-    }
-
-    public virtual void DeleteRange(IEnumerable<TEntity> entities)
-    {
-        foreach (var entity in entities)
-            Delete(entity);
-    }
-
-    public virtual void Delete(object id)
-    {
-        var entityToDelete = _dbSet.Find(id);
-        Delete(entityToDelete);
-    }
-
-    // Bulk Delete the list of entities in the DB Set.
-    public virtual void Delete(TEntity entityToDelete)
-    {
-        if (_dbContext.Entry(entityToDelete).State == EntityState.Detached)
-            _dbSet.Attach(entityToDelete);
-
-        _dbSet.Remove(entityToDelete);
-    }
-
-    // Update single entity in the database.
-    public virtual void Update(TEntity entityToUpdate)
-    {
-        Update(entityToUpdate, FieldConstants.Id);
-    }
-
-    public virtual void Update(TEntity entityToUpdate, string primaryKeyName)
-    {
-        var entry = _dbContext.Entry(entityToUpdate);
-
-        if (entry.State != EntityState.Detached) return;
-
-        // Get cached key properties
-        var keyProperties = GetKeyProperties();
-
-        // Extract key values using cached extractor
-        var keyValues = ExtractKeyValues(entityToUpdate, keyProperties);
-
-        var set = _dbContext.Set<TEntity>();
-        var attachedEntity = set.Find(keyValues);
-        if (attachedEntity != null)
-        {
-            set.Attach(attachedEntity); // Attach it to the context
-            var attachedEntry = _dbContext.Entry(attachedEntity); // Re-fetch the entry
-
-            attachedEntry.CurrentValues.SetValues(entityToUpdate);
-            if (_cachedIncludeProperties != null && _cachedIncludeProperties.Length > 0)
-            {
-                foreach (var include in _cachedIncludeProperties)
-                {
-                    var collection = attachedEntry.Collection(include);
-                    if (!collection.IsLoaded)
-                    {
-                        collection.Load();
-                    }
-                }
-            }
-
-            var isUpdated = (attachedEntry.Entity as CornoModel)?.UpdateDetails(entityToUpdate as CornoModel);
-            if (false == (isUpdated ?? false))
-            {
-                entityToUpdate.Adapt(attachedEntry.Entity);
-                
-                // Automatically sync all detail collections for any master-detail entity
-                SyncDetailCollections(attachedEntry.Entity, entityToUpdate, attachedEntry);
-            }
-        }
-        else
-        {
-            // Entity not found in DB, treat as new or modified
-            set.Attach(entityToUpdate);
-            entry.State = EntityState.Modified;
-        }
-    }
-
-
-
-    #endregion
-
-    #region -- Local Functions --
-
-    private static EntitySet GetEntitySet<T>(IObjectContextAdapter context)
-    {
-        var type = typeof(T);
-        var entityName = type.Name;
-        var metadata = context.ObjectContext.MetadataWorkspace;
-
-        var entitySets = metadata.GetItemCollection(DataSpace.SSpace)
-            .GetItems<EntityContainer>()
-            .Single()
-            .BaseEntitySets
-            .OfType<EntitySet>()
-            .Where(s => !s.MetadataProperties.Contains("Type")
-                        || s.MetadataProperties["Type"].ToString() == "Tables");
-        var entitySet = entitySets.FirstOrDefault(t => t.Name == entityName);
-        return entitySet;
-    }
-
-    #endregion
-}
-*/

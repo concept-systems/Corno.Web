@@ -1,0 +1,258 @@
+@using Corno.Web.Areas.Kitchen.Dto.Dashboard
+@using Corno.Web.Globals
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@model CartonDashboardDto
+
+@{
+    Layout = "~/Views/Shared/_AppLayout.cshtml";
+    ViewBag.BoxTitle = "Carton Dashboard";
+}
+
+<style>
+    .dashboard-container {
+        padding: 20px;
+    }
+    .kpi-card {
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .kpi-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    .kpi-value {
+        font-size: 32px;
+        font-weight: bold;
+        color: #1976d2;
+        margin: 10px 0;
+    }
+    .kpi-label {
+        font-size: 14px;
+        color: #666;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .kpi-icon {
+        font-size: 48px;
+        color: #1976d2;
+        float: right;
+        opacity: 0.3;
+    }
+    .dashboard-section {
+        margin-bottom: 30px;
+    }
+    .section-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 15px;
+        color: #333;
+        border-bottom: 2px solid #1976d2;
+        padding-bottom: 8px;
+    }
+    .chart-container {
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+</style>
+
+<div class="dashboard-container">
+    <!-- KPI Cards Row 1 -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-icon"><i class="k-icon k-i-box"></i></div>
+                <div class="kpi-label">Total Cartons</div>
+                <div class="kpi-value">@Model.TotalCartons</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-icon"><i class="k-icon k-i-check"></i></div>
+                <div class="kpi-label">Packed Cartons</div>
+                <div class="kpi-value" style="color: #388e3c;">@Model.PackedCartons</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-icon"><i class="k-icon k-i-grid"></i></div>
+                <div class="kpi-label">Racked In</div>
+                <div class="kpi-value" style="color: #1976d2;">@Model.RackedInCartons</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-icon"><i class="k-icon k-i-send"></i></div>
+                <div class="kpi-label">Dispatched</div>
+                <div class="kpi-value" style="color: #388e3c;">@Model.DispatchedCartons</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI Cards Row 2 -->
+    <div class="row">
+        <div class="col-md-4">
+            <div class="kpi-card">
+                <div class="kpi-icon"><i class="k-icon k-i-calculator"></i></div>
+                <div class="kpi-label">Total Quantity</div>
+                <div class="kpi-value">@Model.TotalCartonQuantity.ToString("N0")</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="kpi-card">
+                <div class="kpi-icon"><i class="k-icon k-i-check-circle"></i></div>
+                <div class="kpi-label">Packed Quantity</div>
+                <div class="kpi-value" style="color: #388e3c;">@Model.PackedQuantity.ToString("N0")</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="kpi-card">
+                <div class="kpi-icon"><i class="k-icon k-i-chart"></i></div>
+                <div class="kpi-label">Dispatch Progress</div>
+                <div class="kpi-value">@Model.DispatchProgressPercentage.ToString("F1")%</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Overview -->
+    <div class="dashboard-section">
+        <div class="section-title">Dispatch Progress</div>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="chart-container">
+                    <h4 style="margin-top: 0;">Overall Dispatch Progress</h4>
+                    @(Html.Kendo().CircularProgressBar()
+                        .Name("dispatchProgress")
+                        .Value(Model.DispatchProgressPercentage)
+                        .Color("#1976d2")
+                        .CenterTemplate("#=value#%")
+                        .HtmlAttributes(new { style = "width: 100%; height: 250px;" }))
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="dashboard-section">
+        <div class="section-title">Charts & Analytics</div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <h4 style="margin-top: 0;">Cartons by Date</h4>
+                    @(Html.Kendo().Chart(Model.CartonsByDate)
+                        .Name("chartCartonsByDate")
+                        .Title("Packing Trend")
+                        .Legend(legend => legend.Visible(false))
+                        .Series(series =>
+                        {
+                            series.Column(model => model.Count)
+                                .Name("Cartons")
+                                .Color("#1976d2");
+                        })
+                        .CategoryAxis(axis => axis
+                            .Categories(model => model.PackingDateFormatted)
+                            .Labels(labels => labels.Rotation(-45))
+                            .MajorGridLines(lines => lines.Visible(false)))
+                        .ValueAxis(axis => axis
+                            .Numeric()
+                            .Labels(labels => labels.Format("{0}"))
+                            .MajorGridLines(lines => lines.Visible(true)))
+                        .Tooltip(tooltip => tooltip
+                            .Visible(true)
+                            .Template("#= series.name #: #= value #"))
+                        .HtmlAttributes(new { style = "height: 300px;" }))
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <h4 style="margin-top: 0;">Cartons by Status</h4>
+                    @(Html.Kendo().Chart(Model.CartonsByStatus)
+                        .Name("chartCartonsByStatus")
+                        .Title("Status Distribution")
+                        .Legend(legend => legend.Position(ChartLegendPosition.Bottom))
+                        .Series(series =>
+                        {
+                            series.Pie(model => model.Count, model => model.Status)
+                                .Labels(labels => labels
+                                    .Template("#= category #: #= value #")
+                                    .Visible(true)
+                                    .Position(ChartPieLabelsPosition.OutsideEnd));
+                        })
+                        .Tooltip(tooltip => tooltip
+                            .Visible(true)
+                            .Template("#= category #: #= value # (#= percentage #%)"))
+                        .HtmlAttributes(new { style = "height: 300px;" }))
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="chart-container">
+                    <h4 style="margin-top: 0;">Top Warehouse Orders by Carton Count</h4>
+                    @(Html.Kendo().Chart(Model.CartonsByWarehouseOrder.Take(15))
+                        .Name("chartCartonsByWarehouseOrder")
+                        .Title("Top 15 Warehouse Orders")
+                        .Legend(legend => legend.Visible(false))
+                        .Series(series =>
+                        {
+                            series.Bar(model => model.CartonCount)
+                                .Name("Carton Count")
+                                .Color("#1976d2");
+                        })
+                        .CategoryAxis(axis => axis
+                            .Categories(model => model.WarehouseOrderNo)
+                            .Labels(labels => labels.Rotation(-45))
+                            .MajorGridLines(lines => lines.Visible(false)))
+                        .ValueAxis(axis => axis
+                            .Numeric()
+                            .Labels(labels => labels.Format("{0}"))
+                            .MajorGridLines(lines => lines.Visible(true)))
+                        .Tooltip(tooltip => tooltip
+                            .Visible(true)
+                            .Template("#= category #: #= value # cartons"))
+                        .HtmlAttributes(new { style = "height: 400px;" }))
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Cartons -->
+    <div class="dashboard-section">
+        <div class="section-title">Recent Cartons</div>
+        <div class="chart-container">
+            @(Html.Kendo().Grid(Model.RecentCartons)
+                .Name("gridRecentCartons")
+                .Columns(columns =>
+                {
+                    columns.Bound(m => m.CartonBarcode).Title("Barcode")
+                        .ClientTemplate("<a href='" + Url.Action("View", "Carton", new { area = "Kitchen" }) + "?id=#=Id#' class='text-primary'>#=CartonBarcode#</a>");
+                    columns.Bound(m => m.WarehouseOrderNo).Title("Order No");
+                    columns.Bound(m => m.PackingDate).Format("{0:dd/MM/yyyy}").Title("Packing Date");
+                    columns.Bound(m => m.Status).Title("Status");
+                })
+                .Pageable(p => p.PageSizes(new[] { 10, 20, 50 }))
+                .Sortable()
+                .Scrollable()
+                .HtmlAttributes(new { style = "height: 400px;" }))
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        // Auto-refresh every 60 seconds
+        setInterval(function() {
+            location.reload();
+        }, 60000);
+    });
+</script>
+

@@ -4,33 +4,125 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Web.Mvc;
 using Corno.Web.Areas.Masters.Dtos.Product;
-using Corno.Web.Controllers;
+using Corno.Web.Areas.Nilkamal.Services.Interfaces;
+using Corno.Web.Extensions;
 using Corno.Web.Globals;
+using Corno.Web.Logger;
 using Corno.Web.Models.Masters;
+using Corno.Web.Services.Import;
+using Corno.Web.Services.Import.Interfaces;
 using Corno.Web.Services.Interfaces;
 using Corno.Web.Services.Masters.Interfaces;
 using Kendo.Mvc.Extensions;
 using Kendo.Mvc.UI;
 using Mapster;
+using Telerik.Reporting;
 
 namespace Corno.Web.Areas.Masters.Controllers;
 
-public class ProductController : SuperController
+public class ProductController : BaseImportController<BomImportDto>
 {
     #region -- Constructors --
     public ProductController(IProductService productService,
         IMiscMasterService miscMasterService, IBaseItemService itemService,
-        ICustomerService customerService)
+        ICustomerService customerService, IFileImportService<BomImportDto> importService,
+        IPartLabelService partLabelService)
+    : base(importService)
     {
         _productService = productService;
         _miscMasterService = miscMasterService;
         _itemService = itemService;
         _customerService = customerService;
+        _partLabelService = partLabelService;
 
         const string viewPath = "~/Areas/Masters/views/Product/";
         _indexPath = $"{viewPath}/Index.cshtml";
         _createPath = $"{viewPath}/Create.cshtml";
         _editPath = $"{viewPath}/Edit.cshtml";
+
+        // Configure Mapster mappings for ProductDto <-> Product
+        ConfigureMapsterMappings();
+    }
+    #endregion
+
+    #region -- Private Methods --
+    private static void ConfigureMapsterMappings()
+    {
+        // ProductDto -> Product mapping
+        TypeAdapterConfig<ProductDto, Product>
+            .NewConfig()
+            .Map(dest => dest.ProductPacketDetails, src => src.ProductPacketDtos.Adapt<List<ProductPacketDetail>>())
+            .AfterMapping((src, dest) =>
+            {
+                dest.Id = src.Id;
+
+                for (var index = 0; index < src.ProductPacketDtos.Count && index < dest.ProductPacketDetails.Count; index++)
+                {
+                    dest.ProductPacketDetails[index].Id = src.ProductPacketDtos[index].Id;
+
+                    // Save MRP to ExtraProperties
+                    var packetDto = src.ProductPacketDtos[index];
+                    var packetDetail = dest.ProductPacketDetails[index];
+
+                    if (packetDto.Mrp.HasValue)
+                        packetDetail.ExtraProperties[FieldConstants.Mrp] = packetDto.Mrp.Value;
+                    else
+                        packetDetail.ExtraProperties.Remove(FieldConstants.Mrp);
+                }
+            });
+
+        // Product -> ProductDto mapping
+        TypeAdapterConfig<Product, ProductDto>
+            .NewConfig()
+            .Map(dest => dest.ProductItemDtos, src => src.ProductItemDetails.Adapt<List<ProductItemDto>>())
+            .Map(dest => dest.ProductPacketDtos, src => src.ProductPacketDetails.Adapt<List<ProductPacketDto>>())
+            .Map(dest => dest.ProductStockDtos, src => src.ProductStockDetails.Adapt<List<ProductStockDto>>())
+            .AfterMapping((src, dest) =>
+            {
+                dest.Id = src.Id;
+
+                for (var index = 0; index < src.ProductPacketDetails.Count && index < dest.ProductPacketDtos.Count; index++)
+                {
+                    dest.ProductPacketDtos[index].Id = src.ProductPacketDetails[index].Id;
+
+                    // Load MRP from ExtraProperties
+                    var packetDetail = src.ProductPacketDetails[index];
+                    var packetDto = dest.ProductPacketDtos[index];
+
+                    if (!packetDetail.ExtraProperties.ContainsKey(FieldConstants.Mrp)) continue;
+                    var mrpValue = packetDetail.ExtraProperties.GetOrDefault(FieldConstants.Mrp);
+                    if (mrpValue != null && double.TryParse(mrpValue.ToString(), out var mrp))
+                        packetDto.Mrp = mrp;
+                }
+
+                for (var index = 0; index < src.ProductItemDetails.Count && index < dest.ProductItemDtos.Count; index++)
+                {
+                    dest.ProductItemDtos[index].Id = src.ProductItemDetails[index].Id;
+
+                    // Load MRP from ExtraProperties
+                    var itemDetail = src.ProductItemDetails[index];
+                    var packetDto = dest.ProductItemDtos[index];
+
+                    if (!itemDetail.ExtraProperties.ContainsKey(FieldConstants.Mrp)) continue;
+                    var mrpValue = itemDetail.ExtraProperties.GetOrDefault(FieldConstants.Mrp);
+                    if (mrpValue != null && double.TryParse(mrpValue.ToString(), out var mrp)) ;
+                    //packetDto.Mrp = mrp;
+                }
+
+                for (var index = 0; index < src.ProductStockDetails.Count && index < dest.ProductStockDtos.Count; index++)
+                {
+                    dest.ProductStockDtos[index].Id = src.ProductStockDetails[index].Id;
+
+                    // Load MRP from ExtraProperties
+                    var stockDetail = src.ProductStockDetails[index];
+                    var packetDto = dest.ProductStockDtos[index];
+
+                    if (!stockDetail.ExtraProperties.ContainsKey(FieldConstants.Mrp)) continue;
+                    var mrpValue = stockDetail.ExtraProperties.GetOrDefault(FieldConstants.Mrp);
+                    if (mrpValue != null && double.TryParse(mrpValue.ToString(), out var mrp)) ;
+                        //packetDto.Mrp = mrp;
+                }
+            });
     }
     #endregion
 
@@ -39,10 +131,15 @@ public class ProductController : SuperController
     private readonly IMiscMasterService _miscMasterService;
     private readonly IBaseItemService _itemService;
     private readonly ICustomerService _customerService;
+    private readonly IPartLabelService _partLabelService;
 
     private readonly string _indexPath;
     private readonly string _createPath;
     private readonly string _editPath;
+    #endregion
+
+    #region -- BaseImportController Implementation --
+    protected override string ControllerName => "Product";
     #endregion
 
     #region -- Actions --
@@ -99,9 +196,9 @@ public class ProductController : SuperController
         var customers =  await _customerService.GetViewModelListAsync(p => customerIds.Contains(p.Id)).ConfigureAwait(false);
 
         var productDto = product.Adapt<ProductDto>();
-        productDto.ProductItemDtos.ForEach(d => d.ItemName = items.FirstOrDefault(x => x.Id == d.ItemId)?.Name);
-        productDto.ProductPacketDtos.ForEach(d => d.PackingTypeName = packingTypes.FirstOrDefault(x => x.Id == d.PackingTypeId)?.Name);
-        productDto.ProductStockDtos.ForEach(d => d.CustomerName = customers.FirstOrDefault(x => x.Id == d.CustomerId)?.Name);
+        productDto.ProductItemDtos.ForEach(d => d.ItemName = items.FirstOrDefault(x => x.Id == d.ItemId)?.NameWithCode);
+        productDto.ProductPacketDtos.ForEach(d => d.PackingTypeName = packingTypes.FirstOrDefault(x => x.Id == d.PackingTypeId)?.NameWithCode);
+        productDto.ProductStockDtos.ForEach(d => d.CustomerName = customers.FirstOrDefault(x => x.Id == d.CustomerId)?.NameWithCode);
         return View(_editPath, productDto);
     }
 
@@ -189,6 +286,29 @@ public class ProductController : SuperController
             HandleControllerException(exception);
         }
         return View();
+    }
+
+    [HttpPost]
+    public async Task<ActionResult> PrintBom(int productId, int packingTypeId, int itemId, int quantity)
+    {
+        try
+        {
+            var reportBook = await _partLabelService.GenerateBomLabels(productId,packingTypeId,itemId, quantity);
+
+            // Further processing with the product and quantity
+            return File(reportBook.ToDocumentBytes(), "application/pdf");
+        }
+        catch (Exception exception)
+        {
+            HandleControllerException(exception);
+            //ModelState.AddModelError("Error",  exception.Message);
+            ModelState.AddModelError("Error", LogHandler.GetDetailException(exception).Message);
+            return Json(new DataSourceResult { Errors = ModelState });
+        }
+
+        // Save or process the product quantity
+        // Example: save to database
+        //return Json(new { success = true, message = "Quantity processed successfully" });
     }
 
     public async Task<ActionResult> GetIndexViewModels([DataSourceRequest] DataSourceRequest request)

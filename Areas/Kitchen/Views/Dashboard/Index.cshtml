@@ -1,0 +1,271 @@
+@using Corno.Web.Areas.Kitchen.Dto.Dashboard
+@using Corno.Web.Globals
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@model MainDashboardDto
+
+@{
+    Layout = "~/Views/Shared/_AppLayout.cshtml";
+    ViewBag.BoxTitle = "Dashboard Overview";
+}
+
+<style>
+    .dashboard-container {
+        padding: 20px;
+    }
+    .kpi-card {
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .kpi-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    .kpi-value {
+        font-size: 32px;
+        font-weight: bold;
+        color: #1976d2;
+        margin: 10px 0;
+    }
+    .kpi-label {
+        font-size: 14px;
+        color: #666;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .kpi-icon {
+        font-size: 48px;
+        color: #1976d2;
+        float: right;
+        opacity: 0.3;
+    }
+    .dashboard-section {
+        margin-bottom: 30px;
+    }
+    .section-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 15px;
+        color: #333;
+        border-bottom: 2px solid #1976d2;
+        padding-bottom: 8px;
+    }
+    .chart-container {
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .quick-actions {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+    }
+</style>
+
+<div class="dashboard-container">
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+        @(Html.Kendo().Button()
+            .Name("btnPlanDashboard")
+            .Content("<span class='k-icon k-i-chart'></span> Plan Dashboard")
+            .ApplyStandardSettingsWithType(ButtonType.Primary, "chart")
+            .HtmlAttributes(new { onclick = "window.location.href='" + Url.Action("Plan", "Dashboard", new { area = "Kitchen" }) + "'; return false;" }))
+        
+        @(Html.Kendo().Button()
+            .Name("btnLabelDashboard")
+            .Content("<span class='k-icon k-i-tag'></span> Label Dashboard")
+            .ApplyStandardSettingsWithType(ButtonType.Info, "tag")
+            .HtmlAttributes(new { onclick = "window.location.href='" + Url.Action("Label", "Dashboard", new { area = "Kitchen" }) + "'; return false;" }))
+        
+        @(Html.Kendo().Button()
+            .Name("btnCartonDashboard")
+            .Content("<span class='k-icon k-i-box'></span> Carton Dashboard")
+            .ApplyStandardSettingsWithType(ButtonType.Success, "box")
+            .HtmlAttributes(new { onclick = "window.location.href='" + Url.Action("Carton", "Dashboard", new { area = "Kitchen" }) + "'; return false;" }))
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-icon"><i class="k-icon k-i-clipboard"></i></div>
+                <div class="kpi-label">Total Plans</div>
+                <div class="kpi-value">@Model.TotalPlans</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-icon"><i class="k-icon k-i-tag"></i></div>
+                <div class="kpi-label">Total Labels</div>
+                <div class="kpi-value">@Model.TotalLabels</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-icon"><i class="k-icon k-i-box"></i></div>
+                <div class="kpi-label">Total Cartons</div>
+                <div class="kpi-value">@Model.TotalCartons</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-icon"><i class="k-icon k-i-warning"></i></div>
+                <div class="kpi-label">Overdue Plans</div>
+                <div class="kpi-value" style="color: #d32f2f;">@Model.OverduePlans</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-icon"><i class="k-icon k-i-play"></i></div>
+                <div class="kpi-label">Active Plans</div>
+                <div class="kpi-value" style="color: #388e3c;">@Model.ActivePlans</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-icon"><i class="k-icon k-i-calendar"></i></div>
+                <div class="kpi-label">Today's Labels</div>
+                <div class="kpi-value" style="color: #1976d2;">@Model.TodayLabels</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-icon"><i class="k-icon k-i-calendar"></i></div>
+                <div class="kpi-label">Today's Cartons</div>
+                <div class="kpi-value" style="color: #1976d2;">@Model.TodayCartons</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-icon"><i class="k-icon k-i-bell"></i></div>
+                <div class="kpi-label">High Priority Alerts</div>
+                <div class="kpi-value" style="color: #d32f2f;">@Model.HighPriorityAlerts</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Overview -->
+    <div class="dashboard-section">
+        <div class="section-title">Overall Progress</div>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="chart-container">
+                    <h4 style="margin-top: 0;">Plan Progress</h4>
+                    @(Html.Kendo().CircularProgressBar()
+                        .Name("planProgress")
+                        .Value(Model.OverallPlanProgress)
+                        .Color("#1976d2")
+                        .CenterTemplate("#=value#%")
+                        .HtmlAttributes(new { style = "width: 100%; height: 200px;" }))
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="chart-container">
+                    <h4 style="margin-top: 0;">Label Progress</h4>
+                    @(Html.Kendo().CircularProgressBar()
+                        .Name("labelProgress")
+                        .Value(Model.OverallLabelProgress)
+                        .Color("#388e3c")
+                        .CenterTemplate("#=value#%")
+                        .HtmlAttributes(new { style = "width: 100%; height: 200px;" }))
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="chart-container">
+                    <h4 style="margin-top: 0;">Carton Progress</h4>
+                    @(Html.Kendo().CircularProgressBar()
+                        .Name("cartonProgress")
+                        .Value(Model.OverallCartonProgress)
+                        .Color("#f57c00")
+                        .CenterTemplate("#=value#%")
+                        .HtmlAttributes(new { style = "width: 100%; height: 200px;" }))
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="dashboard-section">
+        <div class="section-title">Recent Activity</div>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="chart-container">
+                    <h4 style="margin-top: 0;">Recent Plans</h4>
+                    @(Html.Kendo().Grid(Model.RecentPlans)
+                        .Name("gridRecentPlans")
+                        .Columns(columns =>
+                        {
+                            columns.Bound(m => m.WarehouseOrderNo).Title("Order No");
+                            columns.Bound(m => m.LotNo).Title("Lot No");
+                            columns.Bound(m => m.DueDate).Format("{0:dd/MM/yyyy}").Title("Due Date");
+                            columns.Bound(m => m.OrderQuantity).Title("Order Qty");
+                            columns.Bound(m => m.PackedQuantity).Title("Packed Qty");
+                        })
+                        .Pageable(p => p.Enabled(false))
+                        .Scrollable(s => s.Enabled(false))
+                        .Sortable(s => s.Enabled(false))
+                        .HtmlAttributes(new { style = "height: 300px;" }))
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="chart-container">
+                    <h4 style="margin-top: 0;">Recent Labels</h4>
+                    @(Html.Kendo().Grid(Model.RecentLabels)
+                        .Name("gridRecentLabels")
+                        .Columns(columns =>
+                        {
+                            columns.Bound(m => m.Barcode).Title("Barcode");
+                            columns.Bound(m => m.WarehouseOrderNo).Title("Order No");
+                            columns.Bound(m => m.LabelDate).Format("{0:dd/MM/yyyy}").Title("Date");
+                            columns.Bound(m => m.Status).Title("Status");
+                            columns.Bound(m => m.Quantity).Title("Qty");
+                        })
+                        .Pageable(p => p.Enabled(false))
+                        .Scrollable(s => s.Enabled(false))
+                        .Sortable(s => s.Enabled(false))
+                        .HtmlAttributes(new { style = "height: 300px;" }))
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="chart-container">
+                    <h4 style="margin-top: 0;">Recent Cartons</h4>
+                    @(Html.Kendo().Grid(Model.RecentCartons)
+                        .Name("gridRecentCartons")
+                        .Columns(columns =>
+                        {
+                            columns.Bound(m => m.CartonBarcode).Title("Barcode");
+                            columns.Bound(m => m.WarehouseOrderNo).Title("Order No");
+                            columns.Bound(m => m.PackingDate).Format("{0:dd/MM/yyyy}").Title("Date");
+                            columns.Bound(m => m.Status).Title("Status");
+                        })
+                        .Pageable(p => p.Enabled(false))
+                        .Scrollable(s => s.Enabled(false))
+                        .Sortable(s => s.Enabled(false))
+                        .HtmlAttributes(new { style = "height: 300px;" }))
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        // Auto-refresh every 60 seconds
+        setInterval(function() {
+            location.reload();
+        }, 60000);
+    });
+</script>
+

@@ -1,0 +1,141 @@
+﻿@using Corno.Web.Areas.Nilkamal.Dto.PacketLabel
+@using Corno.Web.Globals
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@{
+    Layout = "~/Views/Shared/_AppLayout.cshtml";
+    ViewBag.BoxTitle = "Packet Label";
+}
+
+@(Html.Kendo().Grid<PacketIndexDto>()
+    .Name("grid")
+    .ApplyIndexSettings() // 👈 Apply index settings (full height, responsive)
+    .AddExportToolBar(enableExcel: true, enablePdf: true, enableSearch: true, customToolbar: toolbar =>
+    {
+        toolbar.Custom()
+            .Text("<span class='k-icon k-i-plus'></span> Add New")
+            .HtmlAttributes(new { @class = "k-grid-add-new k-button-add-new-outlined", style = "float: right;", onclick = "onAddNewClick(event); return false;" });
+        toolbar.Custom()
+            .Text("<span class='k-icon k-i-plus'></span> Re-Print")
+            .HtmlAttributes(new { id = "btnReprint", @class = "k-grid-add-new k-button-add-new-outlined", style = "float: right;" });
+    })
+    .Events(events => events.ApplyCommonEvents())
+        .Columns(columns =>
+        {
+            columns.Select();
+            columns.Bound(m => m.PackingDate).Format("{0:dd/MM/yyyy}");
+            columns.Bound(m => m.ProductionOrderNo).Align(TextAlign.Left).Title("Production <br/> Order");
+            //columns.Bound(m => m.ProductionOrderNo).Align(TextAlign.Left)
+            //    .ClientTemplate("<a href='" + Url.Action("View", "PacketLabel", new { area = "Nilkamal" }) + "?id=#=Id#' class='text-primary text-decoration-underline'>#=ProductionOrderNo#</a>");
+            columns.Bound(m => m.ProductCode).Title("Product <Br/> Code").Align(TextAlign.Left);
+            columns.Bound(m => m.ProductName).Title("Product <Br/> Name").Align(TextAlign.Left);
+            columns.Bound(m => m.CartonBarcode).Align(TextAlign.Left).Title("Barcode");
+            columns.AddStatusColumn();
+        })
+        .DataSource(dataSource => dataSource
+            .ApplyCommonDataSourceSettings("GetIndexViewDto", "PacketLabel", "Nilkamal")
+            .Sort(s => s.Add(FieldConstants.Id).Descending())
+        //.Group(group => { group.Add(g => g.WarehouseOrderNo); })
+        ))
+
+<script type="text/javascript">
+    function sendData() {
+    }
+
+    function onViewClick(e) {
+        e.preventDefault();
+        var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+        var id = dataItem.Id; // Assuming 'Id' is the field name
+        window.location.href = '@Url.Action("View", "PacketLabel")' + '?id=' + id;
+    }
+
+    function onAddNewClick(e) {
+        e.preventDefault();
+        window.location.href = '@Url.Action("Create", "PacketLabel")';
+    }
+
+    function sendData() {
+    }
+
+    // Calculate and adjust page size based on available grid height
+    function adjustGridPageSize() {
+        var grid = $("#grid").data("kendoGrid");
+        if (!grid) return;
+
+        try {
+            // Get grid container height
+            var gridElement = grid.element;
+            var gridHeight = gridElement.height();
+
+            // Get heights of grid components
+            var toolbarHeight = gridElement.find(".k-grid-toolbar").outerHeight() || 0;
+            var headerHeight = gridElement.find(".k-grid-header").outerHeight() || 0;
+            var pagerHeight = gridElement.find(".k-pager-wrap").outerHeight() || 0;
+            var filterRowHeight = gridElement.find(".k-grid-header .k-filter-row").outerHeight() || 0;
+
+            // Calculate available height for data rows
+            var availableHeight = gridHeight - toolbarHeight - headerHeight - pagerHeight - filterRowHeight - 10; // 10px buffer
+
+            // Estimate row height (typically around 30-35px per row)
+            var estimatedRowHeight = 35;
+
+            // Calculate optimal page size (ensure at least 1 row)
+            var optimalPageSize = Math.max(1, Math.floor(availableHeight / estimatedRowHeight));
+
+            // Set reasonable limits
+            optimalPageSize = Math.min(optimalPageSize, 1000); // Max 1000 rows
+            optimalPageSize = Math.max(optimalPageSize, 5); // Min 5 rows
+
+            // Update page size if different from current
+            var currentPageSize = grid.dataSource.pageSize();
+            if (currentPageSize !== optimalPageSize) {
+                grid.dataSource.pageSize(optimalPageSize);
+                grid.dataSource.page(1); // Reset to first page
+                grid.refresh();
+            }
+        } catch (e) {
+            console.log("Error adjusting grid page size:", e);
+        }
+    }
+
+    $(document).ready(function () {
+        // Adjust page size on load
+        setTimeout(function () {
+            adjustGridPageSize();
+        }, 500);
+
+        // Adjust page size on window resize
+        var resizeTimer;
+        $(window).on('resize', function () {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(function () {
+                adjustGridPageSize();
+            }, 250);
+        });
+
+        // Adjust page size after grid data is bound
+        $("#grid").on("dataBound", function () {
+            setTimeout(function () {
+                adjustGridPageSize();
+            }, 100);
+        });
+
+        $("#btnReprint").click(function (event) {
+            event.preventDefault(); // <-- Prevents page refresh
+
+            var grid = $("#grid").data("kendoGrid");
+            var selected = grid.selectedKeyNames();
+
+            if (selected.length === 0) {
+                alert("Please select at least one row.");
+                return;
+            }
+
+            const formData = new FormData();
+            selected.forEach(id => formData.append("ids", id));
+
+            fetchAndPreviewPdf('/Nilkamal/PacketLabel/ReprintLabels', formData, "Reprint labels");
+        });
+    });
+
+</script>

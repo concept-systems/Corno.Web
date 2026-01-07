@@ -1,4 +1,4 @@
-﻿@using Corno.Web.Areas.Kitchen.Dto.Carcass
+﻿@using Corno.Web.Areas.Kitchen.Dto.Carton
 @using Corno.Web.Globals
 @using Corno.Web.Helper
 @using Kendo.Mvc.UI
@@ -6,174 +6,13 @@
 @{
     Layout = "~/Views/Shared/_AppLayout.cshtml";
     ViewBag.BoxTitle = "Carcass";
+    ViewBag.ControllerName = "Carcass";
+    ViewBag.ViewAction = "View";
+    ViewBag.DataSourceAction = "GetIndexViewDto";
+    ViewBag.ShowAddNewButton = true;
+    ViewBag.ShowCarcassButton = false;
+    ViewBag.ShowNonWeighingButton = false;
+    ViewBag.CommandColumnPosition = "end";
 }
-<div class="grid-container-full-height">
-    @(Html.Kendo().Grid<CarcassIndexDto>()
-        .Name("grid")
-        .ApplyIndexSettings() // 👈 Apply index settings (full height, responsive)
-        .AddExportToolBar(enableExcel: true, enablePdf: true, enableSearch: true, customToolbar: toolbar =>
-        {
-            toolbar.Custom()
-                .Text("<span class='k-icon k-i-plus'></span> Add New")
-                .HtmlAttributes(new { @class = "k-grid-add-new k-button-add-new-outlined", style = "float: right;", onclick = $"window.location.href='{Url.Action("Create", "Carcass")}'; return false;" });
-        })
-        .Events(events => events.ApplyCommonEvents())
-        .Columns(columns =>
-        {
-            columns.Bound(m => m.WarehouseOrderNo).Align(TextAlign.Left).Title("Warehouse Order")
-                .ClientTemplate("<a href='" + Url.Action("View", "Plan") + "?warehouseOrderNo=#=WarehouseOrderNo#' class='text-primary text-decoration-underline'>#=WarehouseOrderNo#</a>");;
-            columns.Bound(m => m.CartonNo).Title("Carton<br/>No")
-                .ClientTemplate("<a href='" + Url.Action("View", "NonWeighingPacking") + "?id=#=Id#' class='text-primary text-decoration-underline'>#=CartonNo#</a>");;
-            columns.Bound(m => m.PackingDate).Format("{0:dd/MM/yyyy hh:mm tt}");
-            columns.Bound(m => m.SoNo);
-            columns.Bound(m => m.CartonBarcode).Align(TextAlign.Left);
-            columns.AddStatusColumn();
-            columns.AddCommandColumns(new List<GridCommandConfig>
-            {
-                //new GridCommandConfig { Name = "Edit", Text = "", IconClass = "fa fa-edit", ClickHandler = "onEditClick" },
-                //new GridCommandConfig { Name = "Delete", Text = "<i class='k-icon k-i-delete k-text-error'></i>", IconClass = "fa fa-trash", ClickHandler = "onDeleteClick" },
-                new GridCommandConfig { Name = "View", Text = "", IconClass = "k-icon k-i-preview k-i-eye", ClickHandler = "onViewClick" },
-                //new GridCommandConfig { Name = "Print", Text = "", IconClass = "fa fa-print", ClickHandler = "onPrintClick" }
-            });
 
-        })
-        .DataSource(dataSource => dataSource
-            .ApplyCommonDataSourceSettings("GetIndexViewDto", "Carcass", "Kitchen")
-            //.Group(group => { group.AddDescending(g => g.WarehouseOrderNo); })
-            .Sort(s => s.Add(FieldConstants.Id).Descending())
-            .Model(model => model.Id(FieldConstants.Id))
-        ))
-</div>
-
-<script type="text/javascript">
-      function onViewClick(e) {
-         e.preventDefault();
-         var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
-         var id = dataItem.Id; // Assuming 'Id' is the field name
-         window.location.href = '@Url.Action("View", "NonWeighingPacking")' + '?id=' + id;
-      }
-
-    function onDeleteClick(e) {
-        var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
-        var id = dataItem.Id; // Assuming 'Id' is the field name
-        bootbox.confirm({
-             message: "Are you sure you want to delete this item?",
-             centerVertical: true,
-                 buttons: {
-                     confirm: {
-                         label: 'Yes',
-                         className: 'btn-danger'
-                     },
-                     cancel: {
-                         label: 'No',
-                         className: 'btn-secondary'
-                     }
-                 },
-             callback: function (result) {
-                 if (result) {
-                     // User confirmed, proceed with deletion
-                     $.ajax({
-                         url: '@Url.Action("DeleteCarton", "Carcass")', // Replace with your actual controller and action
-                         method: 'POST',
-                         data: { id: id }, // Pass the ID of the record to delete
-                         success: function (result) {
-                             if (result.success) {
-                                 bootbox.alert({
-                                     message: '<i class="fa fa-check-circle" style="color: green;"></i> ' + result.message,
-                                     centerVertical: true
-                                 });
-                             } else {
-                                 bootbox.alert({
-                                     message: '<i class="fa fa-exclamation-circle" style="color: red;"></i> ' + result.message,
-                                     centerVertical: true
-                                 });
-                             }
-                         },
-                         error: function (xhr, ajaxOptions, thrownError) {
-                             var errorMessage = xhr.responseJSON && xhr.responseJSON.message ?
-                                 xhr.responseJSON.message : "An error occurred while deleting. Please try again.";
-
-                             bootbox.alert({
-                                 message: errorMessage,
-                                 centerVertical: true
-                             });
-                         }
-                     });
-                 }
-             }
-          });
-    }
-
-    function sendData() {
-    }
-</script>
-
-<!--<script type="text/javascript">
-
-      function onViewClick(e) {
-         e.preventDefault();
-         var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
-         var id = dataItem.Id; // Assuming 'Id' is the field name
-         window.location.href = '@Url.Action("View", "Carcass")' + '?id=' + id;
-      }
-
-
-    function onDeleteClick(e) {
-        var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
-         var id = dataItem.Id; // Assuming 'Id' is the field name
-             bootbox.confirm({
-                message: "Are you sure you want to delete this item?",
-                centerVertical: true,
-                    buttons: {
-                        confirm: {
-                            label: 'Yes',
-                            className: 'btn-danger'
-                        },
-                        cancel: {
-                            label: 'No',
-                            className: 'btn-secondary'
-                        }
-                    },
-                callback: function (result) {
-                    if (result) {
-                        // User confirmed, proceed with deletion
-                        $.ajax({
-                            url: '@Url.Action("DeleteCarton", "Carton")', // Replace with your actual controller and action
-                            method: 'POST',
-                            data: { id: id }, // Pass the ID of the record to delete
-                            success: function (result) {
-                                if (result.success) {
-                                    bootbox.alert({
-                                        message: '<i class="fa fa-check-circle" style="color: green;"></i> ' + result.message,
-                                        centerVertical: true
-                                    });
-                                    // Optionally, refresh the grid or page
-                                    location.reload();
-                                } else {
-                                    bootbox.alert({
-                                        message: '<i class="fa fa-exclamation-circle" style="color: red;"></i> ' + result.message,
-                                        centerVertical: true
-                                    });
-                                }
-                            },
-                            error: function (xhr, ajaxOptions, thrownError) {
-                                var errorMessage = xhr.responseJSON && xhr.responseJSON.message ?
-                                    xhr.responseJSON.message : "An error occurred while deleting. Please try again.";
-
-                                bootbox.alert({
-                                    message: errorMessage,
-                                    centerVertical: true
-                                });
-                            }
-                        });
-                    }
-                }
-             });
- }-->
-
-         @*function onDeleteClick(e) {
-            e.preventDefault();
-            var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
-            window.location.href = '@Url.Action("DeleteCarton", "Carcass")' + '/' + dataItem.Id;
-         }*@
-<!--</script>-->
+@Html.Partial("~/Areas/Kitchen/Views/Shared/_PackingIndex.cshtml")

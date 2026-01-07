@@ -1,0 +1,371 @@
+@using Corno.Web.Areas.Kitchen.Dto.Dashboard
+@using Corno.Web.Globals
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@model PlanDashboardDto
+
+@{
+    Layout = "~/Views/Shared/_AppLayout.cshtml";
+    ViewBag.BoxTitle = "Plan Dashboard";
+}
+
+<style>
+    .dashboard-container {
+        padding: 20px;
+    }
+    .kpi-card {
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .kpi-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    .kpi-value {
+        font-size: 32px;
+        font-weight: bold;
+        color: #1976d2;
+        margin: 10px 0;
+    }
+    .kpi-label {
+        font-size: 14px;
+        color: #666;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .kpi-icon {
+        font-size: 48px;
+        color: #1976d2;
+        float: right;
+        opacity: 0.3;
+    }
+    .dashboard-section {
+        margin-bottom: 30px;
+    }
+    .section-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 15px;
+        color: #333;
+        border-bottom: 2px solid #1976d2;
+        padding-bottom: 8px;
+    }
+    .chart-container {
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .progress-bar-container {
+        margin: 10px 0;
+    }
+    .progress-label {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 5px;
+        font-size: 12px;
+        color: #666;
+    }
+    .alert-item {
+        padding: 10px;
+        margin-bottom: 10px;
+        border-left: 4px solid;
+        background: #fff;
+        border-radius: 4px;
+    }
+    .alert-high {
+        border-color: #d32f2f;
+        background: #ffebee;
+    }
+    .alert-medium {
+        border-color: #f57c00;
+        background: #fff3e0;
+    }
+    .alert-low {
+        border-color: #388e3c;
+        background: #e8f5e9;
+    }
+</style>
+
+<div class="dashboard-container">
+    <!-- KPI Cards Row 1 -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-icon"><i class="k-icon k-i-clipboard"></i></div>
+                <div class="kpi-label">Total Plans</div>
+                <div class="kpi-value">@Model.TotalPlans</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-icon"><i class="k-icon k-i-play"></i></div>
+                <div class="kpi-label">Active Plans</div>
+                <div class="kpi-value" style="color: #388e3c;">@Model.ActivePlans</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-icon"><i class="k-icon k-i-check"></i></div>
+                <div class="kpi-label">Completed Plans</div>
+                <div class="kpi-value" style="color: #388e3c;">@Model.CompletedPlans</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-icon"><i class="k-icon k-i-warning"></i></div>
+                <div class="kpi-label">Overdue Plans</div>
+                <div class="kpi-value" style="color: #d32f2f;">@Model.OverduePlans</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI Cards Row 2 -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-icon"><i class="k-icon k-i-calendar"></i></div>
+                <div class="kpi-label">Due Today</div>
+                <div class="kpi-value" style="color: #f57c00;">@Model.PlansDueToday</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-icon"><i class="k-icon k-i-calculator"></i></div>
+                <div class="kpi-label">Total Order Qty</div>
+                <div class="kpi-value">@Model.TotalOrderQuantity.ToString("N0")</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-icon"><i class="k-icon k-i-check-circle"></i></div>
+                <div class="kpi-label">Total Packed Qty</div>
+                <div class="kpi-value" style="color: #388e3c;">@Model.TotalPackedQuantity.ToString("N0")</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="kpi-card">
+                <div class="kpi-icon"><i class="k-icon k-i-chart"></i></div>
+                <div class="kpi-label">Overall Progress</div>
+                <div class="kpi-value">@Model.OverallProgressPercentage.ToString("F1")%</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Metrics -->
+    <div class="dashboard-section">
+        <div class="section-title">Stage Progress</div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <h4 style="margin-top: 0;">Print Progress</h4>
+                    <div class="progress-bar-container">
+                        <div class="progress-label">
+                            <span>@Model.TotalPrintQuantity.ToString("N0") / @Model.TotalOrderQuantity.ToString("N0")</span>
+                            <span>@Model.PrintProgressPercentage.ToString("F1")%</span>
+                        </div>
+                        @(Html.Kendo().ProgressBar()
+                            .Name("printProgress")
+                            .Type(ProgressBarType.Percent)
+                            .Value(Model.PrintProgressPercentage)
+                            .HtmlAttributes(new { style = "width: 100%;" }))
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <h4 style="margin-top: 0;">Bend Progress</h4>
+                    <div class="progress-bar-container">
+                        <div class="progress-label">
+                            <span>@Model.TotalBendQuantity.ToString("N0") / @Model.TotalOrderQuantity.ToString("N0")</span>
+                            <span>@Model.BendProgressPercentage.ToString("F1")%</span>
+                        </div>
+                        @(Html.Kendo().ProgressBar()
+                            .Name("bendProgress")
+                            .Type(ProgressBarType.Percent)
+                            .Value(Model.BendProgressPercentage)
+                            .HtmlAttributes(new { style = "width: 100%;" }))
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <h4 style="margin-top: 0;">Sort Progress</h4>
+                    <div class="progress-bar-container">
+                        <div class="progress-label">
+                            <span>@Model.TotalSortQuantity.ToString("N0") / @Model.TotalOrderQuantity.ToString("N0")</span>
+                            <span>@Model.SortProgressPercentage.ToString("F1")%</span>
+                        </div>
+                        @(Html.Kendo().ProgressBar()
+                            .Name("sortProgress")
+                            .Type(ProgressBarType.Percent)
+                            .Value(Model.SortProgressPercentage)
+                            .HtmlAttributes(new { style = "width: 100%;" }))
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <h4 style="margin-top: 0;">Pack Progress</h4>
+                    <div class="progress-bar-container">
+                        <div class="progress-label">
+                            <span>@Model.TotalPackedQuantity.ToString("N0") / @Model.TotalOrderQuantity.ToString("N0")</span>
+                            <span>@Model.PackProgressPercentage.ToString("F1")%</span>
+                        </div>
+                        @(Html.Kendo().ProgressBar()
+                            .Name("packProgress")
+                            .Type(ProgressBarType.Percent)
+                            .Value(Model.PackProgressPercentage)
+                            .HtmlAttributes(new { style = "width: 100%;" }))
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="dashboard-section">
+        <div class="section-title">Charts & Analytics</div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <h4 style="margin-top: 0;">Plans by Due Date</h4>
+                    @(Html.Kendo().Chart(Model.PlansByDueDate)
+                        .Name("chartPlansByDueDate")
+                        .Title("Plans Distribution")
+                        .Legend(legend => legend.Visible(false))
+                        .Series(series =>
+                        {
+                            series.Column(model => model.PlanCount)
+                                .Name("Plans")
+                                .Color("#1976d2");
+                        })
+                        .CategoryAxis(axis => axis
+                            .Categories(model => model.DueDateFormatted)
+                            .Labels(labels => labels.Rotation(-45))
+                            .MajorGridLines(lines => lines.Visible(false)))
+                        .ValueAxis(axis => axis
+                            .Numeric()
+                            .Labels(labels => labels.Format("{0}"))
+                            .MajorGridLines(lines => lines.Visible(true)))
+                        .Tooltip(tooltip => tooltip
+                            .Visible(true)
+                            .Template("#= series.name #: #= value #"))
+                        .HtmlAttributes(new { style = "height: 300px;" }))
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <h4 style="margin-top: 0;">Status Distribution</h4>
+                    @(Html.Kendo().Chart(Model.StatusDistribution)
+                        .Name("chartStatusDistribution")
+                        .Title("Plan Status")
+                        .Legend(legend => legend.Position(ChartLegendPosition.Bottom))
+                        .Series(series =>
+                        {
+                            series.Pie(model => model.Count, model => model.Status)
+                                .Labels(labels => labels
+                                    .Template("#= category #: #= value #")
+                                    .Visible(true)
+                                    .Position(ChartPieLabelsPosition.OutsideEnd));
+                        })
+                        .Tooltip(tooltip => tooltip
+                            .Visible(true)
+                            .Template("#= category #: #= value # (#= percentage #%)"))
+                        .HtmlAttributes(new { style = "height: 300px;" }))
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="chart-container">
+                    <h4 style="margin-top: 0;">Stage Completion</h4>
+                    @(Html.Kendo().Chart(Model.StageCompletion)
+                        .Name("chartStageCompletion")
+                        .Title("Completion by Stage")
+                        .Legend(legend => legend.Position(ChartLegendPosition.Top))
+                        .Series(series =>
+                        {
+                            series.Bar(model => model.CompletionPercentage)
+                                .Name("Completion %")
+                                .Color("#1976d2");
+                        })
+                        .CategoryAxis(axis => axis
+                            .Categories(model => model.Stage)
+                            .MajorGridLines(lines => lines.Visible(false)))
+                        .ValueAxis(axis => axis
+                            .Numeric()
+                            .Max(100)
+                            .Labels(labels => labels.Format("{0}%"))
+                            .MajorGridLines(lines => lines.Visible(true)))
+                        .Tooltip(tooltip => tooltip
+                            .Visible(true)
+                            .Template("#= category #: #= value #%"))
+                        .HtmlAttributes(new { style = "height: 300px;" }))
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alerts Section -->
+    @if (Model.Alerts.Any())
+    {
+        <div class="dashboard-section">
+            <div class="section-title">Alerts & Notifications</div>
+            <div class="chart-container">
+                @foreach (var alert in Model.Alerts)
+                {
+                    <div class="alert-item alert-@alert.Severity.ToLower()">
+                        <strong>@alert.AlertType</strong> - @alert.Message
+                        <br />
+                        <small>Warehouse Order: @alert.WarehouseOrderNo | Lot: @alert.LotNo | Due: @(alert.DueDate?.ToString("dd/MM/yyyy") ?? "N/A")</small>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    <!-- Recent Plans -->
+    <div class="dashboard-section">
+        <div class="section-title">Recent Plans</div>
+        <div class="chart-container">
+            @(Html.Kendo().Grid(Model.RecentPlans)
+                .Name("gridRecentPlans")
+                .Columns(columns =>
+                {
+                    columns.Bound(m => m.WarehouseOrderNo).Title("Order No")
+                        .ClientTemplate("<a href='" + Url.Action("View", "Plan", new { area = "Kitchen" }) + "?warehouseOrderNo=#=WarehouseOrderNo#' class='text-primary'>#=WarehouseOrderNo#</a>");
+                    columns.Bound(m => m.LotNo).Title("Lot No");
+                    columns.Bound(m => m.DueDate).Format("{0:dd/MM/yyyy}").Title("Due Date");
+                    columns.Bound(m => m.OrderQuantity).Title("Order Qty").Format("{0:N0}");
+                    columns.Bound(m => m.PrintQuantity).Title("Print Qty").Format("{0:N0}");
+                    columns.Bound(m => m.BendQuantity).Title("Bend Qty").Format("{0:N0}");
+                    columns.Bound(m => m.SortQuantity).Title("Sort Qty").Format("{0:N0}");
+                    columns.Bound(m => m.PackedQuantity).Title("Pack Qty").Format("{0:N0}");
+                })
+                .Pageable(p => p.PageSizes(new[] { 10, 20, 50 }))
+                .Sortable()
+                .Scrollable()
+                .HtmlAttributes(new { style = "height: 400px;" }))
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        // Auto-refresh every 60 seconds
+        setInterval(function() {
+            location.reload();
+        }, 60000);
+    });
+</script>
+

@@ -12,7 +12,6 @@ using Corno.Web.Models.Location;
 using Corno.Web.Repository.Interfaces;
 using Corno.Web.Services.File.Interfaces;
 using Corno.Web.Services.Location;
-using Corno.Web.Services.Progress.Interfaces;
 
 namespace Corno.Web.Areas.Masters.Services;
 
@@ -36,7 +35,7 @@ public class LocationService : BaseLocationService, ILocationService
 
     #region -- Import --
 
-    private async Task CreateLocationAsync(List<LocationImportModel> importModels, IBaseProgressService progressService)
+    private async Task CreateLocationAsync(List<LocationImportModel> importModels)
     {
         // Get or Create Customer
         var first = importModels.FirstOrDefault();
@@ -55,7 +54,7 @@ public class LocationService : BaseLocationService, ILocationService
                 Description = importModel.Description,
                 OrderQuantity = importModel.OrderQuantity,
             };*/
-            progressService.Report(1, 0, 0);
+            // Progress tracking now handled by ImportSessionService
             importModel.Status = FieldConstants.Yes;
             importModel.Remark = StatusConstants.Imported;
         }
@@ -63,7 +62,7 @@ public class LocationService : BaseLocationService, ILocationService
         await AddAndSaveAsync(location).ConfigureAwait(false);
     }
 
-    private async Task UpdatePlanAsync(Location location, List<LocationImportModel> importModels, IBaseProgressService progressService)
+    private async Task UpdatePlanAsync(Location location, List<LocationImportModel> importModels)
     {
         // Get or Create Supplier
         var first = importModels.FirstOrDefault();
@@ -75,7 +74,7 @@ public class LocationService : BaseLocationService, ILocationService
 
         foreach (var importModel in importModels)
         {
-            progressService.Report(1, 0, 0);
+            // Progress tracking now handled by ImportSessionService
             importModel.Status = FieldConstants.No;
             importModel.Remark = StatusConstants.Exists;
         }
@@ -83,6 +82,9 @@ public class LocationService : BaseLocationService, ILocationService
         await UpdateAndSaveAsync(location).ConfigureAwait(false);
     }
 
+    // OLD METHOD - REMOVED: ImportAsync with IBaseProgressService
+    // This should be updated to use the new common import module
+    /*
     public async Task<IEnumerable<LocationImportModel>> ImportAsync(HttpPostedFileBase file, IBaseProgressService progressService)
     {
         try
@@ -125,6 +127,7 @@ public class LocationService : BaseLocationService, ILocationService
             throw;
         }
     }
+    */
 
     #endregion
 }

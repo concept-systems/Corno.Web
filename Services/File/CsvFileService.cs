@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using Corno.Web.Logger;
 using Corno.Web.Services.File.Interfaces;
+using Corno.Web.Services.Import;
 using CsvContext = LINQtoCSV.CsvContext;
 using CsvFileDescription = LINQtoCSV.CsvFileDescription;
 
@@ -66,24 +67,27 @@ namespace Corno.Web.Services.File
         }
 
         /// <summary>
-        /// Reads CSV records from a stream
+        /// Reads CSV records from a stream, normalizing alternative column names
         /// </summary>
         public IEnumerable<TEntity> Read(Stream fileStream, int startRow = 0, int headerRow = 0)
         {
             try
             {
+                // Normalize column headers to handle alternative naming conventions from attributes
+                var normalizedStream = CsvHeaderNormalizer.NormalizeHeaders<TEntity>(fileStream);
+
                 // LINQtoCSV requires a file path, so we need to write stream to temp file
                 var tempFilePath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".csv");
                 
                 try
                 {
                     // Reset stream position
-                    fileStream.Position = 0;
+                    normalizedStream.Position = 0;
                     
                     // Write stream to temp file
                     using (var fileStreamWriter = new FileStream(tempFilePath, FileMode.Create, FileAccess.Write))
                     {
-                        fileStream.CopyTo(fileStreamWriter);
+                        normalizedStream.CopyTo(fileStreamWriter);
                     }
 
                     // Read from temp file
@@ -115,6 +119,22 @@ namespace Corno.Web.Services.File
                 LogHandler.LogError(exception);
                 throw;
             }
+        }
+
+        /// <summary>
+        /// Gets the header mappings for alternative column names based on the entity type
+        /// </summary>
+        private Dictionary<string, string> GetHeaderMappingsForType()
+        {
+            var mappings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+            // Add mappings for LabelImportDto
+            if (typeof(TEntity).Name == "LabelImportDto")
+            {
+                mappings["Material"] = "Material Description";
+            }
+
+            return mappings;
         }
 
         /// <summary>

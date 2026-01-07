@@ -8,6 +8,7 @@ public interface IBasePlanService : IPrintService<Models.Plan.Plan>
     #region -- Public Get Methods --
 
     Task<Models.Plan.Plan> GetByWarehouseOrderNoAsync(string warehouseOrderNo);
+    Task<Models.Plan.Plan> GetByProductionOrderNoAsync(string productionOrderNo);
 
     #endregion
 }

@@ -1,0 +1,137 @@
+@using Corno.Web.Areas.Admin.Dto
+@model ProfileDto
+
+@{
+    Layout = "~/Views/Shared/_AppLayout.cshtml";
+    ViewBag.BoxTitle = "My Profile";
+}
+
+<div class="profile-container" style="padding: 20px;">
+    <div class="k-hstack k-gap-4" style="align-items: flex-start;">
+        <!-- Profile Information -->
+        <div class="k-card" style="flex: 1; max-width: 600px;">
+            <div class="k-card-header">
+                <h3 class="k-card-title">Profile Information</h3>
+            </div>
+            <div class="k-card-body">
+                @using (Html.BeginForm("UpdateProfile", "Profile", new { area = "Admin" }, FormMethod.Post, new { @class = "k-form" }))
+                {
+                    @Html.AntiForgeryToken()
+                    @Html.HiddenFor(m => m.Id)
+
+                    <div class="k-form-field">
+                        @Html.LabelFor(m => m.UserName, new { @class = "k-form-label" })
+                        @Html.TextBoxFor(m => m.UserName, new { @class = "k-textbox k-input-md", @readonly = "readonly" })
+                        <span class="k-form-hint">Username cannot be changed</span>
+                    </div>
+
+                    <div class="k-form-field">
+                        @Html.LabelFor(m => m.Email, new { @class = "k-form-label" })
+                        @Html.TextBoxFor(m => m.Email, new { @class = "k-textbox k-input-md", type = "email" })
+                        @Html.ValidationMessageFor(m => m.Email)
+                    </div>
+
+                    <div class="k-form-field">
+                        @Html.LabelFor(m => m.FirstName, new { @class = "k-form-label" })
+                        @Html.TextBoxFor(m => m.FirstName, new { @class = "k-textbox k-input-md" })
+                    </div>
+
+                    <div class="k-form-field">
+                        @Html.LabelFor(m => m.LastName, new { @class = "k-form-label" })
+                        @Html.TextBoxFor(m => m.LastName, new { @class = "k-textbox k-input-md" })
+                    </div>
+
+                    <div class="k-form-field">
+                        @Html.LabelFor(m => m.PhoneNumber, new { @class = "k-form-label" })
+                        @Html.TextBoxFor(m => m.PhoneNumber, new { @class = "k-textbox k-input-md" })
+                    </div>
+
+                    <div class="k-form-buttons k-hstack k-gap-2" style="margin-top: 20px;">
+                        <button type="submit" class="k-button k-button-md k-button-solid k-button-primary">
+                            <span class="k-icon k-i-save"></span>
+                            <span>Update Profile</span>
+                        </button>
+                        <a href="@Url.Action("ChangePassword", "Profile", new { area = "Admin" })" class="k-button k-button-md k-button-solid-base">
+                            <span class="k-icon k-i-password"></span>
+                            <span>Change Password</span>
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Active Sessions -->
+        <div class="k-card" style="flex: 1;">
+            <div class="k-card-header">
+                <h3 class="k-card-title">Active Sessions</h3>
+            </div>
+            <div class="k-card-body">
+                <div id="sessionsGrid"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        loadActiveSessions();
+    });
+
+    function loadActiveSessions() {
+        $.ajax({
+            url: '@Url.Action("GetActiveSessions", "Profile", new { area = "Admin" })',
+            type: "POST",
+            success: function(data) {
+                if ($("#sessionsGrid").data("kendoGrid")) {
+                    $("#sessionsGrid").data("kendoGrid").destroy();
+                }
+
+                $("#sessionsGrid").kendoGrid({
+                    dataSource: {
+                        data: data
+                    },
+                    columns: [
+                        { field: "SessionId", title: "Session ID", width: 200 },
+                        { 
+                            field: "LoginTime", 
+                            title: "Login Time", 
+                            width: 150,
+                            template: "#= kendo.toString(new Date(LoginTime), 'g') #"
+                        },
+                        { 
+                            field: "LastActivityTime", 
+                            title: "Last Activity", 
+                            width: 150,
+                            template: "#= LastActivityTime ? kendo.toString(new Date(LastActivityTime), 'g') : '' #"
+                        },
+                        { field: "IpAddress", title: "IP Address", width: 120 },
+                        { 
+                            title: "Actions", 
+                            width: 100,
+                            template: "<button class='k-button k-button-sm k-button-solid k-button-error' onclick='invalidateSession(\"#= SessionId #\")'>End Session</button>"
+                        }
+                    ],
+                    height: 400
+                });
+            }
+        });
+    }
+
+    function invalidateSession(sessionId) {
+        if (confirm("Are you sure you want to end this session?")) {
+            $.ajax({
+                url: '@Url.Action("InvalidateSession", "Profile", new { area = "Admin" })',
+                type: "POST",
+                data: { sessionId: sessionId },
+                success: function() {
+                    loadActiveSessions();
+                    alert("Session ended successfully");
+                },
+                error: function() {
+                    alert("Failed to end session");
+                }
+            });
+        }
+    }
+</script>
+

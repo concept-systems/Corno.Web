@@ -1,8 +1,17 @@
-﻿@{
+﻿@using Corno.Web.Globals.Enums
+@{
     Layout = "~/Views/Shared/_AppLayout.cshtml";
     ViewBag.BoxTitle = "Part Label";
+    ViewBag.ControllerName = "PartLabel";
+    ViewBag.ViewAction = "View";
+    ViewBag.DataSourceAction = "GetIndexViewDto";
+    ViewBag.ShowAddNewButton = true;
+    ViewBag.BarcodeColumnLink = true;
+    ViewBag.WarehouseOrderColumnLink = false;
+    ViewBag.GroupByWarehouseOrder = false;
+    ViewBag.LabelType = nameof(LabelType.Part);
 }
 
 <div class="grid-container-full-height">
-    @Html.Partial("_PartialIndex")
+    @Html.Partial("~/Areas/Kitchen/Views/Shared/_LabelIndex.cshtml")
 </div>

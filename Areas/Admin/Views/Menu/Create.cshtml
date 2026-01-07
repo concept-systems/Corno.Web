@@ -1,0 +1,61 @@
+@using Corno.Web.Areas.Admin.Dto
+@model MenuDto
+
+@{
+    Layout = "~/Views/Shared/_LayoutEdit.cshtml";
+}
+
+@{
+    ViewBag.BoxTitle = "Create Menu";
+    ViewBag.Controller = "Menu";
+    ViewBag.SubmitAction = "Create";
+    ViewBag.Area = "Admin";
+    ViewBag.FormId = "form";
+}
+
+@using (Html.BeginForm("Create", "Menu", new { area = "Admin" }, FormMethod.Post, new { id = "form", @class = "crud-form-wrapper" }))
+{
+    @Html.AntiForgeryToken()
+    @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+
+    <div class="crud-content">
+        @Html.Partial("_Menu", Model)
+    </div>
+}
+
+<style>
+    .crud-form-wrapper {
+        width: 100%;
+    }
+
+    .crud-content {
+        width: 100%;
+        padding: 15px;
+    }
+
+    .k-actions {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .k-actions .k-button {
+        flex: 1 1 auto;
+        min-width: 120px;
+    }
+
+    @@media (max-width: 768px) {
+        .crud-content {
+            padding: 10px;
+        }
+
+        .k-actions {
+            flex-direction: column;
+        }
+
+        .k-actions .k-button {
+            width: 100%;
+            min-width: unset;
+        }
+    }
+</style>
+

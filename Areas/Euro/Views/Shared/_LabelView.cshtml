@@ -1,0 +1,207 @@
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@model Corno.Web.Areas.Euro.Dto.Label.LabelViewDto
+
+@{
+    var controllerName = ViewBag.ControllerName as string ?? "PartLabel";
+}
+
+<div class="row g-3 mb-4">
+    <!-- Action Buttons -->
+    <div class="col-md-12 mb-3">
+        <div class="d-flex gap-2 justify-content-end">
+            @(Html.Kendo().Button()
+                .Name("print")
+                .Content("Print")
+                .ApplyStandardSettingsWithType(ButtonType.Primary, "print", ComponentSize.Medium)
+                .Events(e => e.Click("onPrintLabel")))
+            @(Html.Kendo().Button()
+                .Name("btnBack")
+                .Content("Back")
+                .ApplyStandardSettingsWithType(ButtonType.Info, "arrow-left", ComponentSize.Medium)
+                .Events(e => e.Click("onBack")))
+            @(Html.Kendo().Button()
+                .Name("btnList")
+                .Content("List")
+                .ApplyStandardSettingsWithType(ButtonType.Info, "list", ComponentSize.Medium)
+                .Events(e => e.Click("onBackToList")))
+        </div>
+    </div>
+    <!-- Modern Card Layout (PartLabel Style) -->
+    <!-- Basic Information -->
+    <div class="col-md-6">
+        <div class="k-card shadow-sm mb-3">
+            <div class="k-card-header d-flex justify-content-between align-items-center">
+                <span class="fw-bold">Basic Information</span>
+            </div>
+            <div class="k-card-body p-3">
+                <div class="row g-0 border">
+                    <div class="col-md-4 col-6 border p-2 bg-light"><strong>Due Date</strong></div>
+                    <div class="col-md-8 col-6 border p-2">@(Model.DueDate?.ToString("dd/MM/yyyy hh:mm tt"))</div>
+                    <div class="col-md-4 col-6 border p-2 bg-light"><strong>Lot No</strong></div>
+                    <div class="col-md-8 col-6 border p-2">@Model.LotNo</div>
+                    <div class="col-md-4 col-6 border p-2 bg-light"><strong>Production Order No</strong></div>
+                    <div class="col-md-8 col-6 border p-2">@Model.ProductionOrderNo</div>
+                    <div class="col-md-4 col-6 border p-2 bg-light"><strong>Carcass Code</strong></div>
+                    <div class="col-md-8 col-6 border p-2">@Model.CarcassCode</div>
+                    <div class="col-md-4 col-6 border p-2 bg-light"><strong>Assembly Code</strong></div>
+                    <div class="col-md-8 col-6 border p-2">@Model.AssemblyCode</div>
+                    <div class="col-md-4 col-6 border p-2 bg-light"><strong>Position</strong></div>
+                    <div class="col-md-8 col-6 border p-2">@Model.Position</div>
+                    <div class="col-md-4 col-6 border p-2 bg-light"><strong>Barcode</strong></div>
+                    <div class="col-md-8 col-6 border p-2">@Model.Barcode</div>
+                    <div class="col-md-4 col-6 border p-2 bg-light"><strong>Label Status</strong></div>
+                    <div class="col-md-8 col-6 border p-2">
+                        <span class="badge bg-info text-dark">@(Model.LabelStatus ?? "N/A")</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Item & Quantity Information -->
+    <div class="col-md-6">
+        <div class="k-card shadow-sm mb-3">
+            <div class="k-card-header d-flex justify-content-between align-items-center">
+                <span class="fw-bold">Item & Quantity Information</span>
+            </div>
+            <div class="k-card-body p-3">
+                <div class="row g-0 border">
+                    <div class="col-md-4 col-6 border p-2 bg-light"><strong>Family</strong></div>
+                    <div class="col-md-8 col-6 border p-2">@Model.Family</div>
+                    <div class="col-md-4 col-6 border p-2 bg-light"><strong>Drawing No</strong></div>
+                    <div class="col-md-8 col-6 border p-2">@Model.DrawingNo</div>
+                    <div class="col-md-4 col-6 border p-2 bg-light"><strong>Color</strong></div>
+                    <div class="col-md-8 col-6 border p-2">@Model.Color</div>
+                    <div class="col-md-4 col-6 border p-2 bg-light"><strong>Item Code</strong></div>
+                    <div class="col-md-8 col-6 border p-2">@Model.ItemCode</div>
+                    <div class="col-md-4 col-6 border p-2 bg-light"><strong>Description</strong></div>
+                    <div class="col-md-8 col-6 border p-2">@Model.Description</div>
+                </div>
+                <div class="row g-0 border mt-0">
+                    <div class="col-md-6">
+                        <div class="row g-0">
+                            <div class="col-6 border p-2 bg-light"><strong>Quantity</strong></div>
+                            <div class="col-6 border p-2">@(Model.Quantity?.ToString("0") ?? "0")</div>
+                            <div class="col-6 border p-2 bg-light"><strong>Print Quantity</strong></div>
+                            <div class="col-6 border p-2">@(Model.PrintQuantity?.ToString("0") ?? "0")</div>
+                            <div class="col-6 border p-2 bg-light"><strong>Bend Quantity</strong></div>
+                            <div class="col-6 border p-2">@(Model.BendQuantity?.ToString("0") ?? "0")</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="row g-0">
+                            <div class="col-6 border p-2 bg-light"><strong>Order Quantity</strong></div>
+                            <div class="col-6 border p-2">@(Model.OrderQuantity?.ToString("0") ?? "0")</div>
+                            <div class="col-6 border p-2 bg-light"><strong>Sort Quantity</strong></div>
+                            <div class="col-6 border p-2">@(Model.SortQuantity?.ToString("0") ?? "0")</div>
+                            <div class="col-6 border p-2 bg-light"><strong>Pack Quantity</strong></div>
+                            <div class="col-6 border p-2">@(Model.PackQuantity?.ToString("0") ?? "0")</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Label Preview -->
+    <div class="col-md-6">
+        <div class="k-card shadow-sm mb-3">
+            <div class="k-card-header d-flex justify-content-between align-items-center">
+                <span class="fw-bold">Label Preview</span>
+            </div>
+            <div class="k-card-body p-2" style="min-height: 400px; max-height: 600px; overflow-y: auto;">
+                <iframe id="pdfFrame" width="100%" height="100%" style="min-height: 400px;"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scan Details -->
+    <div class="col-md-6">
+        <div class="k-card shadow-sm mb-3">
+            <div class="k-card-header d-flex justify-content-between align-items-center">
+                <span class="fw-bold">Scan Details</span>
+                <span class="badge bg-secondary">@(Model?.LabelViewDetailDto?.Count ?? 0) Records</span>
+            </div>
+            <div class="k-card-body p-3">
+                @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+
+                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                    @(Html.Kendo().Grid(Model?.LabelViewDetailDto)
+                            .Name("grid")
+                            .ApplyCommonSettings()
+                            .Events(events => events.ApplyCommonEvents())
+                            .Columns(columns =>
+                            {
+                                columns.Bound(m => m.ScanDate)
+                                    .Title("Scan Date")
+                                    .Format("{0:dd/MM/yyyy hh:mm tt}");
+                                if (Model?.LabelViewDetailDto != null && Model.LabelViewDetailDto.Any())
+                                {
+                                    columns.Bound(m => m.UserName)
+                                        .Title("User Name")
+                                        .Align(TextAlign.Left);
+                                }
+                                else if (Model?.LabelViewDetailDto != null && Model.LabelViewDetailDto.Any())
+                                {
+                                    columns.Bound(m => m.CreatedBy)
+                                        .Title("User Name")
+                                        .Align(TextAlign.Left);
+                                }
+                                columns.AddStatusColumn();
+                            })
+                            .Scrollable(s => s.Enabled(true))
+                            .DataSource(dataSource => dataSource.Ajax()))
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Carton Information -->
+    <div class="col-md-6">
+        <div class="k-card shadow-sm mb-3">
+            <div class="k-card-header d-flex justify-content-between align-items-center">
+                <span class="fw-bold">Carton Information</span>
+            </div>
+            <div class="k-card-body p-3">
+                <div class="row g-0 border">
+                    <div class="col-md-4 col-6 border p-2 bg-light"><strong>Carton No</strong></div>
+                    <div class="col-md-8 col-6 border p-2">@(Model.CartonNo.HasValue ? "C" + Model.CartonNo.Value.ToString().PadLeft(3, '0') : "N/A")</div>
+                    <div class="col-md-4 col-6 border p-2 bg-light"><strong>Carton Barcode</strong></div>
+                    <div class="col-md-8 col-6 border p-2">@(Model.CartonBarcode ?? "N/A")</div>
+                    <div class="col-md-4 col-6 border p-2 bg-light"><strong>Quantity</strong></div>
+                    <div class="col-md-8 col-6 border p-2">@(Model.CartonQuantity?.ToString("0") ?? "N/A")</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function onBackToList() {
+        window.location.href = '@Url.Action("Index", controllerName, new { area = "Euro" })';
+    }
+
+    function onBack() {
+        // Try to use referrer if available and from same origin
+        var referrer = document.referrer;
+        if (referrer && referrer.indexOf(window.location.origin) === 0) {
+            var referrerPath = new URL(referrer).pathname;
+            if (referrerPath && referrerPath !== window.location.pathname) {
+                window.location.href = referrer;
+                return;
+            }
+        }
+        // Fallback to Index
+        window.location.href = '@Url.Action("Index", controllerName, new { area = "Euro" })';
+    }
+
+    const base64 = '@Html.Raw(Model.Base64)';
+    const cleanBase64 = base64.replace(/\s/g, '');
+    function onPrintLabel() {
+        printIFramePdf('pdfFrame');
+    }
+
+    loadPdf(cleanBase64, 'pdfFrame');
+</script>
+

@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.Entity;
 using System.Linq;
 using Corno.Web.Areas.Admin.Services.Interfaces;
 using Corno.Web.Areas.Kitchen.Services.Interfaces;
-using Corno.Web.Dtos;
 using Corno.Web.Globals;
 using Corno.Web.Windsor;
 using Telerik.Reporting;
@@ -17,11 +15,11 @@ public class ReportService : BaseReportService, IReportService
 {
     #region -- Constructors --
 
-    public ReportService()
+    public ReportService(IPlanService planService, ICartonService cartonService, IUserService userService)
     {
-        _planService = Bootstrapper.Get<IPlanService>();
-        _cartonService = Bootstrapper.Get<ICartonService>();
-        _userService = Bootstrapper.Get<IUserService>();
+        _planService = planService;
+        _cartonService = cartonService;
+        _userService = userService;
     }
     #endregion
 

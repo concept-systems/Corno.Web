@@ -1,0 +1,227 @@
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+@using Corno.Web.Areas.Euro.Dto.Carton
+@model Corno.Web.Areas.Euro.Dto.Carton.CartonViewDto
+@{
+    var controllerName = ViewBag.ControllerName as string ?? "Carton";
+    var deleteAction = ViewBag.DeleteAction as string ?? "DeleteCarton";
+    var indexAction = ViewBag.IndexAction as string ?? "Index";
+    var showDeleteButton = ViewBag.ShowDeleteButton as bool? ?? true;
+    var showPrintQuantity = ViewBag.ShowPrintQuantity as bool? ?? false;
+}
+
+<!-- container templates -->
+<script id="template-partial-view" type="text/x-kendo-template">
+    <iframe id="pdfFrame" width="100%" height="100%" style="border: none; min-height: 400px;"></iframe>
+</script>
+<script id="template-header" type="text/x-kendo-template">
+   <table class="k-table k-table-auto table table-bordered">
+    <tr>
+        <td>
+            Due Date :
+        </td>
+        <td>
+            @(Model.DueDate.HasValue ? Model.DueDate.Value.ToString("MM/dd/yyyy") : "N/A")
+        </td>
+    </tr>
+     <tr>
+         <td>
+             Production Order No :
+         </td>
+         <td>
+              @Html.DisplayFor(m => m.ProductionOrderNo)
+         </td>
+     </tr>
+     <tr>
+        <td>
+            Lot No :
+        </td>
+        <td>
+            @Html.DisplayFor(m => m.LotNo)
+        </td>
+     </tr>
+     @if (showPrintQuantity)
+     {
+         <tr>
+             <td>
+                 Print Quantity :
+             </td>
+             <td>
+                 @Html.DisplayFor(m => m.PrintQuantity)
+             </td>
+         </tr>
+     }
+</table>
+</script>
+<script id="template-racking-detail">
+     @(Html.Kendo().Grid(Model?.CartonRackingDetailDtos)
+         .Name("rackingDetails")
+         .ApplyCommonSettings()
+         .Columns(columns =>
+         {
+             columns.Bound(m => m.ScanDate).Format("{0:dd/MM/yyyy hh:mm tt}");
+             columns.Bound(m => m.PalletNo);
+             columns.Bound(m => m.RackNo);
+             if (Model?.CartonRackingDetailDtos != null && Model.CartonRackingDetailDtos.Any() && Model.CartonRackingDetailDtos.FirstOrDefault()?.Status != null)
+             {
+                 columns.Bound(m => m.Status);
+             }
+         })
+         .DataSource(dataSource => dataSource
+             .Ajax()
+             .ServerOperation(false))
+         .ToClientTemplate())
+</script>
+<div class="k-card-header">
+    <div class="row">
+        <div class="col-6">
+            <h5>
+                <span class="k-icon k-i-plus k-icon k-text-success"></span>
+                @ViewBag.BoxTitle
+            </h5>
+        </div>
+        <div class="col-6 k-card-actions k-card-actions-horizontal k-card-actions-end">
+            @if (showDeleteButton)
+            {
+                @(Html.Kendo().Button()
+                    .Name("DeleteButton")
+                    .Content("Delete")
+                    .ApplyStandardSettingsWithType(ButtonType.Delete, "trash", ComponentSize.Medium)
+                    .Events(e => e.Click("onDeleteClick"))
+                    .HtmlAttributes(new { id = "deleteButton", @class = "delete-button" }))
+            }
+            @(Html.Kendo().Button()
+                .Name("print")
+                .Content("Print")
+                .ApplyStandardSettingsWithType(ButtonType.Primary, "print", ComponentSize.Medium)
+                .Events(e => e.Click("onPrintLabel")))
+            @(Html.Kendo().Button()
+                .Name("btnList")
+                .Content("Back")
+                .ApplyStandardSettingsWithType(ButtonType.Info, "arrow-left", ComponentSize.Medium)
+                .Events(e => e.Click("onBack")))
+            @(Html.Kendo().Button()
+                .Name("BackToList")
+                .Content("List")
+                .ApplyStandardSettingsWithType(ButtonType.Info, "list", ComponentSize.Medium)
+                .Events(e => e.Click("onBackToList")))
+        </div>
+    </div>
+</div>
+
+@(Html.Kendo().TileLayout()
+    .Name("tileLayout")
+    .Columns(4)
+    .RowsHeight("100px")
+    .ColumnsWidth("25%")
+    .Containers(c => {
+             c.Add()
+                 .BodyTemplateId("template-partial-view")
+                 .Header(h => h.Text("Label"))
+                 .ColSpan(2)
+                 .RowSpan(5);
+             c.Add()
+                 .BodyTemplateId("template-header")
+                 .Header(h => h.Text("Header Info"))
+                 .ColSpan(2)
+                 .RowSpan(2);
+             c.Add()
+                 .BodyTemplateId("template-racking-detail")
+                 .Header(h => h.Text("Item Info"))
+                 .ColSpan(2)
+                 .RowSpan(3);
+    })
+    .Reorderable(true)
+    .Resizable(true))
+@(Html.Kendo().Grid(Model?.CartonDetailsDtos)
+    .Name("cartonDetails")
+    .ApplyCommonSettings()
+    .Events(events => events.ApplyCommonEvents())
+    .Columns(columns =>
+    {
+        columns.Bound(m => m.AssemblyCode);
+        columns.Bound(m => m.CarcassCode);
+        if (Model?.CartonDetailsDtos != null && Model.CartonDetailsDtos.Any() && Model.CartonDetailsDtos.FirstOrDefault()?.NetWeight != null)
+        {
+            columns.Bound(m => m.NetWeight).Title("Net Weight");
+        }
+        if (Model?.CartonDetailsDtos != null && Model.CartonDetailsDtos.Any() && Model.CartonDetailsDtos.FirstOrDefault()?.Tolerance != null)
+        {
+            columns.Bound(m => m.Tolerance).Title("Tolerance");
+        }
+        columns.Bound(m => m.Quantity);
+        columns.Bound(m => m.OrderQuantity);
+    })
+    .DataSource(dataSource => dataSource
+        .Ajax().ServerOperation(false)))
+<script>
+    $(document).ready(function () {
+        // Inline preview of carton label similar to PartLabel
+        var base64 = '@Html.Raw(Model.Base64 ?? string.Empty)';
+        var cleanBase64 = base64.replace(/\s/g, '');
+        if (cleanBase64) {
+            loadPdf(cleanBase64, 'pdfFrame');
+        }
+    });
+
+    function onDeleteClick(e) {
+        e.preventDefault();
+        var id = @Model.Id;
+        bootbox.confirm("Are you sure you want to delete this carton?", function (result) {
+            if (result) {
+              $.ajax({
+                url: '@Url.Action(deleteAction, controllerName, new { area = "Euro" })',
+                type: 'POST',
+                data: { id: id },
+                success: function (result) {
+                    if (result.success) {
+                        window.location.href = '@Url.Action(indexAction, controllerName, new {area="Euro"})';
+                    } else {
+                        bootbox.alert({
+                            message: '<i class="fa fa-exclamation-circle" style="color: red;"></i> ' + result.message,
+                            centerVertical: true
+                        });
+                    }
+                },
+                error: function (xhr, ajaxOptions, thrownError) {
+                    var errorMessage = xhr.responseJSON && xhr.responseJSON.message ?
+                        xhr.responseJSON.message : "An error occurred while deleting. Please try again.";
+                    bootbox.alert({
+                        message: errorMessage,
+                        centerVertical: true
+                    });
+                }
+            });
+            }
+        });
+    }
+
+    function onBackToList() {
+        window.location.href = '@Url.Action(indexAction, controllerName, new { area = "Euro" })';
+    }
+
+    function onBack() {
+        // Try to use referrer if available and from same origin
+        var referrer = document.referrer;
+        if (referrer && referrer.indexOf(window.location.origin) === 0) {
+            var referrerPath = new URL(referrer).pathname;
+            if (referrerPath && referrerPath !== window.location.pathname) {
+                window.location.href = referrer;
+                return;
+            }
+        }
+        // Fallback to Plan/Index
+        window.location.href = '@Url.Action("Index", "Plan", new { area = "Euro" })';
+    }
+
+    function onPrintLabel() {
+        var base64 = '@Html.Raw(Model.Base64 ?? string.Empty)';
+        if (base64 && base64.trim() !== '') {
+            printIFramePdf('pdfFrame');
+        }
+    }
+
+    function sendData() {
+    }
+</script>
+

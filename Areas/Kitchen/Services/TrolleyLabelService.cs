@@ -1,6 +1,7 @@
-﻿ using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Transactions;
 using Corno.Web.Areas.Kitchen.Services.Interfaces;
 using System.Threading.Tasks;
 using Corno.Web.Globals;
@@ -12,14 +13,13 @@ using Corno.Web.Areas.Kitchen.Labels;
 using Corno.Web.Reports;
 using Microsoft.Ajax.Utilities;
 using Corno.Web.Areas.Kitchen.Dto.Label;
-using Mapster;
 using Corno.Web.Services.Masters.Interfaces;
 using Corno.Web.Areas.Admin.Services.Interfaces;
 using Corno.Web.Repository.Interfaces;
- using Corno.Web.Services.File.Interfaces;
- using Corno.Web.Windsor;
+using Corno.Web.Services.File.Interfaces;
+using Corno.Web.Windsor;
 
- namespace Corno.Web.Areas.Kitchen.Services;
+namespace Corno.Web.Areas.Kitchen.Services;
 public class TrolleyLabelService : LabelService, ITrolleyLabelService
 {
     #region -- Constructors --
@@ -67,7 +67,7 @@ public class TrolleyLabelService : LabelService, ITrolleyLabelService
             d.Group == dto.Family).DistinctBy(d => d.CarcassCode);
 
         var existing = await GetAsync(l => l.WarehouseOrderNo == dto.WarehouseOrderNo &&
-                                l.LabelType == LabelType.Trolley.ToString(),
+                                l.LabelType == nameof(LabelType.Trolley),
             l => new { l.Id, l.CarcassCode }).ConfigureAwait(false);
         
         // Filter out existing labels first
@@ -87,7 +87,7 @@ public class TrolleyLabelService : LabelService, ITrolleyLabelService
             SoNo = plan.SoNo,
             Code = (startSerialNo + index).ToString().PadLeft(7, '0'),
             LabelDate = DateTime.Now,
-            LabelType = LabelType.Trolley.ToString(),
+            LabelType = nameof(LabelType.Trolley),
             ProductId = plan.ProductId,
             ItemId = detail.ItemId,
             OrderQuantity = detail.OrderQuantity ?? 0,
@@ -104,15 +104,22 @@ public class TrolleyLabelService : LabelService, ITrolleyLabelService
 
         return await Task.FromResult(labels.ToList()).ConfigureAwait(false);
     }
+
     public async Task<BaseReport> CreateLabelReportAsync(List<Label> labels, bool bDuplicate)
     {
         var labelRpt = new TrolleyLabelRpt(labels);
         return await Task.FromResult<BaseReport>(labelRpt).ConfigureAwait(false);
     }
+
     public async Task UpdateDatabaseAsync(List<Label> labels, Plan plan)
     {
         if (null == plan)
             throw new Exception("Invalid Plan");
+
+        using var scope = new TransactionScope(TransactionScopeOption.Required,
+            new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted },
+            TransactionScopeAsyncFlowOption.Enabled);
+
         foreach (var label in labels)
         {
             var planItemDetail = plan.PlanItemDetails.FirstOrDefault(d =>
@@ -126,32 +133,9 @@ public class TrolleyLabelService : LabelService, ITrolleyLabelService
         var planService = Bootstrapper.Get<IPlanService>();
         await planService.UpdateAsync(plan).ConfigureAwait(false);
         await AddRangeAndSaveAsync(labels).ConfigureAwait(false);
+
+        scope.Complete();
     }
 
-    public async Task<LabelViewDto> CreateViewDtoAsync(int? id)
-    {
-        var label = await FirstOrDefaultAsync(p => p.Id == id, p => p).ConfigureAwait(false);
-        if (null == label)
-            throw new Exception($"Label with Id '{id}' not found.");
-
-        // Create dto
-        var dto = label.Adapt<LabelViewDto>();
-
-        // Create label report
-        var item = await _itemService.GetViewModelAsync(label.ItemId ?? 0).ConfigureAwait(false);
-        label.NotMapped = new NotMapped
-        {
-            ItemCode = item?.Code,
-            ItemName = item?.Description
-        };
-        var userIds = dto.LabelViewDetailDto.Select(d => d.CreatedBy).ToList();
-        var users = await _userService.GetAsync(p => userIds.Contains(p.Id), p => p).ConfigureAwait(false);
-
-        dto.LabelViewDetailDto.ForEach(d =>
-            d.UserName = users.FirstOrDefault(x => x.Id == d.CreatedBy)?.UserName);
-
-        dto.LabelReport = await CreateLabelReportAsync(new List<Label> { label }, true).ConfigureAwait(false);
-        return dto;
-    }
-    #endregion
+        #endregion
 }

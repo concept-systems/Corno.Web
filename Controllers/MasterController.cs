@@ -7,7 +7,6 @@ using System.Web.Mvc;
 using Corno.Web.Attributes;
 using Corno.Web.Models;
 using Corno.Web.Services.Interfaces;
-using Corno.Web.Services.Progress.Interfaces;
 
 namespace Corno.Web.Controllers;
 
@@ -18,12 +17,10 @@ public class MasterController<TEntity> : BaseController<TEntity>
 {
     #region -- Constructor --
 
-    public MasterController(IMasterService<TEntity> genericMasterService,
-        IWebProgressService progressService)
+    public MasterController(IMasterService<TEntity> genericMasterService)
         : base(genericMasterService)
     {
         _genericMasterService = genericMasterService;
-        _progressService = progressService;
     }
 
        
@@ -32,7 +29,6 @@ public class MasterController<TEntity> : BaseController<TEntity>
     #region -- Data Members --
 
     private readonly IMasterService<TEntity> _genericMasterService;
-    private readonly IWebProgressService _progressService;
 
     #endregion
 
@@ -46,7 +42,7 @@ public class MasterController<TEntity> : BaseController<TEntity>
     #endregion
 
     #region -- Public Methods --
-    [HttpPost]
+    /*[HttpPost]
     public override async Task<ActionResult> ImportMaster(IEnumerable<HttpPostedFileBase> files)
     {
         ActionResult jsonResult = Json(new {error = false }, JsonRequestBehavior.AllowGet); 
@@ -74,6 +70,6 @@ public class MasterController<TEntity> : BaseController<TEntity>
             }, JsonRequestBehavior.AllowGet);
         }
         return jsonResult;
-    }
+    }*/
     #endregion
 }

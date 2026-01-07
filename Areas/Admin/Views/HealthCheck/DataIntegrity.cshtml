@@ -1,0 +1,446 @@
+@using Corno.Web.Areas.Admin.Dto.HealthCheck
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+
+@{
+    Layout = "~/Views/Shared/_AppLayout.cshtml";
+    ViewBag.BoxTitle = "Data Integrity Issues";
+}
+
+<style>
+    #detailedResultsModal .k-content {
+        overflow: hidden !important;
+        height: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+        padding: 0 !important;
+    }
+    
+    #detailedResultsModal .k-card {
+        height: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+        margin: 0 !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+    }
+    
+    #detailedResultsModal .k-card-body {
+        overflow: visible !important;
+        flex: 1 !important;
+        min-height: 0 !important;
+    }
+    
+    #detailedResultsModal .k-card-header,
+    #detailedResultsModal .k-card-footer {
+        flex-shrink: 0 !important;
+    }
+    
+    /* Remove overflow from inner cards */
+    #detailedResultsModal .k-card .k-card {
+        overflow: visible !important;
+    }
+    
+    #detailedResultsModal .k-card .k-card-body {
+        overflow: visible !important;
+    }
+</style>
+
+<script>
+    // Define helper functions BEFORE document.ready and Grid initialization
+    // These must be in global scope for Kendo Grid to access them
+    window.getDataIntegrityFilterData = function() {
+        var fromDate = $("#fromDate").data("kendoDatePicker");
+        var toDate = $("#toDate").data("kendoDatePicker");
+        var checkTypeFilter = $("#checkTypeFilter").data("kendoDropDownList");
+        var statusFilter = $("#statusFilter").data("kendoDropDownList");
+        
+        return {
+            fromDate: fromDate && fromDate.value() ? kendo.toString(fromDate.value(), "yyyy-MM-dd") : null,
+            toDate: toDate && toDate.value() ? kendo.toString(toDate.value(), "yyyy-MM-dd") : null,
+            checkType: checkTypeFilter && checkTypeFilter.value() ? checkTypeFilter.value() : null,
+            status: statusFilter && statusFilter.value() ? statusFilter.value() : null
+        };
+    };
+
+    window.getIssueStatusTemplate = function(status) {
+        var badgeClass = "k-badge";
+        if (status === "Healthy" || status === "Fixed") badgeClass += " k-badge-success";
+        else if (status === "Critical" || status === "CannotFix") badgeClass += " k-badge-danger";
+        else badgeClass += " k-badge-warning";
+        
+        return '<span class="' + badgeClass + '">' + status + '</span>';
+    };
+
+    function loadDataIntegrityResultsModal(warehouseOrderNo) {
+        // Remove existing modal if any
+        $("#detailedResultsModal").remove();
+        
+        // Create modal container
+        var modalContainer = $('<div id="detailedResultsModal" style="display:none;"></div>');
+        $("body").append(modalContainer);
+        
+        // Initialize Kendo Window
+        var window = modalContainer.kendoWindow({
+            width: "90%",
+            height: "85%",
+            modal: true,
+            title: false,
+            visible: false,
+            resizable: true,
+            draggable: true,
+            actions: ["Close"]
+        }).data("kendoWindow");
+        
+        // Load content via AJAX
+        $.ajax({
+            url: '@Url.Action("GetDataIntegrityResultsModal", "HealthCheck", new { area = "Admin" })',
+            type: "POST",
+            data: { warehouseOrderNo: warehouseOrderNo },
+            success: function(html) {
+                window.content(html);
+                window.center().open();
+            },
+            error: function() {
+                kendo.alert("Error loading data integrity results");
+                window.close();
+            }
+        });
+    }
+</script>
+
+<div class="data-integrity-container" style="padding: 20px;">
+    <!-- Action Buttons -->
+    <div class="k-hstack k-gap-2" style="margin-bottom: 20px;">
+        <button type="button" id="btnRunCheck" class="k-button k-button-md k-button-solid k-button-primary">
+            <span class="k-icon k-i-refresh"></span>
+            <span>Run Data Integrity Check (All)</span>
+        </button>
+        <div class="k-hstack k-gap-2" style="border: 1px solid #ddd; padding: 8px; border-radius: 4px;">
+            <input type="text" id="txtWarehouseOrderNo" class="k-textbox k-input-md" placeholder="Enter WarehouseOrderNo" style="width: 200px;" />
+            <button type="button" id="btnCheckSingle" class="k-button k-button-md k-button-solid k-button-info">
+                <span class="k-icon k-i-search"></span>
+                <span>Check Single Order</span>
+            </button>
+            <button type="button" id="btnAutoFixSingle" class="k-button k-button-md k-button-solid k-button-success">
+                <span class="k-icon k-i-check"></span>
+                <span>Check & Auto-Fix</span>
+            </button>
+        </div>
+        <button type="button" id="btnAutoFix" class="k-button k-button-md k-button-solid k-button-success">
+            <span class="k-icon k-i-check"></span>
+            <span>Auto-Fix Selected Issues</span>
+        </button>
+        <button type="button" id="btnRefresh" class="k-button k-button-md k-button-solid-base">
+            <span class="k-icon k-i-reload"></span>
+            <span>Refresh</span>
+        </button>
+    </div>
+
+    <!-- Filters -->
+    <div class="k-card" style="margin-bottom: 20px;">
+        <div class="k-card-body">
+            <div class="k-hstack k-gap-4" style="flex-wrap: wrap;">
+                <div class="k-form-field">
+                    <label class="k-form-label">From Date:</label>
+                    @(Html.Kendo().DatePicker()
+                        .Name("fromDate")
+                        .Value(DateTime.Now.AddDays(-7))
+                        .HtmlAttributes(new { style = "width: 150px;" })
+                    )
+                </div>
+                <div class="k-form-field">
+                    <label class="k-form-label">To Date:</label>
+                    @(Html.Kendo().DatePicker()
+                        .Name("toDate")
+                        .Value(DateTime.Now)
+                        .HtmlAttributes(new { style = "width: 150px;" })
+                    )
+                </div>
+                <div class="k-form-field">
+                    <label class="k-form-label">Check Type:</label>
+                    @(Html.Kendo().DropDownList()
+                        .Name("checkTypeFilter")
+                        .DataTextField("Text")
+                        .DataValueField("Value")
+                        .BindTo(new List<SelectListItem>
+                        {
+                            new() { Text = @"All", Value = "" },
+                            new() { Text = @"Plan Quantities", Value = "Plan Quantities Integrity" },
+                            new() { Text = @"PackQuantity from Cartons", Value = "Plan PackQuantity from Cartons" },
+                            new()
+                            {
+                                Disabled = false,
+                                Group = null,
+                                Selected = false,
+                                Text = @"Carton Barcode Consistency",
+                                Value = "Carton Barcode Consistency"
+                            },
+                            new SelectListItem { Text = @"Label Sequence", Value = "Label Detail Sequence" }
+                        })
+                        .Value("")
+                        .HtmlAttributes(new { style = "width: 200px;" }))
+                </div>
+                <div class="k-form-field">
+                    <label class="k-form-label">Status:</label>
+                    @(Html.Kendo().DropDownList()
+                        .Name("statusFilter")
+                        .DataTextField("Text")
+                        .DataValueField("Value")
+                        .BindTo(new List<SelectListItem>
+                        {
+                            new() { Text = @"All", Value = "" },
+                            new() { Text = @"Open", Value = "Warning" },
+                            new() { Text = @"Fixed", Value = "Healthy" },
+                            new() { Disabled = false, Group = null, Selected = false,Text = @"Critical", Value = @"Critical"                            }
+                        })
+                        .Value("Warning")
+                        .HtmlAttributes(new { style = "width: 150px;" })
+                    )
+                </div>
+                <div class="k-form-field" style="align-self: flex-end;">
+                    <button type="button" id="btnFilter" class="k-button k-button-md k-button-solid k-button-primary">
+                        <span class="k-icon k-i-filter"></span>
+                        <span>Filter</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Integrity Issues Grid -->
+    <div class="k-card">
+        <div class="k-card-header">
+            <h3 class="k-card-title">Data Integrity Issues</h3>
+        </div>
+        <div class="k-card-body">
+            @(Html.Kendo().Grid<DataIntegrityIssueDto>()
+                .Name("dataIntegrityGrid")
+                .ApplyIndexSettings(enableExcel: true, enablePdf: true, enableSearch: true)
+                .Events(events => events.ApplyCommonEvents())
+                .Selectable(selectable => selectable.Mode(GridSelectionMode.Multiple))
+                .Columns(columns =>
+                {
+                    columns.Select().Width(50);
+                    columns.Bound(m => m.CheckDate)
+                        .Title("Check Date")
+                        .Width(150)
+                        .Format("{0:MM/dd/yyyy HH:mm}");
+                    columns.Bound(m => m.CheckType)
+                        .Title("Check Type")
+                        .Width(200);
+                    columns.Bound(m => m.EntityType)
+                        .Title("Entity")
+                        .Width(120);
+                    columns.Bound(m => m.Identifier)
+                        .Title("Identifier")
+                        .Width(200);
+                    columns.Bound(m => m.IssueType)
+                        .Title("Issue Type")
+                        .Width(200);
+                    columns.Bound(m => m.Description)
+                        .Title("Description")
+                        .Width(300);
+                    columns.Bound(m => m.ExpectedValue)
+                        .Title("Expected")
+                        .Width(120);
+                    columns.Bound(m => m.ActualValue)
+                        .Title("Actual")
+                        .Width(120);
+                    columns.Bound(m => m.CanAutoFix)
+                        .Title("Can Fix")
+                        .Width(100)
+                        .ClientTemplate("#= data.CanAutoFix ? '<span class=\\'k-badge k-badge-success\\'>Yes</span>' : '<span class=\\'k-badge k-badge-warning\\'>No</span>' #");
+                    columns.Bound(m => m.Status)
+                        .Title("Status")
+                        .Width(100)
+                        .ClientTemplate("#= getIssueStatusTemplate(data.Status) #");
+                    columns.Bound(m => m.IsFixed)
+                        .Title("Fixed")
+                        .Width(80)
+                        .ClientTemplate("#= data.IsFixed ? '<span class=\\'k-badge k-badge-success\\'>Yes</span>' : '<span class=\\'k-badge\\'>No</span>' #");
+                })
+                .DataSource(dataSource => dataSource
+                    .Ajax()
+                    .Read(read =>
+                    {
+                        read.Action("GetDataIntegrityIssues", "HealthCheck", new { area = "Admin" })
+                            .Data("getDataIntegrityFilterData");
+                    })
+                )
+            )
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $("#btnRunCheck").on("click", function() {
+            var btn = $(this);
+            btn.prop("disabled", true).html('<span class="k-icon k-i-loading"></span> Running...');
+
+            $.ajax({
+                url: '@Url.Action("RunManualDataIntegrityCheck", "HealthCheck", new { area = "Admin" })',
+                type: "POST",
+                success: function(response) {
+                    if (response.success) {
+                        kendo.alert(response.message);
+                        $("#dataIntegrityGrid").data("kendoGrid").dataSource.read();
+                    } else {
+                        kendo.alert("Error: " + (response.message || "Unknown error"));
+                    }
+                },
+                error: function() {
+                    kendo.alert("Error running data integrity check");
+                },
+                complete: function() {
+                    btn.prop("disabled", false).html('<span class="k-icon k-i_refresh"></span> Run Data Integrity Check');
+                }
+            });
+        });
+
+        $("#btnAutoFix").on("click", function() {
+            var grid = $("#dataIntegrityGrid").data("kendoGrid");
+            var selectedRows = grid.select();
+
+            if (selectedRows.length === 0) {
+                kendo.alert("Please select at least one issue to fix");
+                return;
+            }
+
+            var issueIds = [];
+            selectedRows.each(function() {
+                var dataItem = grid.dataItem(this);
+                if (dataItem.CanAutoFix && !dataItem.IsFixed) {
+                    issueIds.push(dataItem.Id);
+                }
+            });
+
+            if (issueIds.length === 0) {
+                kendo.alert("No fixable issues selected. Please select issues that can be auto-fixed.");
+                return;
+            }
+
+            if (!confirm("Are you sure you want to auto-fix " + issueIds.length + " selected issue(s)?")) {
+                return;
+            }
+
+            var btn = $(this);
+            btn.prop("disabled", true).html('<span class="k-icon k-i-loading"></span> Fixing...');
+
+            $.ajax({
+                url: '@Url.Action("AutoFixIssues", "HealthCheck", new { area = "Admin" })',
+                type: "POST",
+                data: { issueIds: issueIds },
+                traditional: true,
+                success: function(response) {
+                    if (response.success) {
+                        kendo.alert(response.message);
+                        $("#dataIntegrityGrid").data("kendoGrid").dataSource.read();
+                    } else {
+                        kendo.alert("Error: " + (response.message || "Unknown error"));
+                    }
+                },
+                error: function() {
+                    kendo.alert("Error fixing issues");
+                },
+                complete: function() {
+                    btn.prop("disabled", false).html('<span class="k-icon k-i-check"></span> Auto-Fix Selected Issues');
+                }
+            });
+        });
+
+        $("#btnRefresh").on("click", function() {
+            $("#dataIntegrityGrid").data("kendoGrid").dataSource.read();
+        });
+
+        $("#btnFilter").on("click", function() {
+            $("#dataIntegrityGrid").data("kendoGrid").dataSource.read();
+        });
+
+        $("#btnCheckSingle").on("click", function() {
+            var warehouseOrderNo = $("#txtWarehouseOrderNo").val().trim();
+
+            if (!warehouseOrderNo) {
+                kendo.alert("Please enter a WarehouseOrderNo");
+                return;
+            }
+
+            var btn = $(this);
+            btn.prop("disabled", true).html('<span class="k-icon k-i-loading"></span> Checking...');
+
+            $.ajax({
+                url: '@Url.Action("CheckDataIntegrityForWarehouseOrderNo", "HealthCheck", new { area = "Admin" })',
+                type: "POST",
+                data: { warehouseOrderNo: warehouseOrderNo },
+                success: function(response) {
+                    if (response.success) {
+                        // Load partial view into modal
+                        loadDataIntegrityResultsModal(warehouseOrderNo);
+                        // Refresh grid to show new results
+                        $("#dataIntegrityGrid").data("kendoGrid").dataSource.read();
+                    } else {
+                        kendo.alert("Error: " + (response.message || "Unknown error"));
+                    }
+                },
+                error: function() {
+                    kendo.alert("Error checking data integrity for WarehouseOrderNo");
+                },
+                complete: function() {
+                    btn.prop("disabled", false).html('<span class="k-icon k-i-search"></span> Check Single Order');
+                }
+            });
+        });
+
+        // Allow Enter key to trigger check
+        $("#txtWarehouseOrderNo").on("keypress", function(e) {
+            if (e.which === 13) {
+                $("#btnCheckSingle").click();
+            }
+        });
+
+        $("#btnAutoFixSingle").on("click", function() {
+            var warehouseOrderNo = $("#txtWarehouseOrderNo").val().trim();
+
+            if (!warehouseOrderNo) {
+                kendo.alert("Please enter a WarehouseOrderNo");
+                return;
+            }
+
+            if (!confirm("This will check and auto-fix all fixable issues for " + warehouseOrderNo + ". Continue?")) {
+                return;
+            }
+
+            var btn = $(this);
+            btn.prop("disabled", true).html('<span class="k-icon k-i-loading"></span> Fixing...');
+
+            $.ajax({
+                url: '@Url.Action("AutoFixDataIntegrityForWarehouseOrderNo", "HealthCheck", new { area = "Admin" })',
+                type: "POST",
+                data: { warehouseOrderNo: warehouseOrderNo },
+                success: function(response) {
+                    if (response.success) {
+                        var message = response.message;
+                        if (response.details && response.details.length > 0) {
+                            message += "\n\nDetails:\n" + response.details.slice(0, 10).join("\n");
+                            if (response.details.length > 10) {
+                                message += "\n... and " + (response.details.length - 10) + " more";
+                            }
+                        }
+                        kendo.alert(message);
+                        $("#dataIntegrityGrid").data("kendoGrid").dataSource.read();
+                    } else {
+                        kendo.alert("Error: " + (response.message || "Unknown error"));
+                    }
+                },
+                error: function() {
+                    kendo.alert("Error auto-fixing data integrity for WarehouseOrderNo");
+                },
+                complete: function() {
+                    btn.prop("disabled", false).html('<span class="k-icon k-i-check"></span> Check & Auto-Fix');
+                }
+            });
+        });
+    });
+</script>
+

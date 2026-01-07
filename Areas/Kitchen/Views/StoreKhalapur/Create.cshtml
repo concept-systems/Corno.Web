@@ -1,33 +1,621 @@
 ﻿@using Corno.Web.Globals
-@using Corno.Web.Helper
 @using Kendo.Mvc.UI
+@using System.ComponentModel
 @model Corno.Web.Areas.Kitchen.Dto.StoreLabel.StoreLabelCrudDto
 
 @{
-    Layout = "~/Views/Shared/_LayoutCrud.cshtml";
+    Layout = "~/Views/Shared/_LayoutBase.cshtml";
 }
 
 @{
-    ViewBag.BoxTitle = "Store Khalapur : Create New Labels";
+    ViewBag.BoxTitle = "Create New Store Khalapur Label";
     ViewBag.SubmitAction = "Create";
 }
 
-@section sectionCrudHeader
+@{
+    ViewBag.MainMenu = "Transaction";
+    ViewBag.MainHeader = "Store Khalapur";
+    ViewBag.CurrentSitemap = "Store Khalapur";
+    ViewBag.Title = "Store Khalapur";
+    ViewBag.Area = "Kitchen";
+    ViewBag.Controller = "StoreKhalapur";
+}
+
+@section sectionBaseFooter
 {
-    <div class="k-card-actions k-card-actions-horizontal k-card-actions-end">
-        @(Html.Kendo().Button()
-            .Name("btnList")
-            .Content("List")
-            .ApplyStandardSettingsWithType(ButtonType.Info, "arrow-left", ComponentSize.Medium)
-            .Events(e => e.Click("onBack")))
+    <div class="k-actions k-actions-horizontal k-actions-end">
+        @Html.Partial("Buttons/_BackButton")
+        @Html.Partial("Buttons/_PreviewButton")
+        @Html.Partial("Buttons/_PrintButton")
     </div>
 }
 
-@Html.Partial("_StoreKhalapur", Model)
+<!-- Responsive Panel Layout -->
+<div class="row g-3" style="margin: 0;">
+    <!-- Items Grid Panel -->
+    <div class="col-lg-6 col-md-12">
+        <div class="k-card k-card-primary" style="height: 100%;">
+            <div class="k-card-header">
+                <h5 class="k-card-title">Items Grid</h5>
+            </div>
+            <div class="k-card-body" id="grid-container" style="padding: 2px;">
+                <!-- Grid will be rendered here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Items Info Panel -->
+    <div class="col-lg-6 col-md-12">
+        <div class="k-card k-card-primary" style="height: 100%;">
+            <div class="k-card-header">
+                <h5 class="k-card-title">Items Info</h5>
+            </div>
+            <div class="k-card-body" style="padding: 2px;">
+                <div class="k-content">
+                    <table class="table k-table k-table-alt-row w-100 storekhalapur-table">
+                        <tbody>
+                            <tr>
+                                <td>Due Date :</td>
+                                <td>
+                                    @(Html.Kendo().DatePickerFor(m => m.DueDate)
+                                        .Format("yyyy-MM-dd")
+                                        .Events(e => e.Change("onDueDateChange"))
+                                        .HtmlAttributes(new { required = "required", @class = "w-100" }))
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Lot No :</td>
+                                <td>
+                                    @(Html.Kendo().MultiColumnComboBoxFor(m => m.LotNo)
+                                        .DataTextField(FieldConstants.LotNo)
+                                        .DataValueField(FieldConstants.LotNo)
+                                        .HtmlAttributes(new { required = "required", @class = "w-100" })
+                                        .Filter("contains")
+                                        .Placeholder("Select ...")
+                                        .Suggest(true)
+                                        .Columns(columns => { columns.Add().Field(FieldConstants.LotNo).Title(FieldConstants.LotNo); })
+                                        .DataSource(dataSource => dataSource
+                                            .Read(read => { read.Action("GetLotNos", "StoreKhalapur").Data("getLotParameters"); })
+                                            .ServerFiltering(true)
+                                        )
+                                        .AutoBind(false)
+                                        .CascadeFrom(FieldConstants.DueDate))
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Warehouse Order :</td>
+                                <td>
+                                    @(Html.Kendo().MultiColumnComboBoxFor(m => m.WarehouseOrderNo)
+                                        .DataTextField(FieldConstants.WarehouseOrderNo)
+                                        .DataValueField(FieldConstants.WarehouseOrderNo)
+                                        .HtmlAttributes(new { required = "required", @class = "w-100" })
+                                        .Filter("contains")
+                                        .Placeholder("Select ...")
+                                        .Suggest(true)
+                                        .Columns(columns => { columns.Add().Field(FieldConstants.WarehouseOrderNo).Title(FieldConstants.WarehouseOrderNo); })
+                                        .DataSource(dataSource => dataSource
+                                            .Read(read => { read.Action("GetWarehouseOrderNos", "StoreKhalapur").Data("getWarehouseParameters"); })
+                                            .ServerFiltering(true)
+                                        )
+                                        .AutoBind(false)
+                                        .CascadeFrom(FieldConstants.LotNo))
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Family :</td>
+                                <td>
+                                    @(Html.Kendo().MultiColumnComboBoxFor(m => m.Family)
+                                        .DataTextField(FieldConstants.Family)
+                                        .DataValueField(FieldConstants.Family)
+                                        .HtmlAttributes(new { required = "required", @class = "w-100" })
+                                        .Filter("contains")
+                                        .Placeholder("Select ...")
+                                        .Suggest(true)
+                                        .Events(e => e.Change("OnFamilyChange"))
+                                        .Columns(columns => { columns.Add().Field(FieldConstants.Family).Title(FieldConstants.Family); })
+                                        .DataSource(dataSource => dataSource
+                                            .Read(read => { read.Action("GetFamilies", "StoreKhalapur").Data("getFamilyParameters"); })
+                                            .ServerFiltering(true)
+                                        )
+                                        .AutoBind(false)
+                                        .CascadeFrom(FieldConstants.WarehouseOrderNo))
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Grid rendered initially in hidden container, will be moved to panel -->
+<div id="grid-wrapper" style="display: none;">
+@(Html.Kendo().Grid(Model.StoreLabelCrudDetailDtos)
+    .Name("grid")
+    .ToolBar(toolbar => { toolbar.Search(); })
+    .Pageable()
+    .Scrollable()
+    .Sortable(s => s.InitialDirection(ListSortDirection.Descending))
+    .Resizable(resize => resize.Columns(true))
+    //.HtmlAttributes(new { style = "height: 500px;" })
+    .Columns(columns =>
+    {
+        columns.Template(@<text></text>)
+            .ClientTemplate("<input type='checkbox' class='chkIsSelected' #= IsSelected ? checked='checked':'' # name='StoreLabelCrudDetailDtos[#= index(data)#].IsSelected' value='#= IsSelected #' />")
+            .HeaderTemplate("<input type='checkbox' id='selectAll' class='select-all' />")
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+            .HtmlAttributes(new { style = "text-align: center" })
+            .Title("");
+        columns.Bound(p => p.Position)
+            .ClientTemplate("#= Position #" + "<input type='hidden' name='StoreLabelCrudDetailDtos[#= index(data)#].Position' value='#= Position #' />")
+            .HtmlAttributes(new { style = "text-align: center" })
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+            .Title("Position");
+        columns.Bound(p => p.ItemCode)
+            .ClientTemplate("#= ItemCode #" + "<input type='hidden' name='StoreLabelCrudDetailDtos[#= index(data)#].ItemCode' value='#= ItemCode #' />")
+            .HtmlAttributes(new { style = "text-align: center" })
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+            .Title("Item Code");
+        columns.Bound(p => p.ItemName)
+            .HtmlAttributes(new { style = "text-align: center" })
+            .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
+            .Title("Type");
+    })
+    .DataSource(dataSource => dataSource
+        .Ajax()
+        .Model(model =>
+        {
+            model.Field(p => p.IsSelected).DefaultValue(false);
+        })
+        .ServerOperation(false))
+    .Resizable(resize => resize.Columns(true))
+    .Reorderable(reorder => reorder.Columns(true)))
+</div>
+
+<style>
+    /* Responsive Panel Layout */
+    .row.g-3 {
+        margin-left: -0.75rem;
+        margin-right: -0.75rem;
+    }
+    
+    .row.g-3 > * {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+    
+    .k-card {
+        border: 1px solid #e5e5e5;
+        border-radius: 4px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        margin-bottom: 1rem;
+    }
+    
+    .k-card-header {
+        padding: 12px 15px;
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #e5e5e5;
+        border-radius: 4px 4px 0 0;
+    }
+    
+    .k-card-title {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .k-card-body {
+        min-height: 200px;
+    }
+    
+    /* StoreKhalapur specific responsive table styles */
+    .storekhalapur-table {
+        width: 100%;
+        table-layout: auto;
+    }
+
+        .storekhalapur-table td {
+            padding: 8px;
+            word-wrap: break-word;
+        }
+
+            .storekhalapur-table td:first-child {
+                font-weight: 600;
+                white-space: nowrap;
+                min-width: 120px;
+            }
+
+    /* Responsive buttons */
+    .storekhalapur-actions {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+        .storekhalapur-actions .k-button {
+            flex: 1 1 auto;
+            min-width: 120px;
+        }
+
+    /* Responsive breakpoints */
+    @@media (max-width: 992px) {
+        .storekhalapur-table td:first-child {
+            min-width: 100px;
+        }
+        
+        .col-lg-6 {
+            margin-bottom: 1rem;
+        }
+        
+        .k-card {
+            height: auto !important;
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .storekhalapur-table {
+            font-size: 0.9em;
+        }
+
+            .storekhalapur-table td {
+                padding: 6px 4px;
+                display: block;
+                width: 100%;
+                border-bottom: 1px solid #e5e5e5;
+            }
+
+                .storekhalapur-table td:first-child {
+                    font-weight: 700;
+                    background: #f8f9fa;
+                    padding-top: 10px;
+                    padding-bottom: 4px;
+                    border-bottom: 2px solid #dee2e6;
+                }
+
+                .storekhalapur-table td:last-child {
+                    padding-bottom: 10px;
+                }
+
+            .storekhalapur-table tr {
+                display: block;
+                margin-bottom: 10px;
+                border: 1px solid #e5e5e5;
+                border-radius: 4px;
+                padding: 0;
+            }
+
+            .storekhalapur-table tbody {
+                display: block;
+            }
+
+        .storekhalapur-actions {
+            flex-direction: column;
+        }
+
+            .storekhalapur-actions .k-button {
+                width: 100%;
+                min-width: unset;
+            }
+    }
+
+    @@media (max-width: 576px) {
+        .storekhalapur-table {
+            font-size: 0.85em;
+        }
+
+            .storekhalapur-table td {
+                padding: 5px 3px;
+            }
+    }
+</style>
 
 <script>
-    function onBack() {
-        window.location.href = '@Url.Action("Index", "StoreKhalapur", new { area = "Kitchen" })';
-        /* history.back();*/
+    $(document).ready(function () {
+        // Move grid into the grid container
+        function moveGridToContainer() {
+            var gridContainer = $("#grid-container");
+            var grid = $("#grid");
+            var gridWrapper = $("#grid-wrapper");
+            
+            if (gridContainer.length && grid.length && gridContainer.find("#grid").length === 0) {
+                // Move grid from wrapper to container
+                grid.appendTo(gridContainer);
+                gridWrapper.remove();
+                
+                // Refresh grid to ensure proper sizing
+                var gridInstance = grid.data("kendoGrid");
+                if (gridInstance) {
+                    setTimeout(function() {
+                        // Calculate available height for grid based on panel
+                        var panel = gridContainer.closest('.k-card');
+                        var panelHeight = panel.height();
+                        var headerHeight = panel.find('.k-card-header').outerHeight() || 0;
+                        var padding = 30; // Account for padding
+                        var availableHeight = panelHeight - headerHeight - padding;
+                        
+                        // Set grid height to fit panel (minimum 300px)
+                        if (availableHeight > 0) {
+                            grid.css('height', Math.max(300, availableHeight) + 'px');
+                        }
+                        gridInstance.resize();
+                    }, 100);
+                }
+                return true;
+            }
+            return false;
+        }
+        
+        // Move grid immediately
+        moveGridToContainer();
+
+        // Handle window resize to adjust grid height
+        $(window).on('resize', function() {
+            setTimeout(function() {
+                var grid = $("#grid").data("kendoGrid");
+                var gridContainer = $("#grid-container");
+                if (grid && gridContainer.length) {
+                    var panel = gridContainer.closest('.k-card');
+                    var panelHeight = panel.height();
+                    var headerHeight = panel.find('.k-card-header').outerHeight() || 0;
+                    var padding = 30;
+                    var availableHeight = panelHeight - headerHeight - padding;
+                    
+                    if (availableHeight > 0) {
+                        $("#grid").css('height', Math.max(300, availableHeight) + 'px');
+                        grid.resize();
+                    }
+                }
+            }, 100);
+        });
+
+        // Kendo Validator - validate form fields directly
+        var validator = $("body").kendoValidator({
+            rules: {
+                requiredMultiColumnComboBox: function (input) {
+                    if (input.is("[data-role=multicolumncombobox]")) {
+                        return input.val() !== "";
+                    }
+                    return true;
+                },
+                requiredDatePicker: function (input) {
+                    if (input.is("[data-role=datepicker]")) {
+                        var value = input.val();
+                        return kendo.parseDate(value) !== null;
+                    }
+                    return true;
+                }
+            },
+            messages: {
+                requiredMultiColumnComboBox: function (input) {
+                    var comboBoxName = input.attr("name");
+                    switch (comboBoxName) {
+                        case "LotNo":
+                            return "Please select Lot No.";
+                        case "Family":
+                            return "Please select Family.";
+                        case "WarehouseOrderNo":
+                            return "Please select Warehouse Order.";
+                        default:
+                            return "Please select a value for the ComboBox.";
+                    }
+                },
+                requiredDatePicker: "Please select due date."
+            }
+        });
+
+        // Handle "Select All" checkbox click
+        $('#grid').on('click', '.select-all', function () {
+            var isChecked = $(this).is(':checked');
+            var grid = $('#grid').data('kendoGrid');
+            if (grid) {
+                grid.dataSource.view().forEach(function (dataItem) {
+                    dataItem.set('IsSelected', isChecked);
+                });
+                grid.refresh();
+            }
+        });
+
+        // Handle individual row checkbox click
+        $('#grid').on('click', '.chkIsSelected', function () {
+            var isChecked = $(this).is(':checked');
+            var grid = $('#grid').data('kendoGrid');
+            if (grid) {
+                var dataItem = grid.dataItem($(this).closest('tr'));
+                if (dataItem) {
+                    dataItem.set('IsSelected', isChecked);
+                    var allChecked = grid.dataSource.view().every(function (dataItem) {
+                        return dataItem.IsSelected;
+                    });
+                    $('#selectAll').prop('checked', allChecked);
+                }
+            }
+        });
+    });
+
+    // 🔁 Reusable helper to build FormData
+    function buildFormData() {
+        const formData = new FormData();
+        formData.append("DueDate", $("#DueDate").val());
+        formData.append("LotNo", $("#LotNo").val());
+        formData.append("WarehouseOrderNo", $("#WarehouseOrderNo").val());
+        formData.append("Family", $("#Family").val());
+        
+        // Get selected items from grid
+        var grid = $('#grid').data('kendoGrid');
+        if (grid) {
+            var selectedItems = [];
+            grid.dataSource.view().forEach(function (dataItem, index) {
+                if (dataItem.IsSelected) {
+                    formData.append("StoreLabelCrudDetailDtos[" + index + "].Position", dataItem.Position);
+                    formData.append("StoreLabelCrudDetailDtos[" + index + "].ItemCode", dataItem.ItemCode);
+                    formData.append("StoreLabelCrudDetailDtos[" + index + "].ItemName", dataItem.ItemName);
+                    formData.append("StoreLabelCrudDetailDtos[" + index + "].IsSelected", "true");
+                }
+            });
+        }
+
+        return formData;
+    }
+
+    function onPrint(e) {
+        e.preventDefault();
+        var validator = $("body").data("kendoValidator");
+        if (validator && !validator.validate()) {
+            return false;
+        }
+        const formData = buildFormData();
+        fetchAndPrint('/Kitchen/StoreKhalapur/Print', formData, onPrintSuccess);
+    }
+
+    function onPreview(e) {
+        e.preventDefault();
+        var validator = $("body").data("kendoValidator");
+        if (validator && !validator.validate()) {
+            return false;
+        }
+        const formData = buildFormData();
+        fetchAndPreviewPdf('/Kitchen/StoreKhalapur/Preview', formData, "Store Khalapur Label");
+    }
+
+    function onPrintSuccess() {
+        console.log('print success.');
+        // Clear form fields
+        $("#DueDate").data("kendoDatePicker").value(null);
+        $("#LotNo").data("kendoMultiColumnComboBox").value("");
+        $("#WarehouseOrderNo").data("kendoMultiColumnComboBox").value("");
+        $("#Family").data("kendoMultiColumnComboBox").value("");
+        
+        // Clear grid data (no need to read since we're using Fetch API)
+        var grid = $('#grid').data('kendoGrid');
+        if (grid) {
+            grid.dataSource.data([]);
+            grid.refresh();
+        }
+    }
+
+    function getLotParameters() {
+        return {
+            dueDate: $('#DueDate').val()
+        };
+    }
+
+    function getWarehouseParameters() {
+        return {
+            lotNo: $('#LotNo').val()
+        };
+    }
+
+    function getFamilyParameters() {
+        return {
+            warehouseOrderNo: $('#WarehouseOrderNo').val()
+        };
+    }
+
+    function getItemsParameters() {
+        var familyComboBox = $("#Family").data("kendoMultiColumnComboBox");
+        var familyValue = "";
+        
+        if (familyComboBox) {
+            // Get the selected value from the combobox
+            familyValue = familyComboBox.value() || "";
+            // If value() returns empty, try to get from the input
+            if (!familyValue) {
+                var input = familyComboBox.input;
+                if (input && input.val) {
+                    familyValue = input.val() || "";
+                }
+            }
+        }
+        
+        var warehouseOrderNo = $('#WarehouseOrderNo').val();
+        
+        return {
+            warehouseOrderNo: warehouseOrderNo || "",
+            family: familyValue || ""
+        };
+    }
+
+    function onDueDateChange(e) {
+        var cmblotNo = $("#LotNo").data("kendoMultiColumnComboBox");
+        if (cmblotNo) {
+            cmblotNo.dataSource.read();
+        }
+    }
+
+    function OnFamilyChange(e) {
+        var grid = $('#grid').data('kendoGrid');
+        if (!grid) {
+            return;
+        }
+        
+        // Get the selected family value from the event
+        var familyValue = "";
+        if (e && e.sender) {
+            familyValue = e.sender.value() || "";
+        }
+        
+        // Get warehouse order number
+        var warehouseOrderNo = $('#WarehouseOrderNo').val();
+        
+        if (!warehouseOrderNo || !familyValue) {
+            // Clear grid if required parameters are missing
+            grid.dataSource.data([]);
+            grid.refresh();
+            return;
+        }
+        
+        // Build the URL for GetItems action
+        var url = '@Url.Action("GetItems", "StoreKhalapur", new { area = "Kitchen" })';
+        
+        // Build query parameters
+        var params = new URLSearchParams();
+        params.append('warehouseOrderNo', warehouseOrderNo);
+        params.append('family', familyValue);
+        
+        // Add DataSourceRequest parameters (required by Kendo Grid)
+        var pageSize = grid.dataSource.pageSize() || 10;
+        params.append('page', '1');
+        params.append('pageSize', pageSize.toString());
+        params.append('sort[0][field]', '');
+        params.append('sort[0][dir]', '');
+        
+        // Use Fetch API to get the data
+        fetch(url + '?' + params.toString(), {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json'
+            },
+            credentials: 'same-origin'
+        })
+        .then(function(response) {
+            if (!response.ok) {
+                throw new Error('Network response was not ok: ' + response.status);
+            }
+            return response.json();
+        })
+        .then(function(data) {
+            // Assign the data to the grid
+            // Handle different response formats
+            var items = [];
+            if (Array.isArray(data)) {
+                items = data;
+            } else if (data && Array.isArray(data.Data)) {
+                // Handle DataSourceResult format
+                items = data.Data;
+            } else if (data && data.data && Array.isArray(data.data)) {
+                // Handle alternative DataSourceResult format
+                items = data.data;
+            }
+            
+            // Set the data and refresh the grid
+            grid.dataSource.data(items);
+            grid.refresh();
+        })
+        .catch(function(error) {
+            console.error('Error fetching items:', error);
+            grid.dataSource.data([]);
+            grid.refresh();
+        });
     }
 </script>

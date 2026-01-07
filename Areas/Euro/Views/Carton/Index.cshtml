@@ -1,0 +1,18 @@
+@using Corno.Web.Areas.Euro.Dto.Carton
+@using Corno.Web.Globals
+@using Corno.Web.Helper
+@using Kendo.Mvc.UI
+
+@{
+    Layout = "~/Views/Shared/_AppLayout.cshtml";
+    ViewBag.BoxTitle = "Cartons";
+    ViewBag.ControllerName = "Carton";
+    ViewBag.ViewAction = "View";
+    ViewBag.DataSourceAction = "GetAllCartonsIndexViewDto";
+    ViewBag.ShowAddNewButton = false;
+    ViewBag.ShowNonWeighingButton = true;
+    ViewBag.CommandColumnPosition = "start";
+}
+
+@Html.Partial("~/Areas/Euro/Views/Carton/_PartialIndex.cshtml")
+

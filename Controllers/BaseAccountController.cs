@@ -4,7 +4,6 @@ using Microsoft.AspNet.Identity.Owin;
 
 namespace Corno.Web.Controllers;
 
-[AllowAnonymous]
 public class BaseAccountController : Controller
 {
     #region -- Data Members --

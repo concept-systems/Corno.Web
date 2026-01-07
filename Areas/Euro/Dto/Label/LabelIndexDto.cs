@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace Corno.Web.Areas.Euro.Dto.Label;
 
@@ -12,6 +12,8 @@ public class LabelIndexDto
     public double Length { get; set; }
     public double Width { get; set; }
     public double Thickness { get; set; }
+    public double OrderQuantity { get; set; }
+    public double Quantity { get; set; }
     public DateTime? LabelDate { get; set; }
     public string Description { get; set; }
     public string Status { get; set; }

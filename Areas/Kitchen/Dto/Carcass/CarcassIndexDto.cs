@@ -16,7 +16,6 @@ public class CarcassIndexDto
     public string Status { get; set; }
     public bool PrintToPrinter { get; set; }
     #endregion
-
 }
 
 

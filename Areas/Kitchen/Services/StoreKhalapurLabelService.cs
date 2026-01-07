@@ -50,7 +50,7 @@ public class StoreKhalapurLabelService : LabelService, IStoreKhalapurLabelServic
             throw new Exception("Invalid family Order.");
 
         if (dto.StoreLabelCrudDetailDtos.All(d => d.IsSelected == false))
-            throw new Exception("You have not selected any position");
+            throw new Exception("Please, select at least one position");
 
         return true;
     }
@@ -138,28 +138,6 @@ public class StoreKhalapurLabelService : LabelService, IStoreKhalapurLabelServic
         }
 
         return labels;
-    }
-    public async Task<BaseReport> CreateLabelReportAsync(List<Label> labels, bool bDuplicate)
-    {
-        var labelRpt = new PartLabelRpt(labels, bDuplicate);
-        return await Task.FromResult<BaseReport>(labelRpt).ConfigureAwait(false);
-    }
-    public async Task UpdateDatabaseAsync(List<Label> labels, Plan plan)
-    {
-        if (null == plan)
-            throw new Exception("Invalid Plan");
-        foreach (var label in labels)
-        {
-            var planItemDetail = plan.PlanItemDetails.FirstOrDefault(d =>
-                d.Position == label.Position);
-            if (null == planItemDetail) continue;
-            planItemDetail.PrintQuantity ??= 0;
-            planItemDetail.PrintQuantity += label.Quantity;
-        }
-
-        var planService = Bootstrapper.Get<IPlanService>();
-        await planService.UpdateAndSaveAsync(plan).ConfigureAwait(false);
-        await AddRangeAndSaveAsync(labels).ConfigureAwait(false);
     }
     #endregion
 }

@@ -1,11 +1,13 @@
-﻿using Corno.Web.Areas.Admin.Models;
+using Corno.Web.Areas.Admin.Models;
 using Corno.Web.Areas.Admin.Services.Interfaces;
 using Corno.Web.Areas.Kitchen.Dto.Kitting;
 using Corno.Web.Areas.Kitchen.Dto.Label;
 using Corno.Web.Areas.Kitchen.Dto.Sorting;
+using Corno.Web.Areas.Kitchen.Labels;
 using Corno.Web.Areas.Kitchen.Services.Interfaces;
 using Corno.Web.Extensions;
 using Corno.Web.Globals;
+using Corno.Web.Globals.Enums;
 using Corno.Web.Logger;
 using Corno.Web.Models.Packing;
 using Corno.Web.Models.Plan;
@@ -13,7 +15,6 @@ using Corno.Web.Reports;
 using Corno.Web.Repository.Interfaces;
 using Corno.Web.Services;
 using Corno.Web.Services.File.Interfaces;
-using Corno.Web.Services.Progress.Interfaces;
 using Corno.Web.Windsor;
 using Kendo.Mvc.Extensions;
 using Kendo.Mvc.UI;
@@ -48,7 +49,7 @@ public class LabelService : BaseService<Label>, ILabelService
 
     #region -- Protected Methods --
 
-    protected async Task<LabelViewDto> GetLabelViewDto(Label label)
+    protected async Task<LabelViewDto> GetLabelViewDtoAsync(Label label)
     {
         try
         {
@@ -69,8 +70,8 @@ public class LabelService : BaseService<Label>, ILabelService
             // The .Any() will be translated to SQL EXISTS subquery which is efficient with proper indexes
             var cartonService = Bootstrapper.Get<ICartonService>();
             var cartons = await cartonService.GetAsync(
-                c => c.WarehouseOrderNo == label.WarehouseOrderNo && 
-                     c.CartonDetails.Any(d => d.Barcode == label.Barcode), 
+                c => c.WarehouseOrderNo == label.WarehouseOrderNo &&
+                     c.CartonDetails.Any(d => d.Barcode == label.Barcode && d.Position == label.Position),
                 c => c,
                 null,
                 ignoreInclude: true).ConfigureAwait(false);
@@ -141,6 +142,27 @@ public class LabelService : BaseService<Label>, ILabelService
         return result.DocumentBytes;
     }
 
+    /// <summary>
+    /// Creates a label report for view. Override this method in derived services to provide service-specific report creation.
+    /// </summary>
+    public async Task<BaseReport> CreateLabelReportAsync(List<Label> labels, bool bDuplicate, LabelType? labelType = null)
+    {
+        // If labelType is provided, create the appropriate report
+        if (!labelType.HasValue) 
+            return await Task.FromResult<BaseReport>(null).ConfigureAwait(false);
+
+        return labelType.Value switch
+        {
+            LabelType.StoreShirwal => await Task.FromResult<BaseReport>(new ShirwalPartLabelRpt(labels, bDuplicate))
+                .ConfigureAwait(false),
+            LabelType.SubAssembly => await Task.FromResult<BaseReport>(new SubAssemblyLabelRpt(labels))
+                .ConfigureAwait(false),
+            LabelType.Trolley => await Task.FromResult<BaseReport>(new TrolleyLabelRpt(labels))
+                .ConfigureAwait(false),
+            _ => await Task.FromResult<BaseReport>(new PartLabelRpt(labels, bDuplicate)).ConfigureAwait(false)
+        };
+    }
+
     #endregion
 
     #region -- Private Methods --
@@ -170,7 +192,7 @@ public class LabelService : BaseService<Label>, ILabelService
             });
     }
 
-    public async Task PerformKitting(KittingCrudDto dto, string userId)
+    public async Task PerformKittingAsync(KittingCrudDto dto, string userId)
     {
         var dueDate = dto.DueDate;
         var label = await FirstOrDefaultAsync(d => d.Barcode == dto.Barcode && dueDate == dto.DueDate, d => d,
@@ -215,7 +237,7 @@ public class LabelService : BaseService<Label>, ILabelService
         dto.WarehousePosition = planItemDetail?.CarcassCode;
     }
 
-    public async Task PerformSorting(SortingCrudDto dto, string userId)
+    public async Task PerformSortingAsync(SortingCrudDto dto, string userId)
     {
         var label = await FirstOrDefaultAsync(d => d.Barcode == dto.Barcode, d => d,
             d => d.OrderByDescending(x => x.Id)).ConfigureAwait(false);
@@ -254,130 +276,59 @@ public class LabelService : BaseService<Label>, ILabelService
         dto.WarehousePosition = planItemDetail?.CarcassCode;
     }
 
-    public async Task<List<SalvaginiExcelDto>> Import(Stream fileStream, string filePath,
-        string newStatus, IBaseProgressService progressService, string userId)
-    {
-        try
-        {
-            progressService.ResetProgressModel();
-
-            progressService.Report("Reading excel file", MessageType.Progress);
-            var records = _excelFileService.Read(fileStream)
-                .ToList().Trim();
-            if (!records.Any())
-                throw new Exception("No records found to import.");
-
-            // Create progress model
-
-            var unImportedBarcodes = new List<string>();
-
-            progressService.Report("Loading labels", MessageType.Progress);
-            var barcodes = records.Select(r => r.Barcode).Where(d => null != d).Distinct().ToList();
-            if (!barcodes.Any())
-                throw new Exception("All barcodes are null. Check excel file.");
-            var labels = await GetAsync(l => barcodes.Contains(l.Barcode), l => l).ConfigureAwait(false);
-            // Get only distinct with last entry
-            labels = labels.GroupBy(l => l.Barcode)
-                .Select(g => g.OrderBy(x => x.Id).LastOrDefault())
-                .ToList();
-            var warehouseOrderNos = labels.Select(l => l.WarehouseOrderNo).Distinct().ToList();
-
-            progressService.Report("Loading plans", MessageType.Progress);
-            var planService = Bootstrapper.Get<IPlanService>();
-            var plans = (await planService.GetAsync(p => warehouseOrderNos.Contains(p.WarehouseOrderNo), p => p).ConfigureAwait(false)).ToList();
-            var updatedLabels = new List<Label>();
-            var updatedPlans = new List<Plan>();
-            foreach (var record in records)
-            {
-                try
-                {
-                    var label = labels.LastOrDefault(l => l.Barcode == record.Barcode);
-                    if (null == label)
-                    {
-                        unImportedBarcodes.Add(record.Barcode);
-                        progressService.Report(0, 0, 1);
-                        record.Status = StatusConstants.Exists;
-                        record.Remark = $"Label not found for barcode {record.Barcode}.";
-                        continue;
-                    }
-                    var context = new MapContext
-                    {
-                        Parameters = { ["UserId"] = userId, ["IsUpdate"] = false }
-                    };
-                    ConfigureMapping(context);
-                    // Execute plan operation
-                    var plan = plans.FirstOrDefault(p => p.WarehouseOrderNo == label.WarehouseOrderNo);
-                    if (null == plan)
-                    {
-                        unImportedBarcodes.Add(record.Barcode);
-                        progressService.Report(0, 0, 1);
-                        record.Status = StatusConstants.Ignore;
-                        record.Remark = $"Plan with warehouse order {label.WarehouseOrderNo} not found.";
-                        continue;
-                    }
-
-                    if (label.Status == newStatus)
-                    {
-                        progressService.Report(0, 1, 0);
-                        record.Status = StatusConstants.Exists;
-                        continue;
-                    }
-
-                    var planDetail = plan.PlanItemDetails.FirstOrDefault(d =>
-                        d.Position == label.Position);
-                    if (null == planDetail)
-                        throw new Exception($"No plan detail available warehouse order no {plan?.WarehouseOrderNo} & " +
-                                            $"Item Id {label.ItemId} & Position {label.Position}");
-                    await planService.IncreasePlanQuantityAsync(plan, planDetail, label.Quantity ?? 0, newStatus).ConfigureAwait(false);
-                    
-                    //_planService.IncreasePlanQuantity(plan, label, newStatus);
-                    updatedPlans.Add(plan);
-
-                    // Execute barcode label operation
-                    //label.Operation = operation;
-                    label.Status = newStatus;
-                    label.AddDetail(null, null, null, null, newStatus, null);
-                    //Update(label);
-                    updatedLabels.Add(label);
-
-                    //UpdateAndSave(label);
-                    progressService.Report(1, 0, 0);
-                    record.Status = StatusConstants.Imported;
-                }
-                catch (Exception exception)
-                {
-                    unImportedBarcodes.Add(record.Barcode);
-                    progressService.Report(0, 0, 1);
-                    record.Status = StatusConstants.Ignore;
-                    record.Remark = LogHandler.GetDetailException(exception)?.Message;
-                    LogHandler.LogError(exception);
-                }
-            }
-
-            progressService.Report("Saving Records");
-            await planService.UpdateRangeAndSaveAsync(updatedPlans).ConfigureAwait(false);
-            await UpdateRangeAndSaveAsync(updatedLabels).ConfigureAwait(false);
-            progressService.Report("Saved Records");
-
-            progressService.Report("Updated Successfully", MessageType.Info);
-
-            return records;
-        }
-        catch (Exception exception)
-        {
-            LogHandler.LogError(exception);
-            progressService.Report(LogHandler.GetDetailException(exception).Message, MessageType.Error);
-            throw;
-        }
-    }
+    // OLD METHOD - REMOVED: ImportAsync with progress service
+    // This functionality is now in LabelBusinessImportService
+    // The import is now handled through FileImportService<SalvaginiExcelDto> which delegates to LabelBusinessImportService
 
     #endregion
 
     #region -- Public Methods --
-    public async Task<DataSourceResult> GetIndexDataSource(DataSourceRequest request)
+    public async Task<DataSourceResult> GetIndexDataSourceAsync(DataSourceRequest request)
     {
         // Project on server using Kendo ToDataSourceResultAsync for paging
         return await GetQuery().ProjectToType<LabelIndexDto>().ToDataSourceResultAsync(request).ConfigureAwait(false);
+    }
+
+    public async Task<LabelViewDto> CreateViewDtoAsync(int? id, LabelType? labelType = null)
+    {
+        var label = await FirstOrDefaultAsync(p => p.Id == id, p => p).ConfigureAwait(false);
+        if (label == null)
+            throw new Exception($"Label with Id '{id}' not found.");
+
+        // If labelType is not provided, try to infer it from the label's LabelType property
+        if (!labelType.HasValue && !string.IsNullOrEmpty(label.LabelType))
+        {
+            if (Enum.TryParse<LabelType>(label.LabelType, true, out var inferredType))
+            {
+                labelType = inferredType;
+            }
+        }
+
+        var dto = await GetLabelViewDtoAsync(label).ConfigureAwait(false);
+
+        var report = await CreateLabelReportAsync([label], true, labelType).ConfigureAwait(false);
+        if (report != null)
+            dto.Base64 = Convert.ToBase64String(report.ToDocumentBytes());
+
+        return dto;
+    }
+
+    public async Task UpdateDatabaseAsync(List<Label> entities, Plan plan)
+    {
+        if (null == plan)
+            throw new Exception("Invalid Plan");
+        foreach (var label in entities)
+        {
+            var planItemDetail = plan.PlanItemDetails.FirstOrDefault(d =>
+                d.Position == label.Position);
+            if (null == planItemDetail) continue;
+            planItemDetail.PrintQuantity ??= 0;
+            planItemDetail.PrintQuantity += label.Quantity;
+        }
+
+        var planService = Bootstrapper.Get<IPlanService>();
+        await planService.UpdateAndSaveAsync(plan).ConfigureAwait(false);
+        await AddRangeAndSaveAsync(entities).ConfigureAwait(false);
     }
     #endregion
 }

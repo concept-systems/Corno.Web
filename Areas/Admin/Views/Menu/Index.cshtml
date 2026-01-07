@@ -1,0 +1,122 @@
+@using Corno.Web.Areas.Admin.Dto
+@using Kendo.Mvc.UI
+
+@{
+    Layout = "~/Views/Shared/_AppLayout.cshtml";
+    ViewBag.BoxTitle = "Menu Management";
+}
+
+<div class="menu-management-container" style="padding: 20px;">
+    <div class="k-hstack k-gap-2" style="margin-bottom: 20px;">
+        <button type="button" id="btnCreateMenu" class="k-button k-button-md k-button-solid k-button-primary">
+            <span class="k-icon k-i-plus"></span>
+            <span>Add New Menu</span>
+        </button>
+        <button type="button" id="btnRefresh" class="k-button k-button-md k-button-solid-base">
+            <span class="k-icon k-i-refresh"></span>
+            <span>Refresh</span>
+        </button>
+    </div>
+
+    <div class="k-card">
+        <div class="k-card-body">
+            <div id="menuTree"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        loadMenuTree();
+
+        $("#btnCreateMenu").on("click", function() {
+            window.location.href = '@Url.Action("Create", "Menu", new { area = "Admin" })';
+        });
+
+        $("#btnRefresh").on("click", function() {
+            loadMenuTree();
+        });
+    });
+
+    function loadMenuTree() {
+        $.ajax({
+            url: '@Url.Action("GetMenuTree", "Menu", new { area = "Admin" })',
+            type: "POST",
+            success: function(response) {
+                if ($("#menuTree").data("kendoTreeView")) {
+                    $("#menuTree").data("kendoTreeView").destroy();
+                }
+
+                // Handle DataSourceResult if returned
+                var data = response.Data || response;
+                var treeData = buildTreeData(data);
+
+                $("#menuTree").kendoTreeView({
+                    dataSource: treeData,
+                    template: "#= item.DisplayName # <span class='k-text-muted' style='font-size: 11px;'>(#= item.MenuName #)</span>",
+                    dataTextField: "DisplayName",
+                    loadOnDemand: false,
+                    select: function(e) {
+                        var dataItem = this.dataItem(e.node);
+                        if (dataItem && dataItem.id) {
+                            window.location.href = '@Url.Action("Edit", "Menu", new { area = "Admin" })?id=' + dataItem.id;
+                        }
+                    }
+                });
+            },
+            error: function() {
+                alert("Failed to load menu tree");
+            }
+        });
+    }
+
+    function buildTreeData(menus) {
+        if (!menus || menus.length === 0) return [];
+
+        // Flatten menu tree if needed
+        var flatMenus = [];
+        function flattenMenu(menu) {
+            flatMenus.push({
+                Id: menu.Id,
+                MenuName: menu.MenuName,
+                DisplayName: menu.DisplayName,
+                ParentMenuId: menu.ParentMenuId
+            });
+            if (menu.ChildMenus && menu.ChildMenus.length > 0) {
+                menu.ChildMenus.forEach(flattenMenu);
+            }
+        }
+        menus.forEach(flattenMenu);
+
+        var map = {};
+        var roots = [];
+
+        // First pass: create map
+        flatMenus.forEach(function(menu) {
+            map[menu.Id] = {
+                id: menu.Id,
+                DisplayName: menu.DisplayName,
+                MenuName: menu.MenuName,
+                items: []
+            };
+        });
+
+        // Second pass: build tree
+        flatMenus.forEach(function(menu) {
+            var node = map[menu.Id];
+            if (menu.ParentMenuId == null || menu.ParentMenuId === 0) {
+                roots.push(node);
+            } else {
+                var parent = map[menu.ParentMenuId];
+                if (parent) {
+                    parent.items.push(node);
+                } else {
+                    roots.push(node);
+                }
+            }
+        });
+
+        return roots;
+    }
+</script>
+

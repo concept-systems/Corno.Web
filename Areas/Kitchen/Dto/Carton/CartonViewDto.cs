@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Corno.Web.Dtos;
-using Telerik.Reporting;
 
 namespace Corno.Web.Areas.Kitchen.Dto.Carton;
 
@@ -16,9 +15,9 @@ public sealed class CartonViewDto : BaseDto
     public double? OrderQuantity { get; set; }
     public double? PackedQuantity { get; set; }
     public double? PrintQuantity { get; set; }
-    public bool PrintToPrinter { get; set; }
+    /*public bool PrintToPrinter { get; set; }
 
-    public ReportBook ReportBook { get; set; }
+    public ReportBook ReportBook { get; set; }*/
 
     /// <summary>
     /// Base64 encoded PDF of the carton label, used for inline preview/print.

@@ -1,23 +1,22 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Corno.Web.Areas.Kitchen.Dto.Label;
-using Corno.Web.Areas.Kitchen.Labels;
 using Corno.Web.Extensions;
 using Corno.Web.Globals;
 using Corno.Web.Globals.Enums;
 using Corno.Web.Models.Packing;
 using Corno.Web.Models.Plan;
-using Corno.Web.Reports;
 using Corno.Web.Services.Masters.Interfaces;
-using Mapster;
 using Corno.Web.Areas.Admin.Services.Interfaces;
+using Corno.Web.Areas.Kitchen.Helper;
 using Corno.Web.Areas.Kitchen.Services.Interfaces;
 using Corno.Web.Repository.Interfaces;
 using Corno.Web.Services.File.Interfaces;
 using Corno.Web.Windsor;
 using MoreLinq;
+using System.Transactions;
 
 namespace Corno.Web.Areas.Kitchen.Services;
 
@@ -52,24 +51,13 @@ public class AssemblyLabelService : LabelService, IAssemblyLabelService
     private static void ValidateLabels(IReadOnlyList<Label> labels, Plan plan)
     {
         var expectedStatus = new[] { StatusConstants.Sorted };
-        var families2223 = new[] { "FGWN22", "FGWN23" };
+
+        // Validate labels for families 22 & 23
+        LabelFamilyValidationHelper.ValidateLabelsForFamilies2223(labels, plan, expectedStatus);
 
         for (var index = 0; index < labels.Count; index++)
         {
             var label = labels[index];
-            if (!expectedStatus.Contains(label.Status))
-            {
-                // Check whether family is 22 / 23
-                var planItemDetail = plan.PlanItemDetails.FirstOrDefault(d => d.Position == label.Position);
-                if (families2223.Contains(planItemDetail?.Group))
-                {
-                    if (labels.All(d => d.Status != StatusConstants.Sorted))
-                        throw new Exception($"At least single label should be sorted.");
-                }
-                else
-                    throw new Exception($"Label {label.Barcode}' has '{label.Status}' status. Expected status is '{string.Join(",", expectedStatus)}'.");
-            }
-
             var assemblyCode = label.AssemblyCode;
             if (string.IsNullOrEmpty(assemblyCode))
                 throw new Exception($"Invalid assembly code {assemblyCode} of label {index}.");
@@ -157,16 +145,20 @@ public class AssemblyLabelService : LabelService, IAssemblyLabelService
         return [assemblyLabel];
     }
 
-    public async Task<BaseReport> CreateLabelReportAsync(IEnumerable<Label> labels, bool bDuplicate)
+    /*public override async Task<BaseReport> CreateLabelReportAsync(List<Label> labels, bool bDuplicate)
     {
         var labelRpt = new SubAssemblyLabelRpt(labels);
         return await Task.FromResult<BaseReport>(labelRpt).ConfigureAwait(false);
-    }
+    }*/
 
     public async Task UpdateDatabaseAsync(Label assemblyLabel, List<Label> labels, Plan plan)
     {
         if (null == plan)
             throw new Exception("Invalid Plan");
+        using var scope = new TransactionScope(TransactionScopeOption.Required,
+            new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted },
+            TransactionScopeAsyncFlowOption.Enabled);
+
         foreach (var label in labels)
         {
             var planItemDetail = plan.PlanItemDetails.FirstOrDefault(d =>
@@ -183,33 +175,9 @@ public class AssemblyLabelService : LabelService, IAssemblyLabelService
         await UpdateRangeAndSaveAsync(labels).ConfigureAwait(false);
         // 4. Add Assembly label
         await AddAndSaveAsync(assemblyLabel).ConfigureAwait(false);
+
+        scope.Complete();
     }
 
-    public async Task<LabelViewDto> CreateViewDtoAsync(int? id)
-    {
-        var label = await GetByIdAsync(id).ConfigureAwait(false);
-        if (null == label)
-            throw new Exception($"Label with Id '{id}' not found.");
-
-        // Create dto
-        var dto = label.Adapt<LabelViewDto>();
-
-        // Create label report
-        var item = await _itemService.GetViewModelAsync(label.ItemId ?? 0).ConfigureAwait(false);
-        label.NotMapped = new NotMapped
-        {
-            ItemCode = item?.Code,
-            DrawingNo = item?.Description,
-
-        };
-        var userIds = dto.LabelViewDetailDto.Select(d => d.CreatedBy).ToList();
-        var users = await _userService.GetAsync(u => userIds.Contains(u.Id), u => u).ConfigureAwait(false);
-
-        dto.LabelViewDetailDto.ForEach(d =>
-            d.UserName = users.FirstOrDefault(x => x.Id == d.CreatedBy)?.UserName);
-
-        dto.LabelReport = await CreateLabelReportAsync(new List<Label> { label }, true).ConfigureAwait(false);
-        return dto;
-    }
-    #endregion
+        #endregion
 }

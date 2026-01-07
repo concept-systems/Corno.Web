@@ -243,8 +243,8 @@ public class NonWeighingPackingController : SuperController
     {
         try
         {
-            var dto = await _nonWeighingPackingService.View(id);
-            Session[FieldConstants.Label] = dto.ReportBook;
+            var dto = await _nonWeighingPackingService.ViewAsync(id);
+            //Session[FieldConstants.Label] = dto.ReportBook;
             return View(dto);
         }
         catch (Exception exception)
@@ -316,7 +316,7 @@ public class NonWeighingPackingController : SuperController
                     carton.Status
                 };
             var result = await query.ToDataSourceResultAsync(request);*/
-            var result = await Task.Run(() => _nonWeighingPackingService.GetIndexDataSource(request)).ConfigureAwait(false);
+            var result = await _nonWeighingPackingService.GetIndexDataSourceAsync(request).ConfigureAwait(false);
             return Json(result, JsonRequestBehavior.AllowGet);
         }
         catch (Exception exception)

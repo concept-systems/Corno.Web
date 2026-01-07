@@ -7,26 +7,20 @@ using System.Web.Mvc;
 using Corno.Web.Areas.Kitchen.Dto.Plan;
 using Corno.Web.Areas.Kitchen.Dto.Label;
 using Corno.Web.Areas.Kitchen.Services.Interfaces;
-using Corno.Web.Hubs;
-using Corno.Web.Models;
 using Corno.Web.Models.Plan;
 using Corno.Web.Services.Import;
 using Corno.Web.Services.Import.Interfaces;
-using Corno.Web.Services.Progress.Interfaces;
 using Kendo.Mvc.UI;
-using Microsoft.AspNet.SignalR;
 
 namespace Corno.Web.Areas.Kitchen.Controllers;
 
 public class PlanController : BaseImportController<BmImportDto>
 {
     #region -- Constructors --
-    public PlanController(IFileImportService<BmImportDto> importService,
-        IWebProgressService progressService, IPlanService planService)
-        : base(importService, progressService)
+    public PlanController(IFileImportService<BmImportDto> importService, IPlanService planService)
+        : base(importService)
     {
         _planService = planService;
-        ProgressService.OnProgressChanged += OnProgressChanged;
 
         const string viewPath = "~/Areas/Kitchen/Views/Plan";
         _createPath = $"{viewPath}/Create.cshtml";
@@ -248,11 +242,6 @@ public class PlanController : BaseImportController<BmImportDto>
         }
     }
 
-    private void OnProgressChanged(object sender, ProgressModel e)
-    {
-        var context = GlobalHost.ConnectionManager.GetHubContext<ProgressHub>();
-        context.Clients.All.receiveProgress(e);
-    }
 
     [HttpPost]
     public ActionResult Remove(string[] fileNames)

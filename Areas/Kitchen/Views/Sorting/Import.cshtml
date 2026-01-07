@@ -1,125 +1,17 @@
-﻿@using System.ComponentModel
-@using Corno.Web.Areas.Kitchen.Dto.Label
-@using Kendo.Mvc.UI
+﻿@using Corno.Web.Helper
 
 @{
     Layout = "~/Views/Shared/_LayoutDetails.cshtml";
-}
-
-@{
-    ViewBag.Index = "Index";
-    ViewBag.Create = "Create";
-    ViewBag.Edit = "Edit";
-    ViewBag.Details = "Details";
-    ViewBag.Delete = "Delete";
-    ViewBag.View = "Import";
-    ViewBag.Area = "Kitchen";
-    ViewBag.Controller = "Sorting";
-}
-
-@{
-    ViewBag.BoxTitle = "Import";
-}
-
-@{
     ViewBag.Title = "Import (Sorting)";
     ViewBag.BoxTitle = "Import (Sorting)";
-
-    ViewBag.Controller = "Sorting";
-    ViewBag.ImportAction = "Import";
+    ViewBag.Area = "Kitchen";
+    ViewBag.Controller = "LabelImport";
+    ViewBag.Description = "Upload an Excel file (.xls, .xlsx) to import sorting data.";
+    ViewBag.AllowedExtensions = new[] { ".xls", ".xlsx" };
+    ViewBag.MaxFileSizeBytes = 10 * 1024 * 1024;
+    ViewBag.MaxFileSizeText = "10 MB";
+    ViewBag.HasGrid = true;
+    ViewBag.NewStatus = "Sorting"; // Pass newStatus for LabelImportController
 }
 
-<div class="col-12">
-    @Html.Partial("Partials/_ProgressbarSignalR")
-</div>
-<br />
-@*<div class="k-card-footer text-end">
-    @(Html.Kendo().Button()
-        .Name("cancel-button")
-        .Icon("cancel")
-        .SpriteCssClass("k-icon-64")
-        .ThemeColor(ThemeColor.Error)
-        .FillMode(ButtonFillMode.Outline)
-        .Rounded(Rounded.Medium)
-        .Events(ev => ev.Click("onCancelImport"))
-        .Content("Cancel"))
-</div>*@
-<div class="col-12 ">
-    @(Html.Kendo().Grid<SalvaginiExcelDto>()
-        .Name("importGrid")
-        .ToolBar(toolbar =>
-        {
-            toolbar.Excel();
-            toolbar.Pdf();
-            toolbar.Search();
-        })
-        .Scrollable()
-        .AutoBind(true)
-        .Sortable(s => s.InitialDirection(ListSortDirection.Descending))
-        .Filterable()
-        .Resizable(resize => resize.Columns(true)) // Allow column resizing
-        .PersistSelection()
-        .Height(540)
-        .HtmlAttributes(new { style = "height: 500px;" })
-        .Columns(columns =>
-        {
-            // Serial Number Column
-            columns.Template(@<text>#: ++rowNumber #</text>)
-            .Title("Serial No")
-            .HeaderHtmlAttributes(new { @class = "k-text-center" })
-            .HtmlAttributes(new { style = "text-align: center" })
-            .Width(20);
-            columns.Bound(m => m.Barcode)
-                .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
-                .HtmlAttributes(new { style = "text-align: center" })
-                .Width(30);
-            columns.Bound(m => m.Status)
-                .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
-                .HtmlAttributes(new { style = "text-align: center " })
-                .Width(30);
-            columns.Bound(m => m.Remark)
-                .HeaderHtmlAttributes(new { @class = "k-text-center !k-justify-content-center" })
-                .HtmlAttributes(new { style = "color: red; text-align: center" })
-                .Width(40);
-        })
-        //.Excel(excel => excel
-        //    .FileName("Sorting.xlsx")
-        //    .ProxyURL(Url.Action("Excel_Export_Save", "Corno"))
-        //)
-        //.Pdf(pdf => pdf
-        //    .AllPages()
-        //    .AvoidLinks()
-        //    .PaperSize("A4")
-        //    .Scale(0.8)
-        //    .Margin("2cm", "1cm", "1cm", "1cm")
-        //    .Landscape()
-        //    .FileName("Sorting.pdf")
-        //    .ProxyURL(Url.Action("Excel_Export_Save", "Corno"))
-        //)
-        .DataSource(dataSource => dataSource
-            .Ajax()
-        //.Read(read => read.Action("Excel_Export_Save", "Corno"))
-        //.ServerOperation(false)
-        )
-        .Events(events => events.DataBound("onDataBound"))
-        )
-
-</div>
-
-
-<script>
-
-    var rowNumber = 0;
-
-    function onDataBound(e) {
-        rowNumber = 0; // Reset the row number counter
-        var rows = this.items();
-        for (var i = 0; i < rows.length; i++) {
-            rowNumber++;
-            // Insert the serial number into the first cell
-            $(rows[i]).find("td:first").html(rowNumber);
-        }
-    }
-    
-
-</script>
+@Html.Partial("~/Views/Shared/Import/_GenericImport.cshtml")

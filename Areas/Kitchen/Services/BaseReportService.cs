@@ -301,5 +301,12 @@ public class BaseReportService : IBaseReportService
         parameters[fieldName].AvailableValues.DataSource = objectDataSource;
     }
 
+    public virtual void AddIsPreviewParameter(ReportParameterCollection parameters)
+    {
+        parameters.Add("isPreview", ReportParameterType.Boolean, true);
+        parameters["isPreview"].Visible = true;
+        parameters["isPreview"].Value = true;  // Default to false (export)
+    }
+
     #endregion
 }

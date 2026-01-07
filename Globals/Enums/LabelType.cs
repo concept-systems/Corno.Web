@@ -6,5 +6,8 @@ public enum LabelType
     Part,
     SubAssembly,
     Store,
+    StoreKhalapur,
+    StoreShirwal,
+    Stiffener,
     Trolley
 }

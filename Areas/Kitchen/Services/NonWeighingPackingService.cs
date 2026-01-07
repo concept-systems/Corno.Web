@@ -1,4 +1,5 @@
 ﻿using Corno.Web.Areas.Kitchen.Dto.Carton;
+using Corno.Web.Areas.Kitchen.Helper;
 using Corno.Web.Areas.Kitchen.Services.Interfaces;
 using Corno.Web.Extensions;
 using Corno.Web.Globals;
@@ -12,6 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Transactions;
 using Telerik.Reporting;
 
 namespace Corno.Web.Areas.Kitchen.Services;
@@ -66,6 +68,9 @@ public class NonWeighingPackingService : CartonService, INonWeighingPackingServi
     {
         const string newStatus = StatusConstants.Packed;
 
+        using var scope = new TransactionScope(TransactionScopeOption.Required,
+            new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted },
+            TransactionScopeAsyncFlowOption.Enabled);
         // Update plan
         var plan = dto.Plan;
         //var labels = dto.Labels;
@@ -79,9 +84,9 @@ public class NonWeighingPackingService : CartonService, INonWeighingPackingServi
 
         // Update carton fields
         carton.CartonNo = await MaxAsync(p => p.WarehouseOrderNo == carton.WarehouseOrderNo, p =>
-                              p.CartonNo).ConfigureAwait(false) + 1;
+            p.CartonNo).ConfigureAwait(false) + 1;
         carton.CartonNo = await GetNextCartonNoAsync(carton.WarehouseOrderNo).ConfigureAwait(false);
-        carton.CartonBarcode = GetCartonBarcode(carton.WarehouseOrderNo, carton.CartonNo ?? 0);
+        carton.CartonBarcode = await GetCartonBarcodeAsync(carton.WarehouseOrderNo, carton.CartonNo ?? 0).ConfigureAwait(false);
         carton.SoNo = plan.SoNo;
         carton.Code = "Web";
         carton.Status = newStatus;
@@ -121,10 +126,6 @@ public class NonWeighingPackingService : CartonService, INonWeighingPackingServi
             planItemDetail.PackQuantity += p.Quantity;
         });
 
-        //var labelIds = labels.Select(p => p.Id);
-        //var info = $"Updating Labels (2) : {labels.Count}, Label Ids : {string.Join("-", labelIds)} UserId : {userId}";
-        //LogHandler.LogInfo(info);
-
         await _labelService.UpdateRangeAsync(labels).ConfigureAwait(false);
         var planService = Bootstrapper.Get<IPlanService>();
         await planService.UpdateAsync(plan).ConfigureAwait(false);
@@ -132,6 +133,8 @@ public class NonWeighingPackingService : CartonService, INonWeighingPackingServi
 
         await AddAsync(carton).ConfigureAwait(false);
         await SaveAsync().ConfigureAwait(false);
+
+        scope.Complete();
     }
 
     #endregion
@@ -169,6 +172,10 @@ public class NonWeighingPackingService : CartonService, INonWeighingPackingServi
             var planService = Bootstrapper.Get<IPlanService>();
             dto.Plan = await planService.GetByWarehouseOrderNoAsync(label.WarehouseOrderNo).ConfigureAwait(false);
         }
+
+        // Validate subassembled labels for families 22 & 23
+        if (label.Status == StatusConstants.SubAssembled)
+            LabelFamilyValidationHelper.ValidateSubAssembledLabelsForFamilies2223(labels, dto.Plan);
 
         foreach (var record in labels)
         {
@@ -239,57 +246,6 @@ public class NonWeighingPackingService : CartonService, INonWeighingPackingServi
     }
 
 
-    public async Task<CartonViewDto> View(int? id)
-    {
-        var carton = await GetByIdAsync(id).ConfigureAwait(false);
-        if (null == carton)
-            throw new Exception($"Label with Id '{id}' not found.");
-
-        var planService = Bootstrapper.Get<IPlanService>();
-        var plan = await planService.GetByWarehouseOrderNoAsync(carton.WarehouseOrderNo).ConfigureAwait(false);
-
-        var dto = new CartonViewDto
-        {
-            Id = carton.Id,
-            WarehouseOrderNo = carton.WarehouseOrderNo,
-            SoNo = carton.SoNo,
-            LotNo = plan?.LotNo,
-            DueDate = plan?.DueDate,
-            OrderQuantity = plan?.OrderQuantity,
-            PrintQuantity = plan?.PrintQuantity,
-
-            CartonDetailsDtos = carton.CartonDetails.Select(d =>
-            {
-                var planItemDetail = plan?.PlanItemDetails.FirstOrDefault(x => x.Position == d.Position);
-                return new CartonDetailsDto
-                {
-                    Position = d.Position,
-                    WarehousePosition = d.WarehousePosition,
-                    AssemblyCode = planItemDetail?.AssemblyCode,
-                    CarcassCode = planItemDetail?.CarcassCode,
-                    NetWeight = d.NetWeight,
-                    Tolerance = d.Tolerance,
-                    Quantity = d.Quantity,
-                    OrderQuantity = d.OrderQuantity ?? 0
-                };
-            }).ToList(),
-
-            CartonRackingDetailDtos = carton.CartonRackingDetails.Select(d => new CartonRackingDetailDto
-            {
-                ScanDate = d.ScanDate,
-                PalletNo = d.PalletNo,
-                RackNo = d.RackNo,
-                Status = d.Status
-            }).ToList(),
-
-            ReportBook = await CreateLabelReport(carton, plan, false).ConfigureAwait(false) // Make sure this method is accessible
-        };
-
-        // Convert report to Base64 for inline preview similar to PartLabel
-        dto.Base64 = dto.ReportBook?.ToBase64();
-
-        return dto;
-    }
 
     #endregion
 }

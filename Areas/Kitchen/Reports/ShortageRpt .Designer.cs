@@ -591,7 +591,7 @@ namespace Corno.Web.Areas.Kitchen.Reports
             this.currentTimeTextBox.Name = "currentTimeTextBox";
             this.currentTimeTextBox.Size = new Telerik.Reporting.Drawing.SizeU(Telerik.Reporting.Drawing.Unit.Inch(1.2D), Telerik.Reporting.Drawing.Unit.Inch(0.181D));
             this.currentTimeTextBox.StyleName = "PageInfo";
-            this.currentTimeTextBox.Value = "=NOW()";
+            this.currentTimeTextBox.Value = "=Now()";
             // 
             // pageInfoTextBox
             // 
@@ -635,11 +635,11 @@ namespace Corno.Web.Areas.Kitchen.Reports
             reportParameter3.Visible = true;
             reportParameter4.Name = "Location";
             reportParameter4.Visible = true;
-            reportParameter5.Name = "UpdateQuantities";
-            reportParameter5.Text = "Validate Data";
+            reportParameter5.Name = "isPreview";
+            reportParameter5.Text = "Is Preview";
             reportParameter5.Type = Telerik.Reporting.ReportParameterType.Boolean;
-            reportParameter5.Value = "= False";
-            reportParameter5.Visible = true;
+            reportParameter5.Value = true;
+            reportParameter5.Visible = false;
             this.ReportParameters.Add(reportParameter1);
             this.ReportParameters.Add(reportParameter2);
             this.ReportParameters.Add(reportParameter3);

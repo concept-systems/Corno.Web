@@ -17,7 +17,6 @@ using Corno.Web.Models.Location;
 using Corno.Web.Models.Masters;
 using Corno.Web.Services.Interfaces;
 using Corno.Web.Services.Masters.Interfaces;
-using Corno.Web.Services.Progress.Interfaces;
 using Kendo.Mvc.Extensions;
 using Kendo.Mvc.UI;
 using Mapster;
@@ -30,17 +29,13 @@ public class LocationController : SuperController
 {
     #region -- Constructors --
     public LocationController(ILocationService locationService, IProductService productService,
-        IMiscMasterService miscMasterService, IBaseItemService itemService, IWebProgressService progressService, IUserService userService)
+        IMiscMasterService miscMasterService, IBaseItemService itemService, IUserService userService)
     {
         _locationService = locationService;
         _productService = productService;
         _miscMasterService = miscMasterService;
         _itemService = itemService;
-        _progressService = progressService;
         _userService = userService;
-
-        progressService.SetWebProgress();
-        progressService.OnProgressChanged += OnProgressChanged;
 
 
         const string viewPath = "~/Areas/Masters/views/Location/";
@@ -93,7 +88,6 @@ public class LocationController : SuperController
     private readonly IProductService _productService;
     private readonly IMiscMasterService _miscMasterService;
     private readonly IBaseItemService _itemService;
-    private readonly IWebProgressService _progressService;
     private readonly IUserService _userService;
 
     private readonly string _indexPath;
@@ -272,10 +266,10 @@ public class LocationController : SuperController
             file?.SaveAs(filePath);*/
 
             // Import file
-            _progressService.SetWebProgress();
-            var importModels = await _locationService.ImportAsync(file, _progressService);
-
-            return Json(new { success = true, importModels }, JsonRequestBehavior.AllowGet);
+            // TODO: Update LocationService.ImportAsync to use new common import module
+            // var importModels = await _locationService.ImportAsync(file);
+            throw new NotImplementedException("Import functionality needs to be updated to use the new common import module");
+            // return Json(new { success = true, importModels }, JsonRequestBehavior.AllowGet);
         }
         catch (Exception exception)
         {
@@ -299,15 +293,9 @@ public class LocationController : SuperController
         return View();
     }
 
-    private void OnProgressChanged(object sender, ProgressModel e)
-    {
-        var context = GlobalHost.ConnectionManager.GetHubContext<ProgressHub>();
-        context.Clients.All.receiveProgress(e);
-    }
-
     public ActionResult CancelImport(string[] fileNames)
     {
-        _progressService.CancelRequested();
+        // TODO: Implement cancel using new import session service
         return Json(new { success = true, importModels = new List<LocationImportModel>() }, JsonRequestBehavior.AllowGet);
     }
 

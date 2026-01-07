@@ -60,50 +60,50 @@ public class Product : MasterModel
 
     #endregion
 
-    #region -- Methods --
-    public override bool UpdateDetails(CornoModel cornoModel)
-    {
-        if (cornoModel is not Product newProduct) return false;
+    //#region -- Methods --
+    //public override bool UpdateDetails(CornoModel cornoModel)
+    //{
+    //    if (cornoModel is not Product newProduct) return false;
 
-        // Sync ProductItemDetails
-        SyncDetails(ProductItemDetails, newProduct.ProductItemDetails);
+    //    // Sync ProductItemDetails
+    //    SyncDetails(ProductItemDetails, newProduct.ProductItemDetails);
 
-        // Sync ProductPacketDetails
-        SyncDetails(ProductPacketDetails, newProduct.ProductPacketDetails);
+    //    // Sync ProductPacketDetails
+    //    SyncDetails(ProductPacketDetails, newProduct.ProductPacketDetails);
 
-        // Sync ProductStockDetails
-        SyncDetails(ProductStockDetails, newProduct.ProductStockDetails);
+    //    // Sync ProductStockDetails
+    //    SyncDetails(ProductStockDetails, newProduct.ProductStockDetails);
 
-        return true;
-    }
+    //    return true;
+    //}
 
-    private static void SyncDetails<TDetail>(List<TDetail> existingList, List<TDetail> newList) 
-        where TDetail : BaseModel
-    {
-        if (existingList == null) return;
-        newList ??= [];
+    //private static void SyncDetails<TDetail>(List<TDetail> existingList, List<TDetail> newList) 
+    //    where TDetail : BaseModel
+    //{
+    //    if (existingList == null) return;
+    //    newList ??= [];
 
-        // Map of new items by Id for quick lookup
-        var newById = newList.Where(d => d.Id > 0).ToDictionary(d => d.Id);
+    //    // Map of new items by Id for quick lookup
+    //    var newById = newList.Where(d => d.Id > 0).ToDictionary(d => d.Id);
 
-        // 1. Update existing and mark those present
-        var presentIds = new HashSet<int>();
-        foreach (var existing in existingList.ToList())
-        {
-            if (existing.Id <= 0 || !newById.TryGetValue(existing.Id, out var newItem)) 
-                continue;
-            newItem.Adapt(existing); // update
-            presentIds.Add(existing.Id);
-        }
+    //    // 1. Update existing and mark those present
+    //    var presentIds = new HashSet<int>();
+    //    foreach (var existing in existingList.ToList())
+    //    {
+    //        if (existing.Id <= 0 || !newById.TryGetValue(existing.Id, out var newItem)) 
+    //            continue;
+    //        newItem.Adapt(existing); // update
+    //        presentIds.Add(existing.Id);
+    //    }
 
-        // 2. Delete items that are not present in new list
-        existingList.RemoveAll(e => e.Id > 0 && !presentIds.Contains(e.Id));
+    //    // 2. Delete items that are not present in new list
+    //    existingList.RemoveAll(e => e.Id > 0 && !presentIds.Contains(e.Id));
 
-        // 3. Add items that are new (Id <= 0) or not matched
-        var additions = newList.Where(n => n.Id <= 0 || !newById.ContainsKey(n.Id)).ToList();
-        if (additions.Any())
-            existingList.AddRange(additions);
-    }
+    //    // 3. Add items that are new (Id <= 0) or not matched
+    //    var additions = newList.Where(n => n.Id <= 0 || !newById.ContainsKey(n.Id)).ToList();
+    //    if (additions.Any())
+    //        existingList.AddRange(additions);
+    //}
 
     /*public override bool UpdateDetails(CornoModel cornoModel)
     {
@@ -156,5 +156,5 @@ public class Product : MasterModel
 
         return true;
     }*/
-    #endregion
+    //#endregion
 }
