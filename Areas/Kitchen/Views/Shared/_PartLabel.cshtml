@@ -1,45 +1,11 @@
 @using Corno.Web.Globals
+@using Corno.Web.Helper
 @using Kendo.Mvc.UI
 @model Corno.Web.Areas.Kitchen.Dto.Label.PartLabelCrudDto
 
 @{
-    // Initialize common ViewBag properties with defaults
-    if (ViewBag.BoxTitle == null)
-    {
-        ViewBag.BoxTitle = "Create New Part Label";
-    }
-    if (ViewBag.SubmitAction == null)
-    {
-        ViewBag.SubmitAction = "Create";
-    }
-    if (ViewBag.MainMenu == null)
-    {
-        ViewBag.MainMenu = "Transaction";
-    }
-    if (ViewBag.MainHeader == null)
-    {
-        ViewBag.MainHeader = "Part Label";
-    }
-    if (ViewBag.CurrentSitemap == null)
-    {
-        ViewBag.CurrentSitemap = "Part Label";
-    }
-    if (ViewBag.Title == null)
-    {
-        ViewBag.Title = "Part Label";
-    }
-    if (ViewBag.Area == null)
-    {
-        ViewBag.Area = "Kitchen";
-    }
-    if (ViewBag.Controller == null)
-    {
-        ViewBag.Controller = "PartLabel";
-    }
-
-    // Get controller and area from ViewBag
-    var controller = ViewBag.Controller;
-    var area = ViewBag.Area;
+    // Get dynamic values from ViewBag - form structure only
+    var controller = ViewBag.Controller ?? "PartLabel";
     var getItemsAction = ViewBag.GetItemsAction ?? "GetItems";
     var printPath = ViewBag.PrintPath ?? "/" + controller + "/" + (ViewBag.PrintAction ?? "Print");
     var previewPath = ViewBag.PreviewPath ?? "/" + controller + "/" + (ViewBag.PreviewAction ?? "Preview");

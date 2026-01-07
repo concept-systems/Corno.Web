@@ -5,9 +5,18 @@
 @{
     Layout = "~/Views/Shared/_LayoutBase.cshtml";
     
-    // Override Label-specific settings
+    // Page-level metadata
+    ViewBag.BoxTitle = "Create New Part Label";
+    ViewBag.SubmitAction = "Create";
+    ViewBag.MainMenu = "Transaction";
+    ViewBag.MainHeader = "Part Label";
+    ViewBag.CurrentSitemap = "Part Label";
+    ViewBag.Title = "Part Label";
+    ViewBag.Area = "Kitchen";
     ViewBag.Controller = "Label";
     ViewBag.Index = "Index";
+    
+    // Form-specific configuration - Label controller has different action names
     ViewBag.GetItemsAction = "GetPartLabelItems";
     ViewBag.PrintAction = "PrintPartLabel";
     ViewBag.PreviewAction = "PreviewPartLabel";
