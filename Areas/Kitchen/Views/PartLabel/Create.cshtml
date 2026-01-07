@@ -4,19 +4,9 @@
 
 @{
     Layout = "~/Views/Shared/_LayoutBase.cshtml";
-}
-
-@{
-    ViewBag.BoxTitle = "Create New Part Label";
-    ViewBag.SubmitAction = "Create";
-    ViewBag.MainMenu = "Transaction";
-    ViewBag.MainHeader = "Part Label";
-    ViewBag.CurrentSitemap = "Part Label";
-    ViewBag.Title = "Part Label";
-    ViewBag.Area = "Kitchen";
-    ViewBag.Controller = "PartLabel";
     
-    // Set defaults for shared partial
+    // Override only PartLabel-specific settings
+    ViewBag.Controller = "PartLabel";
     ViewBag.GetItemsAction = "GetItems";
     ViewBag.PrintAction = "Print";
     ViewBag.PreviewAction = "Preview";

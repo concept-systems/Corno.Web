@@ -4,20 +4,10 @@
 
 @{
     Layout = "~/Views/Shared/_LayoutBase.cshtml";
-}
-
-@{
-    ViewBag.BoxTitle = "Create New Part Label";
-    ViewBag.SubmitAction = "Create";
-    ViewBag.MainMenu = "Transaction";
-    ViewBag.MainHeader = "Part Label";
-    ViewBag.CurrentSitemap = "Part Label";
-    ViewBag.Title = "Part Label";
-    ViewBag.Area = "Kitchen";
+    
+    // Override Label-specific settings
     ViewBag.Controller = "Label";
     ViewBag.Index = "Index";
-    
-    // Set for shared partial - Label controller has different action names
     ViewBag.GetItemsAction = "GetPartLabelItems";
     ViewBag.PrintAction = "PrintPartLabel";
     ViewBag.PreviewAction = "PreviewPartLabel";
