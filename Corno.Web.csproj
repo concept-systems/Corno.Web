@@ -2603,7 +2603,6 @@
     <Content Include="Areas\Kitchen\Views\PartLabel\Create.cshtml" />
     <Content Include="Areas\Kitchen\Views\PartLabel\Index.cshtml" />
     <Content Include="Areas\Kitchen\Views\PartLabel\View.cshtml" />
-    <Content Include="Areas\Kitchen\Views\PartLabel\_PartLabel.cshtml" />
     <Content Include="Areas\Kitchen\Views\Plan\Create.cshtml" />
     <Content Include="Areas\Kitchen\Views\Plan\Delete.cshtml" />
     <Content Include="Areas\Kitchen\Views\Plan\Import.cshtml" />
