@@ -1,5 +1,4 @@
 ﻿@using Corno.Web.Globals
-@using Corno.Web.Helper
 @using Kendo.Mvc.UI
 @model Corno.Web.Areas.Kitchen.Dto.Label.PartLabelCrudDto
 
@@ -10,9 +9,6 @@
 @{
     ViewBag.BoxTitle = "Create New Part Label";
     ViewBag.SubmitAction = "Create";
-}
-
-@{
     ViewBag.MainMenu = "Transaction";
     ViewBag.MainHeader = "Part Label";
     ViewBag.CurrentSitemap = "Part Label";
@@ -21,11 +17,11 @@
     ViewBag.Controller = "PartLabel";
     
     // Set defaults for shared partial
-    ViewBag.GetItemsAction = ViewBag.GetItemsAction ?? "GetItems";
-    ViewBag.PrintAction = ViewBag.PrintAction ?? "Print";
-    ViewBag.PreviewAction = ViewBag.PreviewAction ?? "Preview";
-    ViewBag.PrintPath = ViewBag.PrintPath ?? "/PartLabel/Print";
-    ViewBag.PreviewPath = ViewBag.PreviewPath ?? "/PartLabel/Preview";
+    ViewBag.GetItemsAction = "GetItems";
+    ViewBag.PrintAction = "Print";
+    ViewBag.PreviewAction = "Preview";
+    ViewBag.PrintPath = "/PartLabel/Print";
+    ViewBag.PreviewPath = "/PartLabel/Preview";
 }
 
 @section sectionBaseFooter
@@ -37,47 +33,4 @@
     </div>
 }
 
-@(Html.Kendo().TileLayout()
-    .Name("tileLayout")
-    .Columns(2)
-    .RowsHeight("100%")
-    .ColumnsWidth("100%")
-    .Containers(c => {
-         c.Add()
-             .BodyTemplateId("partial-view")
-             .Header(h => h.Text("Header Info"))
-             .ColSpan(1)
-             .RowSpan(4);
-         c.Add()
-             .BodyTemplateId("template-items-Info")
-             .Header(h => h.Text("Items Info"))
-             .ColSpan(1)
-             .RowSpan(4);
-    })
-    .Reorderable(true)
-    .Resizable(true))
-
-<script id="partial-view" type="text/x-kendo-template">
-    <div class="col-12">
-          <!-- Placeholder for the partial view -->
-    </div>
-</script>
-<script id="template-items-Info" type="text/x-kendo-template">
-  <div class="k-content">
-         @Html.Partial("Shared/_PartLabel", Model)
-  </div>
-</script>
-
-<script>
-    function onPrint(e) {
-        e.preventDefault();
-        const formData = buildFormData();
-        fetchAndPrint('@ViewBag.PrintPath', formData, onPrintSuccess);
-    }
-
-    function onPreview(e) {
-        e.preventDefault();
-        const formData = buildFormData();
-        fetchAndPreviewPdf('@ViewBag.PreviewPath', formData, "Part Label");
-    }
-</script>
+@Html.Partial("Shared/_PartLabel", Model)

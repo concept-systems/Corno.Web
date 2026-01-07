@@ -7,87 +7,114 @@
     // Get controller and area from ViewBag
     var controller = ViewBag.Controller ?? "PartLabel";
     var area = ViewBag.Area ?? "Kitchen";
-    var printAction = ViewBag.PrintAction ?? "Print";
-    var previewAction = ViewBag.PreviewAction ?? "Preview";
     var getItemsAction = ViewBag.GetItemsAction ?? "GetItems";
-    var printPath = ViewBag.PrintPath ?? "/" + controller + "/" + printAction;
-    var previewPath = ViewBag.PreviewPath ?? "/" + controller + "/" + previewAction;
+    var printPath = ViewBag.PrintPath ?? "/" + controller + "/" + ViewBag.PrintAction ?? "Print";
+    var previewPath = ViewBag.PreviewPath ?? "/" + controller + "/" + ViewBag.PreviewAction ?? "Preview";
 }
 
-<table class="table k-table k-table-alt-row w-100 partlabel-table">
-    <tbody>
-        <tr>
-            <td>Warehouse Order :</td>
-            <td>
-                @(Html.Kendo().TextBoxFor(m => m.WarehouseOrderNo)
-                    .HtmlAttributes(new
-                    {
-                        required = "required",
-                        @class = "w-100"
-                    }).ToClientTemplate())
-            </td>
-        </tr>
-        <tr>
-            <td>Item :</td>
-            <td>
-                @(Html.Kendo().MultiColumnComboBoxFor(m => m.Position)
-                    .Value(Model.Position)
-                    .DataTextField(FieldConstants.Name)
-                    .DataValueField(FieldConstants.Position)
-                    .HtmlAttributes(new { required = "required", @class = "w-100", data_multicolumn_filter = "true" })
-                    .Filter(FilterType.Contains)
-                    .Placeholder("Select ...")
-                    .Suggest(true)
-                    .Events(e => e.Select("OnItemSelect"))
-                    .Columns(columns =>
-                    {
-                        columns.Add().Field(FieldConstants.Position).Title(FieldConstants.Position).Width("80px");
-                        columns.Add().Field(FieldConstants.ItemCode).Title(FieldConstants.ItemCode).Width("150px");
-                        columns.Add().Field(FieldConstants.Name).Title(FieldConstants.Name).Width("150px");
-                        columns.Add().Field(FieldConstants.OrderQuantity).Title(FieldConstants.OrderQuantity).Width("80px");
-                        columns.Add().Field(FieldConstants.Family).Title(FieldConstants.Family).Width("100px");
-                    })
-                    .DataSource(dataSource => dataSource
-                        .Read(read => { read.Action(getItemsAction, controller).Data("getItemsParameters"); })
-                        .ServerFiltering(true)
-                    )
-                    .AutoBind(false)
-                    .CascadeFrom(FieldConstants.WarehouseOrderNo).ToClientTemplate())
-            </td>
-        </tr>
-        <tr>
-            <td>Quantity :</td>
-            <td>
-                @(Html.Kendo().NumericTextBoxFor(m => m.Quantity)
-                    .Decimals(0)
-                    .Min(0)
-                    .Format("n0")
-                    .HtmlAttributes(new { required = "required", @class = "form-control w-100" }).ToClientTemplate())
-            </td>
-        </tr>
-        <tr>
-            <td>Item Code :</td>
-            <td id="tdItemCode"></td>
-        </tr>
-        <tr>
-            <td>Position :</td>
-            <td id="tdPosition">
-            </td>
-        </tr>
-        <tr>
-            <td>Item Name :</td>
-            <td id="tdItemName"></td>
-        </tr>
-        <tr>
-            <td>Order Quantity</td>
-            <td id="tdOrderQuantity"></td>
-        </tr>
-        <tr>
-            <td>Print Quantity</td>
-            <td id="tdPrintQuantity"></td>
-        </tr>
-    </tbody>
-</table>
+@(Html.Kendo().TileLayout()
+    .Name("tileLayout")
+    .Columns(2)
+    .RowsHeight("100%")
+    .ColumnsWidth("100%")
+    .Containers(c => {
+         c.Add()
+             .BodyTemplateId("partial-view")
+             .Header(h => h.Text("Header Info"))
+             .ColSpan(1)
+             .RowSpan(4);
+         c.Add()
+             .BodyTemplateId("template-items-Info")
+             .Header(h => h.Text("Items Info"))
+             .ColSpan(1)
+             .RowSpan(4);
+    })
+    .Reorderable(true)
+    .Resizable(true))
+
+<script id="partial-view" type="text/x-kendo-template">
+    <div class="col-12">
+          <!-- Placeholder for the partial view -->
+    </div>
+</script>
+<script id="template-items-Info" type="text/x-kendo-template">
+  <div class="k-content">
+         <table class="table k-table k-table-alt-row w-100 partlabel-table">
+            <tbody>
+                <tr>
+                    <td>Warehouse Order :</td>
+                    <td>
+                        @(Html.Kendo().TextBoxFor(m => m.WarehouseOrderNo)
+                            .HtmlAttributes(new
+                            {
+                                required = "required",
+                                @class = "w-100"
+                            }).ToClientTemplate())
+                    </td>
+                </tr>
+                <tr>
+                    <td>Item :</td>
+                    <td>
+                        @(Html.Kendo().MultiColumnComboBoxFor(m => m.Position)
+                            .Value(Model.Position)
+                            .DataTextField(FieldConstants.Name)
+                            .DataValueField(FieldConstants.Position)
+                            .HtmlAttributes(new { required = "required", @class = "w-100", data_multicolumn_filter = "true" })
+                            .Filter(FilterType.Contains)
+                            .Placeholder("Select ...")
+                            .Suggest(true)
+                            .Events(e => e.Select("OnItemSelect"))
+                            .Columns(columns =>
+                            {
+                                columns.Add().Field(FieldConstants.Position).Title(FieldConstants.Position).Width("80px");
+                                columns.Add().Field(FieldConstants.ItemCode).Title(FieldConstants.ItemCode).Width("150px");
+                                columns.Add().Field(FieldConstants.Name).Title(FieldConstants.Name).Width("150px");
+                                columns.Add().Field(FieldConstants.OrderQuantity).Title(FieldConstants.OrderQuantity).Width("80px");
+                                columns.Add().Field(FieldConstants.Family).Title(FieldConstants.Family).Width("100px");
+                            })
+                            .DataSource(dataSource => dataSource
+                                .Read(read => { read.Action(getItemsAction, controller).Data("getItemsParameters"); })
+                                .ServerFiltering(true)
+                            )
+                            .AutoBind(false)
+                            .CascadeFrom(FieldConstants.WarehouseOrderNo).ToClientTemplate())
+                    </td>
+                </tr>
+                <tr>
+                    <td>Quantity :</td>
+                    <td>
+                        @(Html.Kendo().NumericTextBoxFor(m => m.Quantity)
+                            .Decimals(0)
+                            .Min(0)
+                            .Format("n0")
+                            .HtmlAttributes(new { required = "required", @class = "form-control w-100" }).ToClientTemplate())
+                    </td>
+                </tr>
+                <tr>
+                    <td>Item Code :</td>
+                    <td id="tdItemCode"></td>
+                </tr>
+                <tr>
+                    <td>Position :</td>
+                    <td id="tdPosition">
+                    </td>
+                </tr>
+                <tr>
+                    <td>Item Name :</td>
+                    <td id="tdItemName"></td>
+                </tr>
+                <tr>
+                    <td>Order Quantity</td>
+                    <td id="tdOrderQuantity"></td>
+                </tr>
+                <tr>
+                    <td>Print Quantity</td>
+                    <td id="tdPrintQuantity"></td>
+                </tr>
+            </tbody>
+        </table>
+  </div>
+</script>
 
 <style>
     /* PartLabel specific responsive table styles */
@@ -228,5 +255,17 @@
         return {
             warehouseOrderNo: $('#WarehouseOrderNo').val()
         };
+    }
+
+    function onPrint(e) {
+        e.preventDefault();
+        const formData = buildFormData();
+        fetchAndPrint('@Html.Raw(printPath)', formData, onPrintSuccess);
+    }
+
+    function onPreview(e) {
+        e.preventDefault();
+        const formData = buildFormData();
+        fetchAndPreviewPdf('@Html.Raw(previewPath)', formData, "Part Label");
     }
 </script>
