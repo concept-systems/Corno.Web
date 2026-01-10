@@ -249,14 +249,14 @@ public class CarcassPackingService : CartonService, ICarcassPackingService
             var planService = Bootstrapper.Get<IPlanService>();
             dto.Plan ??= await planService.GetByWarehouseOrderNoAsync(label.WarehouseOrderNo).ConfigureAwait(false);
             if (null == dto.Plan)
-                throw new Exception($"Plan not found for warehouse order {dto.Plan.WarehouseOrderNo}");
+                throw new Exception($"Plan not found for warehouse order {dto.Plan?.WarehouseOrderNo}");
             LogHandler.LogInfo($"Plan fetched for warehouse order no: {label.WarehouseOrderNo}, Total Items : {dto.Plan?.PlanItemDetails.Count}");
-            var carcassItems = dto.Plan.PlanItemDetails.Where(d =>
+            var carcassItems = dto.Plan?.PlanItemDetails.Where(d =>
                 d.CarcassCode == label.CarcassCode).ToList();
-            if (carcassItems.Count <= 1)
+            if (carcassItems?.Count <= 1)
                 throw new Exception($"Carcass code '{label.CarcassCode}' not found in plan for warehouse order {label.WarehouseOrderNo}");
 
-            dto.CarcassDetailsDtos = carcassItems
+            dto.CarcassDetailsDtos = carcassItems?
                 .SelectMany(detail => Enumerable.Range(0, detail.OrderQuantity.ToInt())
                     .Select(_ => new CarcassDetailsDto
                     {

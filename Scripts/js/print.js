@@ -87,7 +87,7 @@ function fetchAndPreviewPdf(url, formData, windowTitle, onCloseCallback) {
         body: formData
     })
         .then(async response => {
-            if (!response.ok) throw new Error('Failed to fetch PDF');
+            if (!response.ok) throw new Error('Failed to fetch PDF : ' + url);
 
             const contentType = response.headers.get('Content-Type');
             if (contentType && contentType.includes('application/json')) {

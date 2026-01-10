@@ -75,8 +75,7 @@ public static class LabelFamilyValidationHelper
         if (labels == null || labels.Count == 0)
             return;
 
-        if (expectedStatus == null)
-            expectedStatus = new[] { StatusConstants.Sorted };
+        expectedStatus ??= [StatusConstants.Sorted, StatusConstants.SubAssembled];
 
         // Check if any label belongs to families 22 or 23
         var hasFamily2223 = labels.Any(label =>
@@ -88,7 +87,7 @@ public static class LabelFamilyValidationHelper
         if (hasFamily2223)
         {
             // For families 22 & 23, at least one label should be sorted
-            if (labels.All(d => d.Status != StatusConstants.Sorted))
+            if (labels.All(d => !expectedStatus.Contains(d.Status)))
                 throw new Exception($"At least single label should be sorted for families 22 & 23.");
         }
         else

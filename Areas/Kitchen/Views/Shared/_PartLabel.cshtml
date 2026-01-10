@@ -5,10 +5,11 @@
 
 @{
     // Get dynamic values from ViewBag - form structure only
+    var area = ViewBag.Area ?? "Kitchen";
     var controller = ViewBag.Controller ?? "PartLabel";
     var getItemsAction = ViewBag.GetItemsAction ?? "GetItems";
-    var printPath = ViewBag.PrintPath ?? "/" + controller + "/" + (ViewBag.PrintAction ?? "Print");
-    var previewPath = ViewBag.PreviewPath ?? "/" + controller + "/" + (ViewBag.PreviewAction ?? "Preview");
+    var printPath = ViewBag.PrintPath ?? "/" + area + "/" + controller + "/" + (ViewBag.PrintAction ?? "Print");
+    var previewPath = ViewBag.PreviewPath ?? "/"+ area + "/" + controller + "/" + (ViewBag.PreviewAction ?? "Preview");
 }
 
 @(Html.Kendo().TileLayout()
